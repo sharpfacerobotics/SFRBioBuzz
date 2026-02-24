@@ -6,12 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Auto;
 import org.firstinspires.ftc.teamcode.states.Intake;
 import org.firstinspires.ftc.teamcode.states.Shooter;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.config.Config;
 
 
-@Config
+
 @Autonomous(name = "Blue 1", group = "Autonomous")
 public class BlueAllience1 extends LinearOpMode {
 
@@ -28,7 +25,6 @@ public class BlueAllience1 extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
