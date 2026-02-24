@@ -3,7 +3,10 @@ package org.firstinspires.ftc.teamcode.states;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.bylazar.configurables.annotations.Configurable;
 
+
+@Configurable
 public class Shooter {
 
     private static final String SHOOTER_LEFT = "shooterLeft";
@@ -14,7 +17,6 @@ public class Shooter {
     private static final int POS_DEFAULT = 0;
 
     private static double POWER_UP = -1;
-    private static double POWER_DOWN = 1;
 
 
 

@@ -6,9 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Auto;
 import org.firstinspires.ftc.teamcode.states.Intake;
 import org.firstinspires.ftc.teamcode.states.Shooter;
+import com.bylazar.configurables.annotations.Configurable;
 
 
-
+@Configurable
 @Autonomous(name = "Blue 1", group = "Autonomous")
 public class BlueAllience1 extends LinearOpMode {
 
