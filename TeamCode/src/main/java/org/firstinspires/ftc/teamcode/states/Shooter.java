@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @Configurable
@@ -12,11 +13,15 @@ public class Shooter {
     private static final String SHOOTER_LEFT = "shooterLeft";
     private static final String SHOOTER_RIGHT = "shooterRight";
 
-    private static final int POS_CHARGING = -500;
-    private static final int POS_SHOOT = 500;
-    private static final int POS_DEFAULT = 0;
+    private static int POS_CHARGING = -2000;
+    private static int POS_SHOOT = -3000;
+    private static int POS_DEFAULT = 0;
 
     private static double POWER_UP = -1;
+
+    private ElapsedTime timer = new ElapsedTime();
+    private boolean chargingAuto = false;
+    private long chargingDuration = 0;
 
 
 
@@ -32,50 +37,53 @@ public class Shooter {
         leftMotorShoot.setDirection(DcMotor.Direction.REVERSE);
         rightMotorShoot.setDirection(DcMotor.Direction.FORWARD);
 
-        leftMotorShoot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightMotorShoot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftMotorShoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightMotorShoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
 
     }
 
-
-    private void moveUsingEncoder(int position){
-
-        leftMotorShoot.setTargetPosition(position);
-        rightMotorShoot.setTargetPosition(position);
-
-        leftMotorShoot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightMotorShoot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        leftMotorShoot.setPower(POWER_UP);
-        rightMotorShoot.setPower(POWER_UP);
-    }
 
     public void moveToCharging() {
+        leftMotorShoot.setPower(-1);
+        rightMotorShoot.setPower(-1);
 
-    moveUsingEncoder(550);
+    }
+
+    public void startChargingAuto(long durationMs) {
+
+        leftMotorShoot.setPower(-1);
+        rightMotorShoot.setPower(-1);
+
+        chargingDuration = durationMs;
+        timer.reset();
+        chargingAuto = true;
+    }
+    public void update() {
+
+        if (chargingAuto && timer.milliseconds() >= chargingDuration) {
+            leftMotorShoot.setPower(0);
+            rightMotorShoot.setPower(0);
+            chargingAuto = false;
+        }
+    }
+    public boolean isBusy() {
+        return chargingAuto;
     }
 
 
     public void moveToShoot() {
 
-        moveUsingEncoder(500);
+        leftMotorShoot.setPower(0);
+        rightMotorShoot.setPower(0);
 
-    }
 
-    public void moveToDefault() {
-
-        moveUsingEncoder(500);
     }
 
     public void stop() {
         leftMotorShoot.setPower(0);
         rightMotorShoot.setPower(0);
     }
+
+
+
 
     public int getLeftPosition() {
         return leftMotorShoot.getCurrentPosition();

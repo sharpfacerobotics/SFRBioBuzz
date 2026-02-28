@@ -13,7 +13,7 @@ import com.bylazar.configurables.annotations.Configurable;
 @Autonomous(name = "Blue 1", group = "Autonomous")
 public class BlueAllience1 extends LinearOpMode {
 
-    public static double TURN_SPEED = 1;
+    public static double TURN_SPEED = 0.6;
 
     public static double STRAFE_SPEED = 0.6;
 
@@ -33,8 +33,151 @@ public class BlueAllience1 extends LinearOpMode {
 
         waitForStart();
 
-            // Primeiro Ciclo de shooting
-            shooter.moveToDefault();
+
+
+        shooter.startChargingAuto(1200);
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                -61,
+                0,
+                0.6,
+                () -> {
+                    shooter.update();
+                }
+        );
+        while (opModeIsActive() && shooter.isBusy()) {
+            shooter.update();
+        }
+
+        shooter.startChargingAuto(900);
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                -140,
+                () -> {
+                    shooter.update();
+                }
+        );
+
+        while (opModeIsActive() && shooter.isBusy()) {
+            shooter.update();
+        }
+
+        auto.strafe(
+                STRAFE_SPEED,
+                -85,
+                0.7,
+                () -> {
+                    intake.starCollectBall();
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                80,
+                -140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                -79,
+                -140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.strafe(
+                STRAFE_SPEED,
+                120,
+                0.8,
+                () -> {
+
+                }
+        );
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                -160,
+                () -> {
+                    shooter.stop();
+                    intake.stopCollectBall();
+                }
+        );
+
+        shooter.moveToCharging();
+        sleep(300);
+        shooter.stop();
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                -140,
+                () -> {
+                }
+        );
+
+        shooter.startChargingAuto(900);
+
+        auto.strafe(
+                STRAFE_SPEED,
+                -200,
+                0.65,
+                () -> {
+                    intake.starCollectBall();
+                    shooter.update();
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                85,
+                -140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                -80,
+                -140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.strafe(
+                STRAFE_SPEED,
+                185,
+                0.6,
+                () -> {
+
+                }
+        );
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                -160,
+                () -> {
+                    shooter.stop();
+                    intake.stopCollectBall();
+                }
+        );
+
+        shooter.moveToCharging();
+        sleep(300);
+        shooter.stop();
+
+
+
+
+
+
+            /*shooter.moveToCharging();
             sleep(1000);
             shooter.moveToShoot();
             sleep(1000);
@@ -42,7 +185,7 @@ public class BlueAllience1 extends LinearOpMode {
 
             //Segundo ciclo de shooting
             auto.driveStraight(0.6, DISTANCE_MOVING_BACK, 0, 0.6);
-            shooter.moveToDefault();
+            shooter.moveToCharging();
             sleep(400);
             shooter.moveToShoot();
             sleep(400);
@@ -50,7 +193,7 @@ public class BlueAllience1 extends LinearOpMode {
             auto.turnToHeading(TURN_SPEED, 40, 1);
             auto.strafe(STRAFE_SPEED, 80, 0.7);
             intake.starCollectBall();
-            shooter.moveToDefault();
+            shooter.moveToCharging();
             auto.driveStraight(0.25, -70, 0, 0.25);
             shooter.stop();
             sleep(800);
@@ -59,7 +202,7 @@ public class BlueAllience1 extends LinearOpMode {
             auto.turnToHeading(TURN_SPEED, 1, 0.8);
             intake.stopCollectBall();
             auto.driveStraight(1, -40, 0, 0.8);
-            shooter.moveToDefault();
+            shooter.moveToCharging();
             sleep(1000);
             shooter.moveToShoot();
             sleep(1000);
@@ -70,7 +213,7 @@ public class BlueAllience1 extends LinearOpMode {
             auto.turnToHeading(TURN_SPEED, 41, 1);
             auto.strafe(STRAFE_SPEED, 155, 0.7);
             intake.starCollectBall();
-            shooter.moveToDefault();
+            shooter.moveToCharging();
             auto.driveStraight(0.2, -80, 0, 0.2);
             shooter.stop();
             sleep(800);
@@ -79,17 +222,17 @@ public class BlueAllience1 extends LinearOpMode {
             auto.turnToHeading(TURN_SPEED, 2, 1);
             intake.stopCollectBall();
             auto.driveStraight(1, -50, 0, 0.8);
-            shooter.moveToDefault();
+            shooter.moveToCharging();
             sleep(1000);
             shooter.moveToShoot();
             sleep(1000);
             shooter.stop();
             auto.strafe(0.6, 180, 0.8);
-
-
+*/
             telemetry.addData("Path", "Complete");
             telemetry.update();
-            sleep(1000);  // Pause to display last telemetry message.
+            sleep(1000);
+
 
 
         }

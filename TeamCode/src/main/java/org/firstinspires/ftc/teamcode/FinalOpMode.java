@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Thread.sleep;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -45,6 +47,7 @@ public class FinalOpMode extends OpMode {
 
 
 
+
     @Override
     public void init () {
 
@@ -54,7 +57,6 @@ public class FinalOpMode extends OpMode {
    shooter = new Shooter(hardwareMap);
 
     }
-
     boolean previousXButtonValue = false;
     boolean previousAButtonValue = false;
     boolean previousYButtonValue = false;
@@ -66,6 +68,9 @@ public class FinalOpMode extends OpMode {
     boolean previousBButtonValue2 = false;
 
     boolean isPreviousYButtonValue = false;
+
+    boolean previousRightBumper = false;
+    boolean previousLeftBumper = false;
 
 
 
@@ -140,10 +145,8 @@ public class FinalOpMode extends OpMode {
         /*if(buttonB && !isPreviousBButtonValue) {
            robotState = previousRobotState;
         }*/
-        if (triggerRight){
-            shooter.moveToShoot();
-        }
-        else if (triggerLeft){
+
+        if (triggerRight) {
             shooter.moveToCharging();
         }
         else {

@@ -28,14 +28,14 @@ public class RedAllience1 extends LinearOpMode {
 
         waitForStart();
 
-        // Primeiro Ciclo de shooting
+        /* Primeiro Ciclo de shooting
         shooter.moveToShoot();
         sleep(1000);
 
         //Segundo ciclo de shooting
         shooter.stop();
         auto.driveStraight(0.6, 70, 0, 0.6);
-        shooter.moveToDefault();
+       shooter.moveToCharging();
         sleep(1000);
         shooter.moveToShoot();
         sleep(1000);
@@ -43,7 +43,7 @@ public class RedAllience1 extends LinearOpMode {
         auto.turnToHeading(TURN_SPEED, -42, 1);
         auto.strafe(STRAFE_SPEED, -70, 0.6);
         intake.starCollectBall();
-        shooter.moveToDefault();
+        shooter.moveToCharging();
         auto.driveStraight(0.25, -70, 0, 0.25);
         shooter.stop();
         sleep(800);
@@ -52,7 +52,7 @@ public class RedAllience1 extends LinearOpMode {
         auto.turnToHeading(TURN_SPEED, -1, 0.8);
         auto.driveStraight(1, -30, 0, 0.8);
         intake.stopCollectBall();
-        shooter.moveToDefault();
+        shooter.moveToCharging();
         sleep(1000);
         shooter.moveToShoot();
         sleep(1000);
@@ -64,7 +64,7 @@ public class RedAllience1 extends LinearOpMode {
         auto.turnToHeading(TURN_SPEED, -43, 1);
         auto.strafe(STRAFE_SPEED, -162, 1);
         intake.starCollectBall();
-        shooter.moveToDefault();
+       shooter.moveToCharging();
         auto.driveStraight(0.2, -75, 0, 0.2);
         shooter.stop();
         sleep(800);
@@ -73,7 +73,7 @@ public class RedAllience1 extends LinearOpMode {
         auto.strafe(1, 210, 1);
         auto.turnToHeading(TURN_SPEED, -3, 1);
         auto.driveStraight(1, -51, 0, 0.8);
-        shooter.moveToDefault();
+        shooter.moveToCharging();
         sleep(1000);
         shooter.moveToShoot();
         sleep(1000);
@@ -83,7 +83,7 @@ public class RedAllience1 extends LinearOpMode {
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
-        sleep(1000);  // Pause to display last telemetry message.
+        sleep(1000);  // Pause to display last telemetry message.*/
 
 
     }
