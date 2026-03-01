@@ -28,62 +28,132 @@ public class RedAllience1 extends LinearOpMode {
 
         waitForStart();
 
-        /* Primeiro Ciclo de shooting
-        shooter.moveToShoot();
-        sleep(1000);
+        // SECOND CYCLE FOR THE FIRST 3 BALLS
 
-        //Segundo ciclo de shooting
-        shooter.stop();
-        auto.driveStraight(0.6, 70, 0, 0.6);
-       shooter.moveToCharging();
-        sleep(1000);
-        shooter.moveToShoot();
-        sleep(1000);
-        shooter.stop();
-        auto.turnToHeading(TURN_SPEED, -42, 1);
-        auto.strafe(STRAFE_SPEED, -70, 0.6);
-        intake.starCollectBall();
+        shooter.startChargingAuto(900);
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                140,
+                () -> {
+                    shooter.update();
+                }
+        );
+
+        while (opModeIsActive() && shooter.isBusy()) {
+            shooter.update();
+        }
+
+        auto.strafe(
+                STRAFE_SPEED,
+                85,
+                0.7,
+                () -> {
+                    intake.starCollectBall(); // strafe for take balls in the first cycle
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                80,
+                140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                -79,
+                140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.strafe(
+                STRAFE_SPEED,
+                -120,
+                0.8,//STRAFE FOR SHOOT THE SECOND CYCLE
+                () -> {
+
+                }
+        );
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                160,
+                () -> {
+                    shooter.stop();
+                    intake.stopCollectBall();
+                }
+        );
+
         shooter.moveToCharging();
-        auto.driveStraight(0.25, -70, 0, 0.25);
+        sleep(300);
         shooter.stop();
-        sleep(800);
-        auto.driveStraight(0.2, 30, 0, 0.2);
-        auto.strafe(0.6, 110, 1);
-        auto.turnToHeading(TURN_SPEED, -1, 0.8);
-        auto.driveStraight(1, -30, 0, 0.8);
-        intake.stopCollectBall();
+
+
+        // THIRD CYCLE FOR MORE 3 BALL
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                140,
+                () -> {
+                }
+        );
+
+        shooter.startChargingAuto(900);
+
+        auto.strafe(
+                STRAFE_SPEED,
+                200,
+                0.65,
+                () -> {
+                    intake.starCollectBall();
+                    shooter.update();
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                85,
+                140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.driveStraight(
+                STRAFE_SPEED,
+                -80,
+                140,
+                0.6,
+                () -> {
+                }
+        );
+
+        auto.strafe(
+                STRAFE_SPEED,
+                -185,
+                0.6,
+                () -> {
+
+                }
+        );
+
+        auto.turnToHeading(
+                TURN_SPEED,
+                160,
+                () -> {
+                    shooter.stop();
+                    intake.stopCollectBall();
+                }
+        );
+
         shooter.moveToCharging();
-        sleep(1000);
-        shooter.moveToShoot();
-        sleep(1000);
+        sleep(300);
         shooter.stop();
-
-        //Terceiro ciclo de shooting
-
-        auto.driveStraight(0.6, 60, 0, 0.6);
-        auto.turnToHeading(TURN_SPEED, -43, 1);
-        auto.strafe(STRAFE_SPEED, -162, 1);
-        intake.starCollectBall();
-       shooter.moveToCharging();
-        auto.driveStraight(0.2, -75, 0, 0.2);
-        shooter.stop();
-        sleep(800);
-        intake.stopCollectBall();
-        auto.driveStraight(0.2, 10, 0, 0.2);
-        auto.strafe(1, 210, 1);
-        auto.turnToHeading(TURN_SPEED, -3, 1);
-        auto.driveStraight(1, -51, 0, 0.8);
-        shooter.moveToCharging();
-        sleep(1000);
-        shooter.moveToShoot();
-        sleep(1000);
-        shooter.stop();
-
-
-
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
-        sleep(1000);  // Pause to display last telemetry message.*/
 
 
     }
