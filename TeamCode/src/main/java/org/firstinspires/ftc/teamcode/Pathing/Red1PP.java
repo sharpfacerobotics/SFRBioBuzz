@@ -67,31 +67,31 @@ public class Red1PP extends OpMode {
 
     boolean actionStarted = false;
 
-    private final Pose startPose = new Pose(122.74285714285713,126.62857142857143,Math.toRadians(42));
+    private final Pose startPose = new Pose(122.74285714285713,126.62857142857143,Math.toRadians(40));
 
-    private final Pose shootingPreSet = new Pose(104.22857142857143,108.68571428571427,Math.toRadians(42));
+    private final Pose shootingPreSet = new Pose(102.17142857142858,105.68571428571427,Math.toRadians(40));
 
-    private final Pose firstSequenceBallPos =  new Pose (103,90.22857142857141,Math.toRadians(3));
+    private final Pose firstSequenceBallPos =  new Pose (100,90.22857142857141,Math.toRadians(3));
 
     private final Pose forwardToCollect =  new Pose (120.34285714285716,90.22857142857141,Math.toRadians(3));
     private final Pose openGate =  new Pose (133.85714285714286,80.42857142857143,Math.toRadians(110));
 
-    private final Pose shootingFirstSequencePos =  new Pose (104.22857142857143,108.68571428571427,Math.toRadians(42));
+    private final Pose shootingFirstSequencePos =  new Pose (102.17142857142858,105.68571428571427,Math.toRadians(40));
 
     private final Pose secondSequenceBallPos =  new Pose (103,67,Math.toRadians(3));
 
-    private final Pose forwardToCollectSecondSequence =  new Pose (130.54285714285714,65,Math.toRadians(3));
+    private final Pose forwardToCollectSecondSequence =  new Pose (133,65,Math.toRadians(3));
 
     private final Pose backwardToCollectSecondSequence =  new Pose (106.97142857142858,67,Math.toRadians(3));
 
 
-    private final Pose shootingSecondSequencePose =  new Pose (104.22857142857143,108.68571428571427,Math.toRadians(42));
+    private final Pose shootingSecondSequencePose =  new Pose (102.17142857142858,105.68571428571427,Math.toRadians(40));
 
     private final Pose thirdSequenceBallPos =  new Pose (103,42.485714285714295,Math.toRadians(1));
 
     private final Pose forwardThirdSequenceBallPos =  new Pose (130,42.485714285714295,Math.toRadians(1));
 
-    private final Pose shootingThirdSequenceBall =  new Pose (104.22857142857143,108.68571428571427,Math.toRadians(42));
+    private final Pose shootingThirdSequenceBall =  new Pose (104.22857142857143,105.68571428571427,Math.toRadians(40));
 
 
 
@@ -146,7 +146,7 @@ public class Red1PP extends OpMode {
 
         driveCollectSecondSequence = follower.pathBuilder()
                 .addPath(new BezierLine(shootingFirstSequencePos,secondSequenceBallPos))
-                .setLinearHeadingInterpolation(forwardToCollect.getHeading(), secondSequenceBallPos.getHeading())
+                .setLinearHeadingInterpolation(shootingFirstSequencePos.getHeading(), secondSequenceBallPos.getHeading())
                 .build();
 
         driveBackwardSequence = follower.pathBuilder()
@@ -211,7 +211,7 @@ public class Red1PP extends OpMode {
                 }
 
                 if(actionStarted && !follower.isBusy()){
-                    shooter.startChargingAuto(950);
+                    shooter.startChargingAuto(800);
                     intake.starCollectBall();
                     actionStarted = false;
                     setPathState(PathState.FORWARD_FIRST_SEQUENCE);
@@ -224,6 +224,7 @@ public class Red1PP extends OpMode {
             case FORWARD_FIRST_SEQUENCE:
 
                 if(!actionStarted){
+                    follower.setMaxPower(0.6);
                     follower.followPath(driveCollectFirstSequence,true);
                     actionStarted = true;
                 }
@@ -235,6 +236,7 @@ public class Red1PP extends OpMode {
                 }
                 break;
             case OPENGATE:
+                follower.setMaxPower(1);
                 if (!actionStarted){
                     follower.followPath(driveOpenGate,true);
                     pathTimer.resetTimer();
@@ -249,20 +251,20 @@ public class Red1PP extends OpMode {
                 }
                 break;
             case SHOOTING_FIRST_SEQUENCE_POS:
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveShootPos2,true);
                     actionStarted = true;
                 }
 
                 if(actionStarted && !follower.isBusy()){
-                    intake.stopCollectBall();
                     actionStarted = false;
                     setPathState(PathState.SHOOTING_FIRST_SEQUENCE);
                 }
                 break;
 
             case SHOOTING_FIRST_SEQUENCE:
-
+                follower.setMaxPower(1);
                 if(!follower.isBusy() && !actionStarted){
                     shooter.startChargingAuto(500);
                     actionStarted = true;
@@ -281,13 +283,13 @@ public class Red1PP extends OpMode {
 
             // SECOND SEQUENCE OF BALL
             case COLLECT_THE_SECOND_SEQUENCE_BALL:
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveCollectSecondSequence,true);
                     actionStarted = true;
                 }
                 if(actionStarted && !follower.isBusy()){
-                    intake.starCollectBall();
-                    shooter.startChargingAuto(850);
+                    shooter.startChargingAuto(750);
                     actionStarted = false;
                     setPathState(PathState.FORWARD_SECOND_SEQUENCE);
                 }
@@ -295,6 +297,7 @@ public class Red1PP extends OpMode {
 
             case FORWARD_SECOND_SEQUENCE:
                 if(!actionStarted){
+                    follower.setMaxPower(0.6);
                     follower.followPath(driveCollectingSecondSequence,true);
                     actionStarted = true;
                 }
@@ -308,6 +311,7 @@ public class Red1PP extends OpMode {
             case BACKWARD:
 
                 if(!actionStarted){
+                    follower.setMaxPower(1);
                     follower.followPath(driveBackwardSequence,true);
                     actionStarted = true;
                 }
@@ -318,6 +322,7 @@ public class Red1PP extends OpMode {
                 break;
 
             case SHOOTING_SECOND_SEQUENCE_BALL_POS:
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveShootingSecondSequence,true);
                     actionStarted = true;
@@ -329,7 +334,7 @@ public class Red1PP extends OpMode {
                 }
                 break;
             case SHOOTING_SECOND_SEQUENCE_BALL:
-
+                follower.setMaxPower(1);
                 if(!follower.isBusy() && !actionStarted){
                     shooter.startChargingAuto(300);
                     actionStarted = true;
@@ -346,13 +351,14 @@ public class Red1PP extends OpMode {
             // THIRD SEQUENCE BALL
 
             case COLLECT_THE_THIRD_SEQUENCE_BALL:
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveCollectThirdSequence,true);
                     actionStarted = true;
                 }
                 if(actionStarted && !follower.isBusy()){
                     intake.starCollectBall();
-                    shooter.startChargingAuto(900);
+                    shooter.startChargingAuto(750);
                     actionStarted = false;
                     setPathState(PathState.FORWARD_THIRD_SEQUENCE);
                 }
@@ -360,6 +366,7 @@ public class Red1PP extends OpMode {
 
             case FORWARD_THIRD_SEQUENCE:
                 if(!actionStarted){
+                    follower.setMaxPower(0.6);
                     follower.followPath(driveForwardThirdSequence,true);
                     actionStarted = true;
                 }
@@ -371,6 +378,7 @@ public class Red1PP extends OpMode {
                 break;
 
             case SHOOTING_THIRD_SEQUENCE_BALL_POS:
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveShootingThirdSequence,true);
                     actionStarted = true;
@@ -382,9 +390,8 @@ public class Red1PP extends OpMode {
                 }
                 break;
             case SHOOTING_THIRD_SEQUENCE_BALL:
-
+                follower.setMaxPower(1);
                 if(!follower.isBusy() && !actionStarted){
-
                     shooter.startChargingAuto(350);
                     actionStarted = true;
                 }
@@ -410,6 +417,9 @@ public class Red1PP extends OpMode {
         }
 
     }
+
+
+
 
     public void setPathState(PathState newState){
         pathState = newState;
