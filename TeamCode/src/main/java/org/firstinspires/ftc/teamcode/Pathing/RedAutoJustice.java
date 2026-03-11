@@ -16,8 +16,8 @@ import org.firstinspires.ftc.teamcode.states.Intake;
 import org.firstinspires.ftc.teamcode.states.Shooter;
 
 @Configurable
-@Autonomous(name = "Blue 1 PedroPathing", group = "Autonomous")
-public class Blue1PP extends OpMode {
+@Autonomous(name = "Red1 zona menor", group = "Autonomous")
+public class RedAutoJustice extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, opModeTimer;
@@ -58,7 +58,7 @@ public class Blue1PP extends OpMode {
 
         SHOOTING_THIRD_SEQUENCE_BALL,
 
-        OUTLINERP,
+        OUTLINE,
 
         STOP,
 
@@ -69,33 +69,38 @@ public class Blue1PP extends OpMode {
 
     boolean actionStarted = false;
 
-    private final Pose startPose = new Pose(16.685714285714287,130.28571428571428,Math.toRadians(140));
 
-    private final Pose shootingPreSet = new Pose(37.20000000000001,109.42857142857142,Math.toRadians(140));
+    private final Pose startPose = new Pose(66.62857142857142,
+            7.399999999999995,
+            Math.toRadians(90));
 
-    private final Pose firstSequenceBallPos =  new Pose (35.42857142857142,92.6285714285714,Math.toRadians(179));
+    private final Pose shootingPreSet = new Pose(14.771428571428551,
+            11.628571428571423,
+            Math.toRadians(90));
 
-    private final Pose forwardToCollect =  new Pose (17.576,89.71428571428572,Math.toRadians(179));
-    private final Pose openGate =  new Pose (11.256,77.25714285714284,Math.toRadians(80));
+    private final Pose firstSequenceBallPos =  new Pose (100,92.22857142857141,Math.toRadians(3));
 
-    private final Pose shootingFirstSequencePos =  new Pose (36.742857142857154,109.1142857142857,Math.toRadians(140));
+    private final Pose forwardToCollect =  new Pose (124.34285714285716,90.22857142857141,Math.toRadians(3));
+    private final Pose openGate =  new Pose (125.85714285714286,77.42857142857143,Math.toRadians(3));
 
-    private final Pose secondSequenceBallPos =  new Pose (36.085714285714296,68.22857142857141,Math.toRadians(179));
+    private final Pose shootingFirstSequencePos =  new Pose (100.17142857142858,105.68571428571427,Math.toRadians(40));
 
-    private final Pose forwardToCollectSecondSequence =  new Pose (10.371428571428564,68.74285714285712,Math.toRadians(173));
+    private final Pose secondSequenceBallPos =  new Pose (100,70,Math.toRadians(3));
 
-    private final Pose backwardToCollectSecondSequence =  new Pose (40.428571428571438,68.74285714285712,Math.toRadians(173));
+    private final Pose forwardToCollectSecondSequence =  new Pose (125,63,Math.toRadians(3));
 
+    private final Pose backwardToCollectSecondSequence =  new Pose (110.97142857142858,67,Math.toRadians(3));
 
-    private final Pose shootingSecondSequencePose =  new Pose (36.742857142857154,109.1142857142857,Math.toRadians(140));
+    private final Pose shootingSecondSequencePose =  new Pose (100.17142857142858,105.68571428571427,Math.toRadians(40));
 
-    private final Pose thirdSequenceBallPos =  new Pose (34.085714285714296,48.342857142857156,Math.toRadians(175));
+    private final Pose thirdSequenceBallPos =  new Pose (103,42.485714285714295,Math.toRadians(1));
 
-    private final Pose forwardThirdSequenceBallPos =  new Pose (8.771428571428574,44.11428571428572,Math.toRadians(179));
+    private final Pose forwardThirdSequenceBallPos =  new Pose (130,42.485714285714295,Math.toRadians(1));
 
-    private final Pose shootingThirdSequenceBall =  new Pose (36.742857142857154,109.1142857142857,Math.toRadians(140));
+    private final Pose shootingThirdSequenceBall =  new Pose (100.22857142857143,105.68571428571427,Math.toRadians(40));
 
-    private final Pose outlineRP =  new Pose (52.114285714285714,130.65714285714284,Math.toRadians(179));
+    private final Pose outlineRP =  new Pose (93.4857142857143,128.68571428571427,Math.toRadians(0));
+
 
 
 
@@ -109,13 +114,12 @@ public class Blue1PP extends OpMode {
             driveShootingSecondSequence,
             driveBackwardSequence,
 
-            driveCollectThirdSequence,
+    driveCollectThirdSequence,
 
-            driveForwardThirdSequence,
+    driveForwardThirdSequence,
 
-            driveShootingThirdSequence,
-
-    driveOutLineRP
+    driveShootingThirdSequence,
+            driveOutLineRp
                     ;
 
 
@@ -152,7 +156,7 @@ public class Blue1PP extends OpMode {
 
         driveCollectSecondSequence = follower.pathBuilder()
                 .addPath(new BezierLine(shootingFirstSequencePos,secondSequenceBallPos))
-                .setLinearHeadingInterpolation(forwardToCollect.getHeading(), secondSequenceBallPos.getHeading())
+                .setLinearHeadingInterpolation(shootingFirstSequencePos.getHeading(), secondSequenceBallPos.getHeading())
                 .build();
 
         driveBackwardSequence = follower.pathBuilder()
@@ -182,7 +186,7 @@ public class Blue1PP extends OpMode {
                 .setLinearHeadingInterpolation(forwardThirdSequenceBallPos.getHeading(), shootingThirdSequenceBall.getHeading())
                 .build();
 
-        driveOutLineRP = follower.pathBuilder()
+        driveOutLineRp = follower.pathBuilder()
                 .addPath((new BezierLine(shootingThirdSequenceBall,outlineRP)))
                 .setLinearHeadingInterpolation(shootingThirdSequenceBall.getHeading(), outlineRP.getHeading())
                 .build();
@@ -196,36 +200,28 @@ public class Blue1PP extends OpMode {
 
             // PRE SET SHOOTING
             case START_POSITIONPOS_SHOOTPOS:
-                follower.setMaxPower(1);
                 follower.followPath(driveStartPosShoot,true);
                 pathState = PathState.SHOOTING;
                 break;
             case SHOOTING:
-                follower.setMaxPower(1);
-                if(!follower.isBusy() && !actionStarted){
-                shooter.startChargingAuto(1200);
-                actionStarted = true;
-            }
-
-            if(actionStarted && !shooter.isBusy()) {
-                actionStarted = false;
-                setPathState(PathState.COLLECT_THE_FIRST_SEQUENCE_BALL);
-            }
-            break;
+                if(!follower.isBusy()) {
+                    setPathState(PathState.STOP);
+                }
+                break;
 
 
-
+/*
 
 
             case COLLECT_THE_FIRST_SEQUENCE_BALL:
-                follower.setMaxPower(1);
+
                 if(!actionStarted){
                     follower.followPath(driveShootPosCollect1Ball,true);
                     actionStarted = true;
                 }
 
                 if(actionStarted && !follower.isBusy()){
-                    shooter.startChargingAuto(800);
+                    shooter.startChargingAuto(750);
                     intake.starCollectBall();
                     actionStarted = false;
                     setPathState(PathState.FORWARD_FIRST_SEQUENCE);
@@ -234,12 +230,11 @@ public class Blue1PP extends OpMode {
                 break;
 
 
-
-                //FIRST SEQUENCE OF BALLS
+            //FIRST SEQUENCE OF BALLS
             case FORWARD_FIRST_SEQUENCE:
-                follower.setMaxPower(0.5);
 
                 if(!actionStarted){
+                    follower.setMaxPower(0.5);
                     follower.followPath(driveCollectFirstSequence,true);
                     actionStarted = true;
                 }
@@ -251,7 +246,7 @@ public class Blue1PP extends OpMode {
                 }
                 break;
             case SHOOTING_FIRST_SEQUENCE_POS:
-                follower.setMaxPower(0.8);
+                follower.setMaxPower(1);
                 if(!actionStarted){
                     follower.followPath(driveShootPos2,true);
                     actionStarted = true;
@@ -277,19 +272,18 @@ public class Blue1PP extends OpMode {
                         setPathState(PathState.COLLECT_THE_SECOND_SEQUENCE_BALL);
                     }
                 }
-                    break;
+                break;
 
 
-                // SECOND SEQUENCE OF BALL
+
+            // SECOND SEQUENCE OF BALL
             case COLLECT_THE_SECOND_SEQUENCE_BALL:
                 follower.setMaxPower(1);
-
                 if(!actionStarted){
                     follower.followPath(driveCollectSecondSequence,true);
                     actionStarted = true;
                 }
                 if(actionStarted && !follower.isBusy()){
-                    intake.starCollectBall();
                     shooter.startChargingAuto(750);
                     actionStarted = false;
                     setPathState(PathState.FORWARD_SECOND_SEQUENCE);
@@ -297,9 +291,8 @@ public class Blue1PP extends OpMode {
                 break;
 
             case FORWARD_SECOND_SEQUENCE:
-                follower.setMaxPower(0.5);
-
                 if(!actionStarted){
+                    follower.setMaxPower(0.5);
                     follower.followPath(driveCollectingSecondSequence,true);
                     actionStarted = true;
                 }
@@ -311,9 +304,9 @@ public class Blue1PP extends OpMode {
                 break;
 
             case BACKWARD:
-                follower.setMaxPower(1);
 
                 if(!actionStarted){
+                    follower.setMaxPower(1);
                     follower.followPath(driveBackwardSequence,true);
                     actionStarted = true;
                 }
@@ -332,7 +325,7 @@ public class Blue1PP extends OpMode {
 
                 if(actionStarted && !follower.isBusy()){
 
-                    if(pathTimer.getElapsedTimeSeconds() > 3) {
+                    if(pathTimer.getElapsedTimeSeconds() > 4.5) {
                         actionStarted = false;
                         setPathState(PathState.SHOOTING_SECOND_SEQUENCE_BALL_POS);
                     }
@@ -354,7 +347,7 @@ public class Blue1PP extends OpMode {
             case SHOOTING_SECOND_SEQUENCE_BALL:
                 follower.setMaxPower(1);
                 if(!follower.isBusy() && !actionStarted){
-                    shooter.startChargingAuto(350);
+                    shooter.startChargingAuto(300);
                     actionStarted = true;
                 }
 
@@ -365,28 +358,23 @@ public class Blue1PP extends OpMode {
 
                 break;
 
-
-                // THIRD SEQUENCE BALL
-
             case COLLECT_THE_THIRD_SEQUENCE_BALL:
                 follower.setMaxPower(1);
-
                 if(!actionStarted){
                     follower.followPath(driveCollectThirdSequence,true);
                     actionStarted = true;
                 }
                 if(actionStarted && !follower.isBusy()){
                     intake.starCollectBall();
-                    shooter.startChargingAuto(800);
+                    shooter.startChargingAuto(750);
                     actionStarted = false;
                     setPathState(PathState.FORWARD_THIRD_SEQUENCE);
                 }
                 break;
 
             case FORWARD_THIRD_SEQUENCE:
-                follower.setMaxPower(0.5);
-
                 if(!actionStarted){
+                    follower.setMaxPower(0.5);
                     follower.followPath(driveForwardThirdSequence,true);
                     actionStarted = true;
                 }
@@ -399,7 +387,6 @@ public class Blue1PP extends OpMode {
 
             case SHOOTING_THIRD_SEQUENCE_BALL_POS:
                 follower.setMaxPower(1);
-
                 if(!actionStarted){
                     follower.followPath(driveShootingThirdSequence,true);
                     actionStarted = true;
@@ -411,7 +398,7 @@ public class Blue1PP extends OpMode {
                 }
                 break;
             case SHOOTING_THIRD_SEQUENCE_BALL:
-
+                follower.setMaxPower(1);
                 if(!follower.isBusy() && !actionStarted){
                     shooter.startChargingAuto(350);
                     actionStarted = true;
@@ -419,25 +406,28 @@ public class Blue1PP extends OpMode {
 
                 if(actionStarted && !shooter.isBusy()) {
                     actionStarted = false;
-                    setPathState(PathState.OUTLINERP);
+                    setPathState(PathState.OUTLINE);
                 }
 
                 break;
 
-            case OUTLINERP:
-
+            case OUTLINE:
+                follower.setMaxPower(1);
                 if(!actionStarted){
-                    follower.followPath(driveOutLineRP,true);
+                    follower.followPath(driveOutLineRp,true);
                     actionStarted = true;
                 }
 
                 if(actionStarted && !follower.isBusy()) {
                     actionStarted = false;
-
                     setPathState(PathState.STOP);
                 }
 
                 break;
+
+                */
+
+
 
             case STOP:
                 follower.breakFollowing(); // Para qualquer path ativo
@@ -446,14 +436,21 @@ public class Blue1PP extends OpMode {
                 break;
 
 
-        }
+
+
+
 
         }
 
-        public void setPathState(PathState newState){
+    }
+
+
+
+
+    public void setPathState(PathState newState){
         pathState = newState;
         pathTimer = new Timer();
-        }
+    }
 
 
 
@@ -481,16 +478,16 @@ public class Blue1PP extends OpMode {
 
     @Override
     public void loop(){
-    follower.update();
-    shooter.update();
-    statePathUpdate();
+        follower.update();
+        shooter.update();
+        statePathUpdate();
 
 
         telemetry.addData("pathState",pathState.toString());
-    telemetry.addData("X",follower.getPose().getX());
-    telemetry.addData("y",follower.getPose().getY());
-    telemetry.addData("heading",follower.getPose().getHeading());
-    telemetry.addData("Path Time", pathTimer.getElapsedTimeSeconds());
+        telemetry.addData("X",follower.getPose().getX());
+        telemetry.addData("y",follower.getPose().getY());
+        telemetry.addData("heading",follower.getPose().getHeading());
+        telemetry.addData("Path Time", pathTimer.getElapsedTimeSeconds());
 
 
     }
