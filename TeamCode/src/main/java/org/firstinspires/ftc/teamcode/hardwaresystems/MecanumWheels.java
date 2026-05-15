@@ -125,7 +125,16 @@ public class MecanumWheels extends Wheels {
 
         /*
          * The code below should be correct. If for some reason the robot is moving in the wrong direction, reverse
-         * the direction of the motors in {@link MecanumWheels#MecanumWheels(MotorSet, WheelDistances, ticksPerInch)}
+         * the direction of the motors in {@link MecanumWheels#MecanumWheels(MotorSet, WheelDistances, ticksPerInch)}.
+         *
+         * As a last resort, try
+         * ```
+         * double frontLeftPower = -theta + x + y;
+         * double frontRightPower = theta + x + y;
+         * double backLeftPower = -theta - x + y;
+         * double backRightPower = theta - x + y;
+         * ```
+         * It worked in a previous season, but it probably is not a good idea.
          */
         double frontLeftPower = y + x + theta;
         double frontRightPower = y - x - theta;
