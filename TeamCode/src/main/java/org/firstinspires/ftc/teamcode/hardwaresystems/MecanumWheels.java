@@ -43,8 +43,12 @@ public class MecanumWheels extends Wheels {
         private final DcMotor BACK_LEFT_MOTOR;
         private final DcMotor BACK_RIGHT_MOTOR;
 
-        public MotorSet(DcMotor frontLeftMotor, DcMotor frontRightMotor,
-                        DcMotor backLeftMotor, DcMotor backRightMotor) {
+        public MotorSet(
+            DcMotor frontLeftMotor,
+            DcMotor frontRightMotor,
+            DcMotor backLeftMotor,
+            DcMotor backRightMotor
+        ) {
             MOTORS = new HashSet<>();
             MOTORS.add(frontLeftMotor);
             MOTORS.add(frontRightMotor);
@@ -67,8 +71,7 @@ public class MecanumWheels extends Wheels {
         }
     }
 
-    public MecanumWheels(MotorSet motorSet, WheelDistances wheelDistances,
-                         double ticksPerInch) {
+    public MecanumWheels(MotorSet motorSet, WheelDistances wheelDistances, double ticksPerInch) {
         super(motorSet.MOTORS, wheelDistances, ticksPerInch);
 
         this.FRONT_LEFT_MOTOR = motorSet.FRONT_LEFT_MOTOR;

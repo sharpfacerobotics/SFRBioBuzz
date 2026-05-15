@@ -17,8 +17,7 @@ public abstract class Arm {
      */
     public Arm(Set<DcMotor> motors) {
         MOTORS = motors;
-        // The arm motors will attempt to resist external forces　(e.g.,
-        // gravity).
+        // The arm motors will attempt to resist external forces　(e.g., gravity).
         for (DcMotor motor : MOTORS) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }

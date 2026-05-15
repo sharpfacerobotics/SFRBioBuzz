@@ -22,9 +22,12 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     private static final double EJECT_POWER = -1.0;
     /**
-     * The servo that spins the intake.
+     * The left servo that spins the intake.
      */
     private final CRServo LEFT_INTAKE_SERVO;
+    /**
+     * The right servo that spins the intake.
+     */
     private final CRServo RIGHT_INTAKE_SERVO;
 
     /**
@@ -32,28 +35,32 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     private final DigitalChannel INTAKE_SENSOR;
 
-    public DoubleServoIntakeClaw(CRServo leftIntakeServo,
-                                 CRServo rightIntakeServo) {
+    public DoubleServoIntakeClaw(CRServo leftIntakeServo, CRServo rightIntakeServo) {
         this(null, null, null, leftIntakeServo, rightIntakeServo, null);
     }
 
-    public DoubleServoIntakeClaw(CRServo leftIntakeServo,
-                                 CRServo rightIntakeServo,
-                                 DigitalChannel intakeSensor) {
+    public DoubleServoIntakeClaw(CRServo leftIntakeServo, CRServo rightIntakeServo, DigitalChannel intakeSensor) {
         this(null, null, null, leftIntakeServo, rightIntakeServo, intakeSensor);
     }
 
-    public DoubleServoIntakeClaw(Servo rollServo, Servo pitchServo,
-                                 Servo yawServo, CRServo leftIntakeServo,
-                                 CRServo rightIntakeServo) {
-        this(rollServo, pitchServo, yawServo, leftIntakeServo,
-            rightIntakeServo, null);
+    public DoubleServoIntakeClaw(
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
+        CRServo leftIntakeServo,
+        CRServo rightIntakeServo
+    ) {
+        this(rollServo, pitchServo, yawServo, leftIntakeServo, rightIntakeServo, null);
     }
 
-    public DoubleServoIntakeClaw(Servo rollServo, Servo pitchServo,
-                                 Servo yawServo, CRServo leftIntakeServo,
-                                 CRServo rightIntakeServo,
-                                 DigitalChannel intakeSensor) {
+    public DoubleServoIntakeClaw(
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
+        CRServo leftIntakeServo,
+        CRServo rightIntakeServo,
+        DigitalChannel intakeSensor
+    ) {
         super(rollServo, pitchServo, yawServo);
 
         super.ROLL_SERVO.setDirection(Servo.Direction.REVERSE);
