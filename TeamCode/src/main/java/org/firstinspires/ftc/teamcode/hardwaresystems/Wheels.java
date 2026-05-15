@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represent any possible system of wheels on the robot.
@@ -13,9 +14,9 @@ public abstract class Wheels {
      */
     protected final static double MOTOR_POWER = 1.0;
     /**
-     * A HashSet of all the motors included by the wheel system.
+     * A {@link Set} of all the motors included by the wheel system.
      */
-    protected final HashSet<DcMotor> MOTORS;
+    protected final Set<DcMotor> MOTORS;
     /**
      * The distance between the left and right wheels, measured in inches from their centers.
      */
@@ -86,9 +87,9 @@ public abstract class Wheels {
     /**
      * Get all the {@link DcMotor}s that are used by this wheel system.
      *
-     * @return A {@link HashSet} that contains every {@link DcMotor} included by this wheel system.
+     * @return A {@link Set} that contains every {@link DcMotor} included by this wheel system.
      */
-    public HashSet<DcMotor> getMotors() {
+    public Set<DcMotor> getMotors() {
         return MOTORS;
     }
 

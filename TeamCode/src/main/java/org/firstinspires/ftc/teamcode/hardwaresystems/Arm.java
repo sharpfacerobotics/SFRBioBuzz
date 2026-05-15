@@ -27,9 +27,9 @@ public abstract class Arm {
     /**
      * Get all the {@link DcMotor}s that are included in this arm system.
      *
-     * @return A {@link HashSet} that contains every DcMotor included in this arm system.
+     * @return A {@link Set} that contains every DcMotor included in this arm system.
      */
-    public HashSet<DcMotor> getMotors() {
+    public Set<DcMotor> getMotors() {
         return MOTORS;
     }
 }

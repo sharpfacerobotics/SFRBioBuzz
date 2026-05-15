@@ -6,10 +6,11 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Claw with one continuous rotation servo to intake game elements.
- *
+ * <p>
  * See {@link DoubleServoIntakeClaw} for the double servo version.
  */
 public class SingleServoIntakeClaw extends Claw {
@@ -52,7 +53,7 @@ public class SingleServoIntakeClaw extends Claw {
         return EJECT_POWER;
     }
 
-    public HashSet<CRServo> getCrServos() {
+    public Set<CRServo> getCrServos() {
         return new HashSet<>(Collections.singletonList(INTAKE_SERVO));
     }
 
