@@ -89,6 +89,8 @@ public class MecanumWheels extends Wheels {
          * Set the directions of the motors.
          * The right and left motors run in opposite directions of each other.
          * Positive is forward for all motors.
+         *
+         * In some cases, it may be necessary to reverse the signs.
          */
         FRONT_LEFT_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
         FRONT_RIGHT_MOTOR.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -122,22 +124,19 @@ public class MecanumWheels extends Wheels {
         }
 
         /*
+         * The code below should be correct. If for some reason the robot is moving in the wrong direction, reverse
+         * the direction of the motors in {@link MecanumWheels#MecanumWheels(MotorSet, WheelDistances, ticksPerInch)}
+         */
         double frontLeftPower = y + x + theta;
         double frontRightPower = y - x - theta;
         double backLeftPower = y - x + theta;
         double backRightPower = y + x - theta;
-         */
-        double frontLeftPower = -theta + x + y;
-        double frontRightPower = theta + x + y;
-        double backLeftPower = -theta - x + y;
-        double backRightPower = theta - x + y;
 
-        // Scale the motor powers to be within +/- 1.0. Use the absolute
-        // maximum magnitude rather than the algebraic maximum to ensure all
-        // motors
-        // are scaled properly. For example, a power set of [-0.8, 0.2, 0.5,
-        // 0.4]
-        // should be scaled by 0.8, not 0.5.
+        /*
+         * Scale the motor powers to be within +/- 1.0. Use the absolute maximum magnitude rather than the algebraic
+         * maximum to ensure all motors are scaled properly.
+         * For example, a power set of [-0.8, 0.2, 0.5, 0.4] should be scaled by 0.8, not 0.5.
+         */
         double maxMagnitude = Math.max(
             Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
             Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
@@ -184,9 +183,10 @@ public class MecanumWheels extends Wheels {
             return;
         }
 
-        // Scale the motor power based on trigonometry. Multiply by MOTOR_POWER
-        // after normalizing by the total distance so that larger requested
-        // distances don't inadvertently increase motor power.
+        /*
+         * Scale the motor power based on trigonometry. Multiply by MOTOR_POWER after normalizing by the total
+         * distance so that larger requested distances don't inadvertently increase motor power.
+         */
         double xPower = (sidewaysDistance / totalDistance) * MOTOR_POWER;
         double yPower = (forwardDistance / totalDistance) * MOTOR_POWER;
         drive(xPower, yPower, 0);
@@ -215,8 +215,7 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void turn(double degrees) {
-        // The diameter of the circle that the wheels make when rotating 360
-        // degrees.
+        // The diameter of the circle that the wheels make when rotating 360 degrees.
         double diameter =
             Math.sqrt(Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2));
         double circumference = diameter * Math.PI;
