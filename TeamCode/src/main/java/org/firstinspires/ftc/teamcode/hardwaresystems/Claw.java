@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Abstract class to define what methods all robot claws should be capable of.
@@ -22,9 +23,9 @@ public abstract class Claw {
     protected final Servo YAW_SERVO;
 
     /**
-     * A {@link HashSet} of all the {@link Servo}s that are in this claw.
+     * A {@link Set} of all the {@link Servo}s that are in this claw.
      */
-    private final HashSet<Servo> SERVOS;
+    private final Set<Servo> SERVOS;
     /**
      * How much to gradually move the servo.
      */
@@ -38,10 +39,7 @@ public abstract class Claw {
      * @param yawServo       The servo that controls the claw's yaw.
      * @param servoIncrement The increment that the servos use per robot loop.
      */
-    public Claw(
-        Servo rollServo, Servo pitchServo, Servo yawServo,
-        double servoIncrement
-    ) {
+    public Claw(Servo rollServo, Servo pitchServo, Servo yawServo, double servoIncrement) {
         SERVOS = new HashSet<>();
         SERVOS.add(rollServo);
         SERVOS.add(pitchServo);
@@ -69,9 +67,9 @@ public abstract class Claw {
     /**
      * Get all the {@link Servo}s that are included in this claw system.
      *
-     * @return A {@link HashSet} that contains every {@code Claw} included in this claw system.
+     * @return A {@link Set} that contains every {@code Claw} included in this claw system.
      */
-    public HashSet<Servo> getServos() {
+    public Set<Servo> getServos() {
         return SERVOS;
     }
 
@@ -90,8 +88,7 @@ public abstract class Claw {
      *                  rotate it counterclockwise.
      */
     public void rotateRollServo(double direction) {
-        double targetPosition =
-            ROLL_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+        double targetPosition = ROLL_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
         ROLL_SERVO.setPosition(targetPosition);
     }
 

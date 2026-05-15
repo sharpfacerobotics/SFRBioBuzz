@@ -179,13 +179,11 @@ public class Webcam {
         this(webcamName, resolution, new double[]{0, 0, 0}, -1);
     }
 
-    public Webcam(WebcamName webcamName, int[] resolution,
-                  double[] poseAdjust) {
+    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust) {
         this(webcamName, resolution, poseAdjust, -1);
     }
 
-    public Webcam(WebcamName webcamName, int[] resolution,
-                  double[] poseAdjust, int cameraMonitorViewId) {
+    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust, int cameraMonitorViewId) {
         APRIL_TAG = new AprilTagProcessor.Builder().build();
 
         COLOR_PROCESSOR = new PredominantColorProcessor.Builder()

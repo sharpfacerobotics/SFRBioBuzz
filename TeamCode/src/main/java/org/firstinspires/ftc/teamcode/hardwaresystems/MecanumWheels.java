@@ -27,9 +27,8 @@ public class MecanumWheels extends Wheels {
     private final DcMotor BACK_RIGHT_MOTOR;
 
     public static class Builder {
-
         public MecanumWheels build() {
-            return new MecanumWheels(null, null, 1.0);
+            return new MecanumWheels(new MotorSet(), null, 1.0);
         }
     }
 
@@ -44,8 +43,12 @@ public class MecanumWheels extends Wheels {
         private final DcMotor BACK_LEFT_MOTOR;
         private final DcMotor BACK_RIGHT_MOTOR;
 
-        public MotorSet(DcMotor frontLeftMotor, DcMotor frontRightMotor,
-                        DcMotor backLeftMotor, DcMotor backRightMotor) {
+        public MotorSet(
+            DcMotor frontLeftMotor,
+            DcMotor frontRightMotor,
+            DcMotor backLeftMotor,
+            DcMotor backRightMotor
+        ) {
             MOTORS = new HashSet<>();
             MOTORS.add(frontLeftMotor);
             MOTORS.add(frontRightMotor);
@@ -68,8 +71,7 @@ public class MecanumWheels extends Wheels {
         }
     }
 
-    public MecanumWheels(MotorSet motorSet, WheelDistances wheelDistances,
-                         double ticksPerInch) {
+    public MecanumWheels(MotorSet motorSet, WheelDistances wheelDistances, double ticksPerInch) {
         super(motorSet.MOTORS, wheelDistances, ticksPerInch);
 
         this.FRONT_LEFT_MOTOR = motorSet.FRONT_LEFT_MOTOR;
@@ -168,13 +170,14 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void driveDistance(double sidewaysDistance, double forwardDistance) {
-        // Apply Pythagorean's Theorem to find the Euclidean distance. Use
-        // hypot
-        // to avoid overflow and improve readability.
+        /*
+         * Apply Pythagorean's Theorem to find the Euclidean distance. Use hypot to avoid overflow and improve
+         * readability.
+         */
         double totalDistance = Math.hypot(forwardDistance, sidewaysDistance);
 
-        // If both distances are zero there is nothing to do. Guard against
-        // division by zero in the scaling logic below and halt the drive.
+        // If both distances are zero there is nothing to do.
+        // Guard against division by zero in the scaling logic below and halt the drive.
         if (totalDistance == 0) {
             // Set all motor powers to zero to stop the robot cleanly.
             drive(0, 0, 0);

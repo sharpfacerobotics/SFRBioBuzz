@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represent any possible system of wheels on the robot.
@@ -13,9 +14,9 @@ public abstract class Wheels {
      */
     protected final static double MOTOR_POWER = 1.0;
     /**
-     * A HashSet of all the motors included by the wheel system.
+     * A {@link Set} of all the motors included by the wheel system.
      */
-    protected final HashSet<DcMotor> MOTORS;
+    protected final Set<DcMotor> MOTORS;
     /**
      * The distance between the left and right wheels, measured in inches from their centers.
      */
@@ -52,8 +53,10 @@ public abstract class Wheels {
          * @param longitudinalDistance The distance between the front and back wheels, measured in inches from their
          *                             centers.
          */
-        public WheelDistances(double lateralDistance,
-                              double longitudinalDistance) {
+        public WheelDistances(
+            double lateralDistance,
+            double longitudinalDistance
+        ) {
             LONGITUDINAL_DISTANCE = longitudinalDistance;
             LATERAL_DISTANCE = lateralDistance;
         }
@@ -65,8 +68,10 @@ public abstract class Wheels {
      * @param motors       All the motors used by the robot.
      * @param ticksPerInch The number of ticks needed to move the robot by one inch.
      */
-    public Wheels(HashSet<DcMotor> motors, WheelDistances wheelDistances,
-                  double ticksPerInch) {
+    public Wheels(
+        HashSet<DcMotor> motors, WheelDistances wheelDistances,
+        double ticksPerInch
+    ) {
         MOTORS = motors;
         // Allow wheels to roll freely.
         for (DcMotor motor : MOTORS) {
@@ -86,9 +91,9 @@ public abstract class Wheels {
     /**
      * Get all the {@link DcMotor}s that are used by this wheel system.
      *
-     * @return A {@link HashSet} that contains every {@link DcMotor} included by this wheel system.
+     * @return A {@link Set} that contains every {@link DcMotor} included by this wheel system.
      */
-    public HashSet<DcMotor> getMotors() {
+    public Set<DcMotor> getMotors() {
         return MOTORS;
     }
 
@@ -144,8 +149,10 @@ public abstract class Wheels {
      * @param forwardDistance  The distance that the robot travels forward in inches. Positive is forward, negative is
      *                         backward.
      */
-    public abstract void driveDistance(double sidewaysDistance,
-                                       double forwardDistance);
+    public abstract void driveDistance(
+        double sidewaysDistance,
+        double forwardDistance
+    );
 
     /**
      * Rotate the robot a certain number of degrees.

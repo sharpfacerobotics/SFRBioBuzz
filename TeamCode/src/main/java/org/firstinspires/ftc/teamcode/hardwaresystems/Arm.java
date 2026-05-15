@@ -17,8 +17,7 @@ public abstract class Arm {
      */
     public Arm(Set<DcMotor> motors) {
         MOTORS = motors;
-        // The arm motors will attempt to resist external forces　(e.g.,
-        // gravity).
+        // The arm motors will attempt to resist external forces　(e.g., gravity).
         for (DcMotor motor : MOTORS) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
@@ -27,9 +26,9 @@ public abstract class Arm {
     /**
      * Get all the {@link DcMotor}s that are included in this arm system.
      *
-     * @return A {@link HashSet} that contains every DcMotor included in this arm system.
+     * @return A {@link Set} that contains every DcMotor included in this arm system.
      */
-    public HashSet<DcMotor> getMotors() {
+    public Set<DcMotor> getMotors() {
         return MOTORS;
     }
 }
