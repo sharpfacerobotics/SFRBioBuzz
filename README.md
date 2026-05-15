@@ -13,6 +13,7 @@ this template, e.g., motor names or autonomous commands.
 
 ## Table of Contents
 
+- [Connecting to the Robot Remotely](#connecting-to-the-robot-remotely)
 - [Creating a New Repo](#creating-a-new-repo)
 - [Pulling from Template](#pulling-from-template)
 - [Updating with FTC's FtcRobotController](#updating-with-ftcs-ftcrobotcontroller)
@@ -21,6 +22,10 @@ this template, e.g., motor names or autonomous commands.
   - [Tuning RoadRunner](#tuning-roadrunner)
   - [Updating RoadRunner](#updating-roadrunner)
 - [TeamCode](#teamcode)
+
+## Connecting to the Robot Remotely
+
+See [`wifi.md`](./WIFI.md).
 
 ## Creating a New Repo
 
