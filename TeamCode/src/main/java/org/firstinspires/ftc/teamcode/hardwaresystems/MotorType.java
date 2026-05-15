@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.hardwaresystems;
 
+/**
+ * The brand and model of motor. Stores the specifications for various motors.
+ */
 public enum MotorType {
     TETRIX_TORQUENADO(1440),
 

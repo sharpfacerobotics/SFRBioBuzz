@@ -35,6 +35,9 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Process input from the camera to detect objects.
+ */
 public class Webcam {
     // VisionPortal used to communicate with the webcam and run vision processors.
     private final VisionPortal visionPortal;
@@ -192,9 +195,12 @@ public class Webcam {
         return null;
     }
 
-    // Stub kept for backward compatibility.
-    // Previously returned the center of a detected color blob.
-    // Now this class does not do blob detection, so we return [-1.0, -1.0].
+    /**
+     * Get the last seen contour position. If the camera has never spotted a contour position, it will return `null`.
+     *
+     * @return The last seen contour position. If the camera has never spotted a contour position, it will return
+     * `null`.
+     */
     public double[] getContourPosition() {
         return new double[]{-1.0, -1.0};
     }
