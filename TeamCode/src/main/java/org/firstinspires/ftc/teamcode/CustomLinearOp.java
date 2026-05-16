@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class CustomLinearOp extends LinearOpMode {
     /**
@@ -41,13 +42,6 @@ public class CustomLinearOp extends LinearOpMode {
      */
     protected MecanumDrive MECANUM_DRIVE;
 
-    /*
-     * Arm and Claw subsystems are unused in this season's game. The
-     * corresponding fields have been removed to avoid compile errors
-     * when those classes are deleted from the project. If you add
-     * arm/claw subsystems in a future season, declare them here and
-     * initialize them appropriately.
-     */
     protected Arm ARM;
     protected Claw CLAW;
     protected Webcam WEBCAM;
@@ -57,11 +51,11 @@ public class CustomLinearOp extends LinearOpMode {
      */
     protected AutoConfig.AllianceColor ALLIANCE_COLOR;
     /**
-     * Store which side the robot is on(i.e. far or near).
+     * Store which side the robot is on (i.e. far or near).
      */
     protected AutoConfig.TeamSide TEAM_SIDE;
 
-    public HashSet<DcMotor> getAllDcMotors() {
+    public Set<DcMotor> getAllDcMotors() {
         HashSet<DcMotor> motors = new HashSet<>();
         // hardware.dcMotor stores all the DcMotors as name-device pairs.
         for (Map.Entry<String, DcMotor> ele : hardwareMap.dcMotor.entrySet()) {
@@ -76,7 +70,7 @@ public class CustomLinearOp extends LinearOpMode {
      *
      * @return A HashSet containing all the CR servos used by this robot.
      */
-    public HashSet<CRServo> getAllCrServos() {
+    public Set<CRServo> getAllCrServos() {
         HashSet<CRServo> crServos = new HashSet<>();
         // `hardwareMap.crservo` stores all the CRServos as name-device pairs.
         for (Map.Entry<String, CRServo> hardwareDevice : hardwareMap.crservo.entrySet()) {
@@ -87,13 +81,13 @@ public class CustomLinearOp extends LinearOpMode {
     }
 
     /**
-     * Get all the names in the `HardwareMap` that are not connected to a device.
-     * <br>
+     * Get all the names in the {@link HardwareMap} that are not connected to a device.
+     * <p>
      * TODO: <em><strong>THIS METHOD IS NOT WORKING CURRENTLY!!!</strong></em>
      *
-     * @return A `HashSet` of all the hardware devices that can not be found.
+     * @return A {@link Set} of all the hardware devices that can not be found.
      */
-    public HashSet<String> getMissingHardwareDevices() {
+    public Set<String> getMissingHardwareDevices() {
         HashSet<String> missingHardwareDevices = new HashSet<>();
 
         // Loop through each `DeviceMapping` (e.g., `Servo`s and `DcMotor`s).
@@ -152,7 +146,7 @@ public class CustomLinearOp extends LinearOpMode {
      *
      * @param motors The motors that are running.
      */
-    public void autoSleep(HashSet<DcMotor> motors) {
+    public void autoSleep(Set<DcMotor> motors) {
         // Sleep while any of the motors are still running.
         while (motors.stream().anyMatch(DcMotor::isBusy)) {
             sleep(1);
@@ -279,9 +273,9 @@ public class CustomLinearOp extends LinearOpMode {
      * Initiate the webcam.
      * <p>
      * This method ignores the supplied {@code cameraMonitorViewId} and always constructs the {@link Webcam} using the
-     * default EasyOpenCV behavior (i.e. no custom viewport container). Passing a non‑empty container ID into EasyOpenCV
-     * can lead to the exception "Viewport container specified by user is not empty". By always using the three‑argument
-     * {@link Webcam} constructor, we avoid that error.
+     * default EasyOpenCV behavior (i.e., no custom viewport container). Passing a non‑empty container ID into
+     * EasyOpenCV can lead to the exception "Viewport container specified by user is not empty". By always using the
+     * three‑argument {@link Webcam} constructor, we avoid that error.
      *
      * @param cameraMonitorViewId An unused resource ID. Kept for compatibility with existing call sites.
      */
@@ -378,6 +372,7 @@ public class CustomLinearOp extends LinearOpMode {
         initWheels();
         initArm();
         initClaw();
+        initWebcam(-1);
 
         /*
          * Get camera ID to stream.

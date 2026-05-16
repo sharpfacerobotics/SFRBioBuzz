@@ -23,7 +23,7 @@ public class DriverMode extends CustomLinearOp {
     /**
      * Minimum joystick magnitude required to register movement. Inputs below this threshold will be treated as zero.
      * This helps prevent unintended robot motion when the driver releases the sticks and eliminates small negative
-     * values (e.g. -0.29) shown in telemetry caused by joystick drift.
+     * values (e.g., -0.29) shown in telemetry caused by joystick drift.
      */
     private static final double JOY_STICK_DEADBAND = 0.07;
 
@@ -70,7 +70,7 @@ public class DriverMode extends CustomLinearOp {
         return Math.abs(value) < JOY_STICK_DEADBAND ? 0.0 : value;
     }
 
-    // Pick “best” detection: prefer alliance IDs
+    // Pick "best" detection: prefer alliance IDs
     private AprilTagDetection pickBestDetection(List<AprilTagDetection> detections) {
         if (detections == null || detections.isEmpty()) {
             return null;
@@ -79,7 +79,7 @@ public class DriverMode extends CustomLinearOp {
         int[] ids = (ALLIANCE_COLOR == AllianceColor.RED) ? RED_TAG_IDS : BLUE_TAG_IDS;
 
         // Need frame width for pixel scoring; fall back safely if webcam is null.
-        double frameW = (WEBCAM != null) ? WEBCAM.getWidthPx() : 800.0;
+        double frameW = (WEBCAM != null) ? WEBCAM.getResolution()[0] : 800.0;
         double cx = frameW / 2.0;
 
         AprilTagDetection best = null;
