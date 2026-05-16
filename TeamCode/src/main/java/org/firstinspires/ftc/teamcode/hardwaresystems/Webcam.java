@@ -254,7 +254,7 @@ public class Webcam {
      * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
      * yet.
      *
-     * @return The latest color analysis from the predominant color processor. May be `null` if no frame has been
+     * @return The latest color analysis from the predominant color processor. May be {@code null} if no frame has been
      * processed yet.
      */
     public PredominantColorProcessor.Result getColorResult() {

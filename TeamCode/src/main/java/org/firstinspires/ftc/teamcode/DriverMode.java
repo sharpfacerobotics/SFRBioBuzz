@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.AutoConfig.AllianceColor;
+import static org.firstinspires.ftc.teamcode.AutoConfigurator.AllianceColor;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.PoseVelocity2d;

@@ -97,7 +97,7 @@ public abstract class Wheels {
     /**
      * Drive forwards and backwards.
      *
-     * @param forwardPower What power to set the motors to.
+     * @param forwardPower The power to set the motors to.
      */
     public void drive(double forwardPower) {
         /*
@@ -111,7 +111,7 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive the wheels.
+     * Set the wheels to drive forward with a certain power.
      *
      * @param forwardPower Forward power. Positive is forward, negative is backward.
      * @param turn         Rotation power. Positive is clockwise, negative is counterclockwise.
@@ -121,13 +121,13 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive the wheels.
+     * Set the wheels to drive with a given power in for x, y,and turn.
      *
      * @param xPower Sideways power. Positive is rightward, negative is leftward.
      * @param yPower Forward power. Positive is forward, negative is backward.
-     * @param turn   Rotation power. Positive is clockwise, negative is counterclockwise.
+     * @param thetaPower   Rotation power. Positive is clockwise, negative is counterclockwise.
      */
-    public abstract void drive(double xPower, double yPower, double turn);
+    public abstract void drive(double xPower, double yPower, double thetaPower);
 
     /**
      * Drive the robot a certain distance forward.

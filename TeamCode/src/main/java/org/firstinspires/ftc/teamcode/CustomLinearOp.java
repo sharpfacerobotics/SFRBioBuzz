@@ -15,9 +15,6 @@ import org.firstinspires.ftc.teamcode.hardwaresystems.MotorType;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Wheels;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,11 +29,13 @@ public class CustomLinearOp extends LinearOpMode {
     /* Robot systems */
 
     /*
+     * Use for our own system.
      *  TODO: For default purposes, the class is set to `Wheels`.
      *      Replace as necessary.
      */
     protected Wheels WHEELS;
     /*
+     * Use for RoadRunner.
      *  TODO: For default purposes, the class is set to `MecanumDrive`.
      *      Replace as necessary.
      */
@@ -47,13 +46,18 @@ public class CustomLinearOp extends LinearOpMode {
     protected Webcam WEBCAM;
 
     /**
+     * Store the data required to run {@link Auto}.
+     */
+    protected AutoConfigurator.AutoConfig AUTO_CONFIG;
+
+    /**
      * Store which alliance the robot is on.
      */
-    protected AutoConfig.AllianceColor ALLIANCE_COLOR;
+    protected AutoConfigurator.AllianceColor ALLIANCE_COLOR;
     /**
      * Store which side the robot is on (i.e. far or near).
      */
-    protected AutoConfig.TeamSide TEAM_SIDE;
+    protected AutoConfigurator.AllianceSide TEAM_SIDE;
 
     public Set<DcMotor> getAllDcMotors() {
         HashSet<DcMotor> motors = new HashSet<>();
@@ -303,62 +307,26 @@ public class CustomLinearOp extends LinearOpMode {
             resolution,
             poseAdjust
         );
+
+        applyAllianceToWebcam();
     }
 
     /**
-     * Apply the currently selected alliance to the webcam’s color target. Called in both DriverMode and Auto after
-     * AutoConfig.readFromFile().
+     * Apply the currently selected alliance to the webcam’s color target. Called in both {@link DriverMode} and
+     * {@link Auto} after {@link AutoConfigurator#readConfigFile()}.
      */
     protected void applyAllianceToWebcam() {
         if (WEBCAM == null) {
-            return;     // no camera configured
+            // No camera configured
+            return;
         }
-
-        AutoConfig.AllianceColor allianceColor = AutoConfig.getConfigFile();
 
         // Map alliance to webcam color enum
-        if (allianceColor == AutoConfig.AllianceColor.RED) {
+        if (AUTO_CONFIG.getAllianceColor() == AutoConfigurator.AllianceColor.RED) {
             WEBCAM.setTargetColor(Webcam.Color.RED);
-        } else if (allianceColor == AutoConfig.AllianceColor.BLUE) {
+        } else if (AUTO_CONFIG.getAllianceColor() == AutoConfigurator.AllianceColor.BLUE) {
             WEBCAM.setTargetColor(Webcam.Color.BLUE);
         }
-    }
-
-    /**
-     * Retrieve the contents of the auto config file as a `String`, or `null` if there is nothing to read.
-     *
-     * @param autoConfigFile A `String` representing the file path to be read.
-     * @return A `String` representation of the setting file's contents.
-     */
-    public String readAutoConfigFile(String autoConfigFile) {
-        // Try to read the auto config.
-        try (BufferedReader reader = new BufferedReader(new FileReader(autoConfigFile))) {
-            // Read first line.
-            String data = reader.readLine();
-            telemetry.addData("Starting position: ", data);
-
-            return data;
-
-        } catch (IOException | NullPointerException e) {
-            telemetry.addLine(
-                (e instanceof IOException)
-                    ? "ERROR: FAILED TO READ AUTO CONFIG FILE!"
-                    : "The position " + "file is blank."
-            );
-            telemetry.addLine("Defaulting to RED NEAR");
-
-            return null;
-        }
-    }
-
-    /**
-     * Overload {@link CustomLinearOp#readAutoConfigFile(String)}. {@code autoConfigFile} defaults to
-     * {@link AutoConfig#getConfigFile()}.
-     * <p>
-     * See {@link CustomLinearOp#readAutoConfigFile(String)} for more details.
-     */
-    public String readAutoConfigFile() {
-        return readAutoConfigFile(AutoConfig.getConfigFile());
     }
 
     /**
@@ -369,10 +337,15 @@ public class CustomLinearOp extends LinearOpMode {
     public void runOpMode() {
         autoSleepEnabled = true;
 
+        AUTO_CONFIG = AutoConfigurator.parseConfigFile();
+        telemetry.addData(
+            "Starting position",
+            AUTO_CONFIG.getAllianceColor() + ", " + AUTO_CONFIG.getAllianceSide().name()
+        );
+
         initWheels();
         initArm();
         initClaw();
-        initWebcam(-1);
 
         /*
          * Get camera ID to stream.
@@ -383,18 +356,10 @@ public class CustomLinearOp extends LinearOpMode {
             "id",
             hardwareMap.appContext.getPackageName()
         );
-        telemetry.addData("cameraMonitorViewId", cameraMonitorViewId);
-        telemetry.update();
         initWebcam(cameraMonitorViewId);
 
-        // Try to read the auto config
-        String autoConfig = readAutoConfigFile(AutoConfig.getConfigFile());
-        ALLIANCE_COLOR = (autoConfig != null) ? AutoConfig.AllianceColor.valueOf(autoConfig.split(",")[0]) :
-            AutoConfig.AllianceColor.RED;
-        TEAM_SIDE = (autoConfig != null) ? AutoConfig.TeamSide.valueOf(autoConfig.split(",")[1]) :
-            AutoConfig.TeamSide.NEAR;
-
-        telemetry.addData("Starting position", ALLIANCE_COLOR.name() + ", " + TEAM_SIDE.name());
+        telemetry.addData("cameraMonitorViewId", cameraMonitorViewId);
+        telemetry.update();
 
         waitForStart();
     }
