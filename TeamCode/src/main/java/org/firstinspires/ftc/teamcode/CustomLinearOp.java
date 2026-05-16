@@ -20,6 +20,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A custom linear opmode to be used as a basis for {@link Auto} and {@link DriverMode}.
+ */
 public class CustomLinearOp extends LinearOpMode {
     /**
      * Whether the robot will automatically sleep after each command.
@@ -320,12 +323,12 @@ public class CustomLinearOp extends LinearOpMode {
             return;
         }
 
-        // Map alliance to webcam color enum
-        if (AUTO_CONFIG.getAllianceColor() == AutoConfigurator.AllianceColor.RED) {
-            WEBCAM.setTargetColor(Webcam.Color.RED);
-        } else if (AUTO_CONFIG.getAllianceColor() == AutoConfigurator.AllianceColor.BLUE) {
-            WEBCAM.setTargetColor(Webcam.Color.BLUE);
-        }
+        // Map alliance to webcam color enum.
+        Webcam.Color color =
+            (ALLIANCE_COLOR == AutoConfigurator.AllianceColor.RED)
+                ? Webcam.Color.RED :
+                Webcam.Color.BLUE;
+        WEBCAM.setTargetColor(color);
     }
 
     /**

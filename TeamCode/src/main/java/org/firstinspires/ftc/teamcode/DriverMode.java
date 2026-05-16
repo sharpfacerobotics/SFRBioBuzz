@@ -7,7 +7,6 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
@@ -27,9 +26,15 @@ public class DriverMode extends CustomLinearOp {
      */
     private static final double JOY_STICK_DEADBAND = 0.07;
 
-    // Replace with your real IDs for this season
-    private static final int[] RED_TAG_IDS = {24};
-    private static final int[] BLUE_TAG_IDS = {20};
+    // TODO: Replace with your real IDs for this season
+    /**
+     * The AprilTag ID for the red alliance.
+     */
+    private static final int[] RED_TAG_IDS = {-1};
+    /**
+     * The AprilTag ID for the red alliance.
+     */
+    private static final int[] BLUE_TAG_IDS = {-1};
 
     /**
      * Measured resting offsets for the driver controls. These values are sampled during the init phase (before the
@@ -54,13 +59,16 @@ public class DriverMode extends CustomLinearOp {
     private double pivotOffset = 0.0;
 
     /**
-     * Default setting of the camera stream. Set `false` if you want it off by default.
+     * Default setting of the camera stream. Set to {@code false} if you want it off by default.
      */
     private boolean cameraStreamEnabled = true;
+    /**
+     * Check whether the camera is already on or off so that it is not mistakenly opened or closed multiple times.
+     */
     private boolean lastToggleBtn = false;
 
     /**
-     * Apply a deadband to the given value. If the absolute value is less than {@link #JOY_STICK_DEADBAND}, return zero;
+     * Apply a deadband to the given value. If the absolute value is less than {@link #JOY_STICK_DEADBAND}, return 0;
      * otherwise return the original value.
      *
      * @param value The raw joystick value.
@@ -68,76 +76,6 @@ public class DriverMode extends CustomLinearOp {
      */
     private double applyDeadband(double value) {
         return Math.abs(value) < JOY_STICK_DEADBAND ? 0.0 : value;
-    }
-
-    // Pick "best" detection: prefer alliance IDs
-    private AprilTagDetection pickBestDetection(List<AprilTagDetection> detections) {
-        if (detections == null || detections.isEmpty()) {
-            return null;
-        }
-
-        int[] ids = (ALLIANCE_COLOR == AllianceColor.RED) ? RED_TAG_IDS : BLUE_TAG_IDS;
-
-        // Need frame width for pixel scoring; fall back safely if webcam is null.
-        double frameW = (WEBCAM != null) ? WEBCAM.getResolution()[0] : 800.0;
-        double cx = frameW / 2.0;
-
-        AprilTagDetection best = null;
-        double bestScore = Double.NEGATIVE_INFINITY;
-
-        for (AprilTagDetection detection : detections) {
-            if (detection == null || detection.ftcPose == null || detection.center == null) {
-                continue;
-            }
-
-            boolean idMatch = false;
-            for (int id : ids) {
-                if (detection.id == id) {
-                    idMatch = true;
-                    break;
-                }
-            }
-            if (!idMatch) {
-                continue;
-            }
-
-            // Prefer detections closest to camera center, then closer range.
-            double errPx = Math.abs(detection.center.x - cx);
-            double rangeM = detection.ftcPose.range * 0.0254; // inches -> meters
-
-            // Higher score is better: small pixel error dominates.
-            double score = -errPx - (25.0 * rangeM);
-
-            if (score > bestScore) {
-                bestScore = score;
-                best = detection;
-            }
-        }
-
-        if (best != null) {
-            return best;
-        }
-
-        // Fallback: choose the smallest pixel error among all detections
-        for (AprilTagDetection detection : detections) {
-            if (detection == null || detection.center == null) {
-                continue;
-            }
-            double score = -Math.abs(detection.center.x - cx);
-            if (score > bestScore) {
-                bestScore = score;
-                best = detection;
-            }
-        }
-        return best;
-    }
-
-    public void applyAllianceToWebcam() {
-        if (WEBCAM == null) {
-            return;
-        }
-        Webcam.Color color = ALLIANCE_COLOR == AllianceColor.RED ? Webcam.Color.RED : Webcam.Color.BLUE;
-        WEBCAM.setTargetColor(color);
     }
 
     @Override
@@ -206,9 +144,9 @@ public class DriverMode extends CustomLinearOp {
         while (opModeIsActive()) {
             try {
                 runLoop();
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 telemetry.addLine("\nWARNING AN ERROR OCCURRED!!!");
-                telemetry.addLine(e.getMessage());
+                telemetry.addLine(exception.getMessage());
             }
         }
     }

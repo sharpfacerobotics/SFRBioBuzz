@@ -88,6 +88,11 @@ public class Webcam {
     }
 
     /**
+     * Store camera resolution so other code can compute pixel error.
+     */
+    private final int[] RESOLUTION;
+
+    /**
      * VisionPortal used to communicate with the webcam and run vision processors.
      */
     private final VisionPortal VISION_PORTAL;
@@ -99,12 +104,7 @@ public class Webcam {
      * Processor that finds the predominant color in a region of interest.
      */
     private final PredominantColorProcessor COLOR_PROCESSOR;
-    /**
-     * Stores camera resolution so other code can compute pixel error.
-     */
-    private final int[] RESOLUTION;
-    private final int WIDTH_PIXELS;
-    private final int HEIGHT_PIXELS;
+
     /**
      * Alliance or team color you want to remember for this webcam (used by your code).
      */
@@ -138,9 +138,8 @@ public class Webcam {
     }
 
     /**
-     * Construct a webcam wrapper with an optional preview container
-     * D. If{@code cameraMonitorViewId} is -1, VisionPortal uses the default preview.
-     * If `cameraMonitorViewId` is not -1, a custom preview container is used.
+     * Construct a webcam wrapper with an optional preview container D. If{@code cameraMonitorViewId} is -1,
+     * VisionPortal uses the default preview. If `cameraMonitorViewId` is not -1, a custom preview container is used.
      *
      * @param webcamName          The name used by the webcam.
      * @param resolution          The resolution that the camera uses.
@@ -153,8 +152,6 @@ public class Webcam {
 
         // Saves resolution for pixel-based aiming
         this.RESOLUTION = resolution;
-        this.WIDTH_PIXELS = resolution[0];
-        this.HEIGHT_PIXELS = resolution[1];
 
         // No target color selected by default.
         this.targetColor = null;
@@ -252,14 +249,71 @@ public class Webcam {
     }
 
     /**
-     * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
-     * yet.
+     * Pick "best" detection out of the given alliance IDs. Favors detections closer to the center of the camera and
+     * detections with a shorter distance. If that fails, judge the best detection based on pixel error.
      *
-     * @return The latest color analysis from the predominant color processor. May be {@code null} if no frame has been
-     * processed yet.
+     * @param detections  The AprilTags that have been detected.
+     * @param aprilTagIds The AprilTag IDs to detect.
+     * @return The AprilTag that best fits matches.
      */
-    public PredominantColorProcessor.Result getColorResult() {
-        return COLOR_PROCESSOR.getAnalysis();
+    private AprilTagDetection pickBestDetection(List<AprilTagDetection> detections, int[] aprilTagIds) {
+        if (detections == null || detections.isEmpty()) {
+            return null;
+        }
+
+        // Need frame width for pixel scoring; fall back safely if webcam is null.
+        double frameWidth = RESOLUTION[0];
+        double halfWidth = frameWidth / 2.0;
+
+        AprilTagDetection best = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+
+        //
+        for (AprilTagDetection detection : detections) {
+            if (detection == null || detection.ftcPose == null || detection.center == null) {
+                continue;
+            }
+
+            boolean idMatch = false;
+            for (int id : aprilTagIds) {
+                if (detection.id == id) {
+                    idMatch = true;
+                    break;
+                }
+            }
+            if (!idMatch) {
+                continue;
+            }
+
+            // Prefer detections closest to camera center, then closer range.
+            double pixelError = Math.abs(detection.center.x - halfWidth);
+            double range = detection.ftcPose.range * 0.0254; // inches -> meters
+
+            // Higher score is better: small pixel error dominates.
+            double score = -pixelError - (25.0 * range);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = detection;
+            }
+        }
+
+        if (best != null) {
+            return best;
+        }
+
+        // Fallback: choose the smallest pixel error among all detections
+        for (AprilTagDetection detection : detections) {
+            if (detection == null || detection.center == null) {
+                continue;
+            }
+            double score = -Math.abs(detection.center.x - halfWidth);
+            if (score > bestScore) {
+                bestScore = score;
+                best = detection;
+            }
+        }
+        return best;
     }
 
     /**
@@ -281,9 +335,9 @@ public class Webcam {
     }
 
     /**
-     * Return the currently selected target color (may be null).
+     * Return the currently selected target color (maybe {@code null}).
      *
-     * @return The currently selected target color (may be null).
+     * @return The currently selected target color (maybe {@code null}).
      */
     public Color getTargetColor() {
         return targetColor;
@@ -296,5 +350,17 @@ public class Webcam {
      */
     public void setTargetColor(Color targetColor) {
         this.targetColor = targetColor;
+    }
+
+
+    /**
+     * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
+     * yet.
+     *
+     * @return The latest color analysis from the predominant color processor. May be {@code null} if no frame has been
+     * processed yet.
+     */
+    public PredominantColorProcessor.Result getColorResult() {
+        return COLOR_PROCESSOR.getAnalysis();
     }
 }
