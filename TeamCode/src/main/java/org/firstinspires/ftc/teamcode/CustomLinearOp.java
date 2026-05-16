@@ -24,43 +24,54 @@ import java.util.Set;
  * A custom linear opmode to be used as a basis for {@link Auto} and {@link DriverMode}.
  */
 public class CustomLinearOp extends LinearOpMode {
+    /* Robot systems */
+
     /**
      * Whether the robot will automatically sleep after each command.
      */
     protected boolean autoSleepEnabled;
-
-    /* Robot systems */
-
     /**
      * Use for our own system.
-     *  TODO: For default purposes, the class is set to {@link Wheels}.
-     *      Replace as necessary.
+     * TODO: By default, the class is set to {@link Wheels}. Replace as necessary.
      */
     protected Wheels WHEELS;
     /**
      * Use for RoadRunner.
-     *  TODO: For default purposes, the class is set to {@link MecanumDrive}.
-     *      Replace as necessary.
+     * TODO: By default, the class is set to {@link MecanumDrive}. Replace as necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
-
+    /**
+     * The arm used by the robot.
+     * TODO: By default, the type is set to {@link Arm}. Replace or delete as necessary.
+     */
     protected Arm ARM;
+
+    /**
+     * The claw used by the robot.
+     * TODO: By default, the type is set to {@link Claw}. Replace or delete as necessary.
+     */
     protected Claw CLAW;
+
+    /**
+     * The webcam used by the robot.
+     */
     protected Webcam WEBCAM;
+
+    /**
+     * The AprilTag ID for the red alliance.
+     * TODO: Replace with your real AprilTag IDs for this season.
+     */
+    protected Set<Integer> RED_APRILTAG_IDS = Set.of(-1);
+    /**
+     * The AprilTag ID for the red alliance.
+     * TODO: Replace with your real AprilTag IDs for this season.
+     */
+    protected Set<Integer> BLUE_APRILTAG_IDS = Set.of(-1);
 
     /**
      * Store the data required to run {@link Auto}.
      */
     protected AutoConfigurator.AutoConfig AUTO_CONFIG;
-
-    /**
-     * Store which alliance the robot is on.
-     */
-    protected AutoConfigurator.AllianceColor ALLIANCE_COLOR;
-    /**
-     * Store which side the robot is on (i.e., far or near).
-     */
-    protected AutoConfigurator.AllianceSide TEAM_SIDE;
 
     public Set<DcMotor> getAllDcMotors() {
         HashSet<DcMotor> motors = new HashSet<>();
@@ -200,12 +211,14 @@ public class CustomLinearOp extends LinearOpMode {
                     frontLeft, frontRight, backLeft, backRight
                 );
 
-            // Approximate measurements from the CAD model (in inches). The
-            // wheel circumference is 4 inches in diameter multiplied by π.
+            // Approximate measurements from the CAD model (in inches).
+            // The wheel circumference is 4 inches in diameter multiplied by π.
             double wheelCircumference = 4.0 * Math.PI;
             double gearRatio = 1.0;
+            // TODO: Change the motor type as necessary.
             double ticksPerInch = MotorType.TETRIX_TORQUENADO.getTicksPerRotation() * gearRatio / wheelCircumference;
-            // Approximate distances between wheels. Adjust as necessary if your robot's chassis dimensions differ.
+            // TODO: Approximate distances between wheels. Adjust as necessary if your robot's chassis dimensions
+            //  differ.
             Wheels.WheelDistances wheelDistances =
                 new org.firstinspires.ftc.teamcode.hardwaresystems.Wheels.WheelDistances(
                     8.5,  // lateral distance (left‑to‑right)
@@ -222,12 +235,12 @@ public class CustomLinearOp extends LinearOpMode {
              * If any motor could not be found, report the error. This keeps the telemetry output informative and
              * avoids a null pointer exception later on. Leave WHEELS as null to signal an initialization failure.
              */
-            telemetry.addLine("ERROR: Failed to initialize MecanumWheels.\n" + e.getMessage());
+            telemetry.addLine("ERROR: Failed to initialize wheels: \n" + e.getMessage());
         }
 
         /*
          * Assume the robot starts at (0, 0, 0) in the Road Runner field coordinate frame.
-         * If your autonomous program uses a different starting pose, modify the pose here accordingly.
+         * TODO: If your autonomous program uses a different starting pose, modify the pose here accordingly.
          */
         MECANUM_DRIVE = new MecanumDrive(hardwareMap, new Pose2d(0.0, 0.0, 0.0));
     }
@@ -276,6 +289,24 @@ public class CustomLinearOp extends LinearOpMode {
     }
 
     /**
+     * Apply the currently selected alliance to the webcam’s color target. Called in both {@link DriverMode} and
+     * {@link Auto} after {@link AutoConfigurator#readConfigFile()}.
+     */
+    protected void applyAllianceToWebcam() {
+        if (WEBCAM == null) {
+            // No camera configured
+            return;
+        }
+
+        // Map alliance to webcam color enum.
+        Webcam.Color color =
+            (AUTO_CONFIG.getAllianceColor() == AutoConfigurator.AllianceColor.RED)
+                ? Webcam.Color.RED :
+                Webcam.Color.BLUE;
+        WEBCAM.setTargetColor(color);
+    }
+
+    /**
      * Initiate the webcam.
      * <p>
      * This method ignores the supplied {@code cameraMonitorViewId} and always constructs the {@link Webcam} using the
@@ -311,24 +342,6 @@ public class CustomLinearOp extends LinearOpMode {
         );
 
         applyAllianceToWebcam();
-    }
-
-    /**
-     * Apply the currently selected alliance to the webcam’s color target. Called in both {@link DriverMode} and
-     * {@link Auto} after {@link AutoConfigurator#readConfigFile()}.
-     */
-    protected void applyAllianceToWebcam() {
-        if (WEBCAM == null) {
-            // No camera configured
-            return;
-        }
-
-        // Map alliance to webcam color enum.
-        Webcam.Color color =
-            (ALLIANCE_COLOR == AutoConfigurator.AllianceColor.RED)
-                ? Webcam.Color.RED :
-                Webcam.Color.BLUE;
-        WEBCAM.setTargetColor(color);
     }
 
     /**

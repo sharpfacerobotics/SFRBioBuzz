@@ -1,15 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.AutoConfigurator.AllianceColor;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-
-import java.util.List;
 
 @TeleOp(name = "DriverMode")
 public class DriverMode extends CustomLinearOp {
@@ -25,16 +19,6 @@ public class DriverMode extends CustomLinearOp {
      * values (e.g., -0.29) shown in telemetry caused by joystick drift.
      */
     private static final double JOY_STICK_DEADBAND = 0.07;
-
-    // TODO: Replace with your real IDs for this season
-    /**
-     * The AprilTag ID for the red alliance.
-     */
-    private static final int[] RED_TAG_IDS = {-1};
-    /**
-     * The AprilTag ID for the red alliance.
-     */
-    private static final int[] BLUE_TAG_IDS = {-1};
 
     /**
      * Measured resting offsets for the driver controls. These values are sampled during the init phase (before the

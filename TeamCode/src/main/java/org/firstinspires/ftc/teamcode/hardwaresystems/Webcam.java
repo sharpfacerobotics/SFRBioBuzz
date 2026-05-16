@@ -352,7 +352,6 @@ public class Webcam {
         this.targetColor = targetColor;
     }
 
-
     /**
      * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
      * yet.
