@@ -80,7 +80,7 @@ public class MecanumWheels extends Wheels {
         this.BACK_RIGHT_MOTOR = motorSet.BACK_RIGHT_MOTOR;
 
         // Reset position to 0
-        for (DcMotor motor: MOTORS) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
@@ -89,6 +89,8 @@ public class MecanumWheels extends Wheels {
          * Set the directions of the motors.
          * The right and left motors run in opposite directions of each other.
          * Positive is forward for all motors.
+         *
+         * In some cases, it may be necessary to reverse the signs.
          */
         FRONT_LEFT_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
         FRONT_RIGHT_MOTOR.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -132,9 +134,11 @@ public class MecanumWheels extends Wheels {
         double backLeftPower = -theta - x + y;
         double backRightPower = theta - x + y;
 
-        // Scale the motor powers to be within +/- 1.0.  Use the absolute
-        // maximum magnitude rather than the algebraic maximum to ensure all motors
-        // are scaled properly.  For example, a power set of [-0.8, 0.2, 0.5, 0.4]
+        // Scale the motor powers to be within +/- 1.0. Use the absolute
+        // maximum magnitude rather than the algebraic maximum to ensure all
+        // motors
+        // are scaled properly. For example, a power set of [-0.8, 0.2, 0.5,
+        // 0.4]
         // should be scaled by 0.8, not 0.5.
         double maxMagnitude = Math.max(
             Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
@@ -189,10 +193,14 @@ public class MecanumWheels extends Wheels {
         double yPower = (forwardDistance / totalDistance) * MOTOR_POWER;
         drive(xPower, yPower, 0);
 
-        int frontLeftTickPosition = FRONT_LEFT_MOTOR.getCurrentPosition() + (int) ((sidewaysDistance - forwardDistance) * TICKS_PER_INCH);
-        int frontRightTickPosition = FRONT_RIGHT_MOTOR.getCurrentPosition() - (int) ((-sidewaysDistance + forwardDistance) * TICKS_PER_INCH);
-        int backLeftTickPosition = BACK_LEFT_MOTOR.getCurrentPosition() + (int) ((-sidewaysDistance - forwardDistance) * TICKS_PER_INCH);
-        int backRightTickPosition = BACK_RIGHT_MOTOR.getCurrentPosition() - (int) ((sidewaysDistance + forwardDistance) * TICKS_PER_INCH);
+        int frontLeftTickPosition =
+            FRONT_LEFT_MOTOR.getCurrentPosition() + (int) ((sidewaysDistance - forwardDistance) * TICKS_PER_INCH);
+        int frontRightTickPosition =
+            FRONT_RIGHT_MOTOR.getCurrentPosition() - (int) ((-sidewaysDistance + forwardDistance) * TICKS_PER_INCH);
+        int backLeftTickPosition =
+            BACK_LEFT_MOTOR.getCurrentPosition() + (int) ((-sidewaysDistance - forwardDistance) * TICKS_PER_INCH);
+        int backRightTickPosition =
+            BACK_RIGHT_MOTOR.getCurrentPosition() - (int) ((sidewaysDistance + forwardDistance) * TICKS_PER_INCH);
 
         FRONT_LEFT_MOTOR.setTargetPosition(frontLeftTickPosition);
         FRONT_RIGHT_MOTOR.setTargetPosition(frontRightTickPosition);
@@ -209,8 +217,10 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void turn(double degrees) {
-        // The diameter of the circle that the wheels make when rotating 360 degrees.
-        double diameter = Math.sqrt(Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2));
+        // The diameter of the circle that the wheels make when rotating 360
+        // degrees.
+        double diameter =
+            Math.sqrt(Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2));
         double circumference = diameter * Math.PI;
 
         // How far the wheels have to move.
