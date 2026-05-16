@@ -229,7 +229,7 @@ public class FoldingArm extends Arm {
     /**
      * Return the rotation of the arm in degrees.
      *
-     * @return A `double` representing the rotation angle of the arm in degrees.
+     * @return A {@code double} representing the rotation angle of the arm in degrees.
      */
     public double getRotationDegrees() {
         return ROTATION_MOTOR.getCurrentPosition() / TICKS_PER_ROTATION_DEGREE + INITIAL_ROTATION_ANGLE;

@@ -28,15 +28,15 @@ public class CustomLinearOp extends LinearOpMode {
 
     /* Robot systems */
 
-    /*
+    /**
      * Use for our own system.
-     *  TODO: For default purposes, the class is set to `Wheels`.
+     *  TODO: For default purposes, the class is set to {@link Wheels}.
      *      Replace as necessary.
      */
     protected Wheels WHEELS;
-    /*
+    /**
      * Use for RoadRunner.
-     *  TODO: For default purposes, the class is set to `MecanumDrive`.
+     *  TODO: For default purposes, the class is set to {@link MecanumDrive}.
      *      Replace as necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
@@ -55,7 +55,7 @@ public class CustomLinearOp extends LinearOpMode {
      */
     protected AutoConfigurator.AllianceColor ALLIANCE_COLOR;
     /**
-     * Store which side the robot is on (i.e. far or near).
+     * Store which side the robot is on (i.e., far or near).
      */
     protected AutoConfigurator.AllianceSide TEAM_SIDE;
 
@@ -70,13 +70,13 @@ public class CustomLinearOp extends LinearOpMode {
     }
 
     /**
-     * Gets all CR servos if they are present.
+     * Get all {@link CRServo}s if they are present.
      *
-     * @return A HashSet containing all the CR servos used by this robot.
+     * @return A {@link Set} containing all the {@link CRServo}s used by this robot.
      */
     public Set<CRServo> getAllCrServos() {
         HashSet<CRServo> crServos = new HashSet<>();
-        // `hardwareMap.crservo` stores all the CRServos as name-device pairs.
+        // hardwareMap.crservo stores all the CRServos as name-device pairs.
         for (Map.Entry<String, CRServo> hardwareDevice : hardwareMap.crservo.entrySet()) {
             crServos.add(hardwareDevice.getValue());
         }
@@ -94,7 +94,7 @@ public class CustomLinearOp extends LinearOpMode {
     public Set<String> getMissingHardwareDevices() {
         HashSet<String> missingHardwareDevices = new HashSet<>();
 
-        // Loop through each `DeviceMapping` (e.g., `Servo`s and `DcMotor`s).
+        // Loop through each DeviceMapping (e.g., Servos and DcMotors).
         for (HardwareMap.DeviceMapping<? extends HardwareDevice> deviceMapping : hardwareMap.allDeviceMappings) {
             // Check if each device in the mapping is null.
             for (Map.Entry<String, ? extends HardwareDevice> hardwareDevice : deviceMapping.entrySet()) {
@@ -160,7 +160,7 @@ public class CustomLinearOp extends LinearOpMode {
     /**
      * Initiates all hardware needed for the wheels.
      * <p>
-     * <strong>When starting a new season, change the return type from `Wheels` to the desired return type.</strong>
+     * <strong>When starting a new season, change the return type from {@link Wheels} to the desired type.</strong>
      */
     private void initWheels() {
         // Prevent multiple instantiation.
@@ -232,7 +232,7 @@ public class CustomLinearOp extends LinearOpMode {
     /**
      * Initiate all hardware needed for the arm.
      * <p>
-     * <strong>When starting a new season, change the type from `Arm` to the desired return type.</strong>
+     * <strong>When starting a new season, change the type from {@link Arm} to the desired type.</strong>
      */
     private void initArm() {
         // Prevent multiple instantiation.
@@ -241,7 +241,7 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * TODO: Replace `Arm()` with a constructor of the desired `Arm` subclass(e.g. `FoldingArm`).
+         * TODO: Replace Arm() with a constructor of the desired Arm subclass(e.g., FoldingArm).
          *  You might want to look at the class and code from previous years for reference.
          */
         ARM = new Arm();
@@ -250,8 +250,7 @@ public class CustomLinearOp extends LinearOpMode {
     /**
      * Initiate all hardware needed for the claw.
      * <p>
-     * <strong>When starting a new season, change the return type from {@link Claw} to the desired return
-     * type.</strong>
+     * <strong>When starting a new season, change the return type from {@link Claw} to the desired type.</strong>
      */
     public void initClaw() {
         // Prevent multiple instantiation.
@@ -260,15 +259,15 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * TODO: Replace `Claw()` with a constructor of the desired `Claw` subclass(e.g., `SingleServoIntakeClaw`)
+         * TODO: Replace Claw() with a constructor of the desired Claw subclass(e.g., SingleServoIntakeClaw)
          *  You might want to look at the class and code from previous years for reference.
          */
         CLAW = new Claw(
-            // TODO: Replace with the appropriate servo object, e.g., `hardwareMap.get(Servo.class, "exampleServo");`
+            // TODO: Replace with the appropriate servo object, e.g., hardwareMap.get(Servo.class, "exampleServo");
             null,
-            // TODO: Replace with the appropriate servo object, e.g., `hardwareMap.get(Servo.class, "exampleServo");`
+            // TODO: Replace with the appropriate servo object, e.g., hardwareMap.get(Servo.class, "exampleServo");
             null,
-            // TODO: Replace with the appropriate servo object, e.g., `hardwareMap.get(Servo.class, "exampleServo");`
+            // TODO: Replace with the appropriate servo object, e.g., hardwareMap.get(Servo.class, "exampleServo");
             null
         );
     }

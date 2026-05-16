@@ -128,7 +128,7 @@ public class DoubleServoIntakeClaw extends Claw {
      * @return true when the sensor is pressed, false otherwise.
      */
     public boolean isSensorPressed() {
-        // `getState()` returns true when the sensor is not pressed.
+        //  returns true when the sensor is not pressed.
         return !INTAKE_SENSOR.getState();
     }
 }

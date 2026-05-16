@@ -21,18 +21,30 @@ public class MecanumWheels extends Wheels {
      */
     public static class MotorSet {
         public final HashSet<DcMotor> MOTORS;
-        /* The DcMotors powering the wheels */
+        /**
+         * The {@link DcMotor}s powering the front left wheel.
+         */
         private final DcMotor FRONT_LEFT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the front right wheel.
+         */
         private final DcMotor FRONT_RIGHT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the back left wheel.
+         */
         private final DcMotor BACK_LEFT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the back right wheel.
+         */
         private final DcMotor BACK_RIGHT_MOTOR;
 
         /**
-         * The motors used by
-         * @param frontLeftMotor
-         * @param frontRightMotor
-         * @param backLeftMotor
-         * @param backRightMotor
+         * Instantiate a set of four {@link MecanumWheels}.
+         *
+         * @param frontLeftMotor  The motor that controls the front left wheel.
+         * @param frontRightMotor The motor that controls the front right wheel.
+         * @param backLeftMotor   The motor that controls the back left wheel.
+         * @param backRightMotor  The motor that controls the back right wheel.
          */
         public MotorSet(
             DcMotor frontLeftMotor,
@@ -52,6 +64,9 @@ public class MecanumWheels extends Wheels {
             BACK_RIGHT_MOTOR = backRightMotor;
         }
 
+        /**
+         * Instantiate an empty motor set. Mostly used for dummy purposes.
+         */
         public MotorSet() {
             MOTORS = new HashSet<>();
 

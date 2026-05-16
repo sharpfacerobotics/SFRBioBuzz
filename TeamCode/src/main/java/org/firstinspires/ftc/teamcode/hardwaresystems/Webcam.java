@@ -138,8 +138,9 @@ public class Webcam {
     }
 
     /**
-     * Construct a webcam wrapper with an optional preview container ID. If `cameraMonitorViewId` is -1, VisionPortal
-     * uses the default preview. If `cameraMonitorViewId` is not -1, a custom preview container is used.
+     * Construct a webcam wrapper with an optional preview container
+     * D. If{@code cameraMonitorViewId} is -1, VisionPortal uses the default preview.
+     * If `cameraMonitorViewId` is not -1, a custom preview container is used.
      *
      * @param webcamName          The name used by the webcam.
      * @param resolution          The resolution that the camera uses.
