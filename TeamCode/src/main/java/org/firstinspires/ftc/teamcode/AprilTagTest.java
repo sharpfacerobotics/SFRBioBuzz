@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.annotation.SuppressLint;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,28 +20,29 @@ public class AprilTagTest extends LinearOpMode {
     private MecanumWheels WHEELS;
     private Webcam WEBCAM;
 
+    @SuppressLint("DefaultLocale")
     private void printAllAprilTags() {
         // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : WEBCAM.getAprilTagDetections()) {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s",
-                        detection.id, detection.metadata.name));
+                    detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  " +
-                                "(inch)", detection.ftcPose.x,
-                        detection.ftcPose.y,
-                        detection.ftcPose.z));
+                        "(inch)", detection.ftcPose.x,
+                    detection.ftcPose.y,
+                    detection.ftcPose.z));
                 telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)"
-                        , detection.ftcPose.pitch, detection.ftcPose.roll,
-                        detection.ftcPose.yaw));
+                    , detection.ftcPose.pitch, detection.ftcPose.roll,
+                    detection.ftcPose.yaw));
                 telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  " +
-                                "(inch, deg, deg)", detection.ftcPose.range,
-                        detection.ftcPose.bearing,
-                        detection.ftcPose.elevation));
+                        "(inch, deg, deg)", detection.ftcPose.range,
+                    detection.ftcPose.bearing,
+                    detection.ftcPose.elevation));
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown",
-                        detection.id));
+                    detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f   " +
-                        "(pixels)", detection.center.x, detection.center.y));
+                    "(pixels)", detection.center.x, detection.center.y));
             }
         }   // end for() loop
     }
@@ -69,52 +72,39 @@ public class AprilTagTest extends LinearOpMode {
         DcMotor backLeft;
         DcMotor backRight;
         try {
-            frontLeft = pickMotor("frontLeftWheel", "frontLeft", "lf",
-                    "leftFront");
-            frontRight = pickMotor("frontRightWheel", "frontRight", "rf",
-                    "rightFront");
+            frontLeft = pickMotor("frontLeftWheel", "frontLeft", "lf", "leftFront");
+            frontRight = pickMotor("frontRightWheel", "frontRight", "rf", "rightFront");
             backLeft = pickMotor("backLeftWheel", "backLeft", "lb", "leftBack");
-            backRight = pickMotor("backRightWheel", "backRight", "rb",
-                    "rightBack");
-
+            backRight = pickMotor("backRightWheel", "backRight", "rb", "rightBack");
         } catch (IllegalArgumentException e) {
-            telemetry.addLine("ERROR: Unable to find one or more drive " +
-                    "motors. " + "Check that the motor names in " +
-                    "initWheels() match" + " your robot configuration.");
+            telemetry.addLine("ERROR: Unable to find one or more drive motors.  " + "Check that the motor names in " +
+                "initWheels() match your robot configuration.");
             telemetry.addLine(e.getMessage());
             telemetry.update();
             return;
         }
 
-        MecanumWheels.MotorSet motorSet =
-                new MecanumWheels.MotorSet(
-                        frontLeft,
-                        frontRight,
-                        backLeft,
-                        backRight
-                );
+        MecanumWheels.MotorSet motorSet = new MecanumWheels.MotorSet(frontLeft, frontRight, backLeft, backRight);
 
         // Approximately measured from the CAD model in inches
         double wheelCircumference = 4.0 * Math.PI;
         double gearRatio = 1.0;
-        double ticksPerInch =
-                MotorType.TETRIX_TORQUENADO.getTicksPerRotation() * gearRatio / wheelCircumference;
+        double ticksPerInch = MotorType.TETRIX_TORQUENADO.getTicksPerRotation() * gearRatio / wheelCircumference;
         // Approximately measured from CAD
         Wheels.WheelDistances wheelDistances = new Wheels.WheelDistances(
-                8.5,
-                14.5
+            8.5,
+            14.5
         );
 
         WHEELS = new MecanumWheels(motorSet, wheelDistances, ticksPerInch);
     }
 
     /**
-     * Helper method to fetch a DC motor using any of the provided names.
-     * Iterates through the names and returns the first motor found. If none of
-     * the names exist in the hardware map, throws an IllegalArgumentException.
+     * Helper method to fetch a DC motor using any of the provided names. Iterates through the names and returns the
+     * first motor found. If none of the names exist in the hardware map, throws an {@link IllegalArgumentException}.
      *
-     * @param candidates possible hardware names for the motor
-     * @return the corresponding DcMotor
+     * @param candidates The possible hardware names for the motor
+     * @return The corresponding {@link DcMotor}
      */
     private DcMotor pickMotor(String... candidates) {
         for (String name : candidates) {
@@ -125,9 +115,8 @@ public class AprilTagTest extends LinearOpMode {
             }
         }
         throw new IllegalArgumentException("Unable to find a hardware device with names " +
-                java.util.Arrays.toString(candidates));
+            java.util.Arrays.toString(candidates));
     }
-
 
     @Override
     public void runOpMode() {
@@ -135,7 +124,7 @@ public class AprilTagTest extends LinearOpMode {
 
         initWheels();
         WEBCAM = new Webcam(hardwareMap.get(WebcamName.class, "Webcam 1"),
-                resolution);
+            resolution);
 
         waitForStart();
 
@@ -143,7 +132,7 @@ public class AprilTagTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             List<AprilTagDetection> currentDetections =
-                    WEBCAM.getAprilTag().getDetections();
+                WEBCAM.getAprilTag().getDetections();
             telemetry.addData("# AprilTags Detected", currentDetections.size());
 
             driveToTargetAprilTag(targetId);
