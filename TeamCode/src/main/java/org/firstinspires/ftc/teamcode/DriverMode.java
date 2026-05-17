@@ -5,6 +5,9 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @TeleOp(name = "DriverMode")
 public class DriverMode extends CustomLinearOp {
     /**
@@ -33,6 +36,8 @@ public class DriverMode extends CustomLinearOp {
      * values (e.g., -0.29) shown in telemetry caused by joystick drift.
      */
     private static final double JOY_STICK_DEADBAND = 0.07;
+    private static final Logger log = LoggerFactory.getLogger(DriverMode.class);
+
     /**
      * Measured resting offsets for the driver controls. These values are sampled during the init phase (before the
      * match begins) while the driver holds all sticks and triggers at their neutral positions. By subtracting these
@@ -54,6 +59,7 @@ public class DriverMode extends CustomLinearOp {
      * released.
      */
     private double pivotOffset = 0.0;
+
     /**
      * Default setting of the camera stream. Set to {@code false} if you want it off by default.
      */
@@ -62,6 +68,25 @@ public class DriverMode extends CustomLinearOp {
      * Check whether the camera is already on or off so that it is not mistakenly opened or closed multiple times.
      */
     private boolean lastToggleBtn = false;
+
+    /**
+     * Clamp {@code value} between {@code min} and {@code max}. Do the exact same thing as
+     * {@link Math#clamp(float, float, float)} because {@link Math#clamp(float, float, float)} is restricted to SDK 35,
+     * while FTC uses a minimum of SDK 24.
+     *
+     * @return {@code min} if {@code value} is less than {@code min}.
+     * <p>
+     * {@code max} if {@code value} is greater than {@code max}.
+     * <p>
+     * Otherwise, {@code value}.
+     */
+    private double clamp(double value, double min, double max) {
+        if (value < min) {
+            return max;
+        }
+
+        return Math.min(value, max);
+    }
 
     /**
      * Apply a deadband to the given value. If the absolute value is less than {@link #JOY_STICK_DEADBAND}, return 0;
@@ -119,6 +144,8 @@ public class DriverMode extends CustomLinearOp {
      * Then apply a deadband to each value to clamp tiny drift to zero. Forward/backward comes from the right stick
      * Y-axis (up = forward). Negate the value so pushing forward yields positive. Subtract {@link #verticalOffset}
      * measured during init.
+     * <p>
+     * Finally, multiplies each value by {@link #DRIVING_SENSITIVITY}
      *
      * @return An instance of {@link ControlInput} storing the processed input values.
      */
@@ -138,11 +165,16 @@ public class DriverMode extends CustomLinearOp {
         double rawPivot = gamepad1.left_stick_x;
         double correctedPivot = gamepad1.left_stick_x - pivotOffset;
 
-        // Apply deadband to each input to eliminate small stick drift and
-        // unintended motion. Scale the inputs by the driving sensitivity.
+        // Apply deadband to each input to eliminate small stick drift and unintended motion.
+        // Scale the inputs by the driving sensitivity.
         double horizontal = applyDeadband(correctedHorizontal) * DRIVING_SENSITIVITY;
         double vertical = applyDeadband(correctedVertical) * DRIVING_SENSITIVITY;
         double pivot = applyDeadband(correctedPivot) * DRIVING_SENSITIVITY;
+
+        // It is unlikely to cause issues, but for safety, clamp each value.
+        horizontal = clamp(horizontal, -1.0, 1.0);
+        vertical = clamp(vertical, -1.0, 1.0);
+        pivot = clamp(vertical, -1.0, 1.0);
 
         /*
          * Telemetry: report the raw and processed inputs as well as the computed motor powers. This aids in
@@ -240,10 +272,9 @@ public class DriverMode extends CustomLinearOp {
                 /*
                  * For Road Runner fallback, convert our directional commands to the +y forward/+x right convention.
                  * Note that vertical controls forward/backward; horizontal controls strafe; pivot controls rotation.
-                 *  The forward value must be negated because PoseVelocity2d expects +y forward.
                  */
                 PoseVelocity2d velocity = new PoseVelocity2d(
-                    new Vector2d(result.horizontal, -result.vertical),
+                    new Vector2d(result.horizontal, result.vertical),
                     result.pivot
                 );
                 MECANUM_DRIVE.setDrivePowers(velocity);
