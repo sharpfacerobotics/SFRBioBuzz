@@ -9,23 +9,6 @@ import java.util.HashSet;
  * A set of four mecanum wheels, each controlled separately.
  */
 public class MecanumWheels extends Wheels {
-    /**
-     * The motor powering the front left wheel.
-     */
-    private final DcMotor FRONT_LEFT_MOTOR;
-    /**
-     * The motor powering the front right wheel.
-     */
-    private final DcMotor FRONT_RIGHT_MOTOR;
-    /**
-     * The motor powering the back left wheel.
-     */
-    private final DcMotor BACK_LEFT_MOTOR;
-    /**
-     * The motor powering the back right wheel.
-     */
-    private final DcMotor BACK_RIGHT_MOTOR;
-
     public static class Builder {
         public MecanumWheels build() {
             return new MecanumWheels(new MotorSet(), null, 1.0);
@@ -33,16 +16,36 @@ public class MecanumWheels extends Wheels {
     }
 
     /**
-     * Passed into the `MecanumWheels` constructor. Contains all four motors.
+     * Passed into the {@link MecanumWheels#MecanumWheels(MotorSet, WheelDistances, double)} constructor. Contains all
+     * four motors.
      */
     public static class MotorSet {
         public final HashSet<DcMotor> MOTORS;
-        /* The DcMotors powering the wheels */
+        /**
+         * The {@link DcMotor}s powering the front left wheel.
+         */
         private final DcMotor FRONT_LEFT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the front right wheel.
+         */
         private final DcMotor FRONT_RIGHT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the back left wheel.
+         */
         private final DcMotor BACK_LEFT_MOTOR;
+        /**
+         * The {@link DcMotor}s powering the back right wheel.
+         */
         private final DcMotor BACK_RIGHT_MOTOR;
 
+        /**
+         * Instantiate a set of four {@link MecanumWheels}.
+         *
+         * @param frontLeftMotor  The motor that controls the front left wheel.
+         * @param frontRightMotor The motor that controls the front right wheel.
+         * @param backLeftMotor   The motor that controls the back left wheel.
+         * @param backRightMotor  The motor that controls the back right wheel.
+         */
         public MotorSet(
             DcMotor frontLeftMotor,
             DcMotor frontRightMotor,
@@ -61,6 +64,9 @@ public class MecanumWheels extends Wheels {
             BACK_RIGHT_MOTOR = backRightMotor;
         }
 
+        /**
+         * Instantiate an empty motor set. Mostly used for dummy purposes.
+         */
         public MotorSet() {
             MOTORS = new HashSet<>();
 
@@ -70,6 +76,23 @@ public class MecanumWheels extends Wheels {
             BACK_RIGHT_MOTOR = null;
         }
     }
+
+    /**
+     * The motor powering the front left wheel.
+     */
+    private final DcMotor FRONT_LEFT_MOTOR;
+    /**
+     * The motor powering the front right wheel.
+     */
+    private final DcMotor FRONT_RIGHT_MOTOR;
+    /**
+     * The motor powering the back left wheel.
+     */
+    private final DcMotor BACK_LEFT_MOTOR;
+    /**
+     * The motor powering the back right wheel.
+     */
+    private final DcMotor BACK_RIGHT_MOTOR;
 
     public MecanumWheels(MotorSet motorSet, WheelDistances wheelDistances, double ticksPerInch) {
         super(motorSet.MOTORS, wheelDistances, ticksPerInch);
@@ -118,34 +141,26 @@ public class MecanumWheels extends Wheels {
      * {@inheritDoc}
      */
     @Override
-    public void drive(double x, double y, double theta) {
+    public void drive(double xPower, double yPower, double thetaPower) {
         for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
         /*
-         * The code below should be correct. If for some reason the robot is moving in the wrong direction, reverse
-         * the direction of the motors in {@link MecanumWheels#MecanumWheels(MotorSet, WheelDistances, ticksPerInch)}.
-         *
-         * As a last resort, try
-         * ```
-         * double frontLeftPower = -theta + x + y;
-         * double frontRightPower = theta + x + y;
-         * double backLeftPower = -theta - x + y;
-         * double backRightPower = theta - x + y;
-         * ```
-         * It worked in a previous season, but it probably is not a good idea.
+        double frontLeftPower = yPower + xPower + theta;
+        double frontRightPower = yPower - xPower - theta;
+        double backLeftPower = yPower - xPower + theta;
+        double backRightPower = yPower + xPower - theta;
          */
-        double frontLeftPower = y + x + theta;
-        double frontRightPower = y - x - theta;
-        double backLeftPower = y - x + theta;
-        double backRightPower = y + x - theta;
+        double frontLeftPower = -thetaPower + xPower + yPower;
+        double frontRightPower = thetaPower + xPower + yPower;
+        double backLeftPower = -thetaPower - xPower + yPower;
+        double backRightPower = thetaPower - xPower + yPower;
 
-        /*
-         * Scale the motor powers to be within +/- 1.0. Use the absolute maximum magnitude rather than the algebraic
-         * maximum to ensure all motors are scaled properly.
-         * For example, a power set of [-0.8, 0.2, 0.5, 0.4] should be scaled by 0.8, not 0.5.
-         */
+        // Scale the motor powers to be within +/- 1.0.
+        // Use the absolute maximum magnitude rather than the algebraic maximum
+        // to ensure all motors are scaled properly.
+        // For example, a power set of [-0.8, 0.2, 0.5, 0.4] should be scaled by 0.8, not 0.5.
         double maxMagnitude = Math.max(
             Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
             Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
@@ -188,14 +203,13 @@ public class MecanumWheels extends Wheels {
         // Guard against division by zero in the scaling logic below and halt the drive.
         if (totalDistance == 0) {
             // Set all motor powers to zero to stop the robot cleanly.
-            drive(0, 0, 0);
+            drive(0);
             return;
         }
 
-        /*
-         * Scale the motor power based on trigonometry. Multiply by MOTOR_POWER after normalizing by the total
-         * distance so that larger requested distances don't inadvertently increase motor power.
-         */
+        // Scale the motor power based on trigonometry. Multiply by MOTOR_POWER
+        // after normalizing by the total distance so that larger requested
+        // distances don't inadvertently increase motor power.
         double xPower = (sidewaysDistance / totalDistance) * MOTOR_POWER;
         double yPower = (forwardDistance / totalDistance) * MOTOR_POWER;
         drive(xPower, yPower, 0);
@@ -224,9 +238,8 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void turn(double degrees) {
-        // The diameter of the circle that the wheels make when rotating 360 degrees.
-        double diameter =
-            Math.sqrt(Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2));
+        // The diameter of the circle that the wheels make when rotating 360degrees.
+        double diameter = Math.sqrt(Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2));
         double circumference = diameter * Math.PI;
 
         // How far the wheels have to move.

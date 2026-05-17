@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2019 OpenFTC Team
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- *  all
- * copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 import android.util.Size;
@@ -28,312 +6,360 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
-import org.firstinspires.ftc.vision.opencv.ColorRange;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Process input from the camera to detect objects.
- */
 public class Webcam {
     /**
-     * The VisionPortal that the webcam uses.
-     */
-    private final VisionPortal VISION_PORTAL;
-    private final AprilTagProcessor APRIL_TAG;
-    private final PredominantColorProcessor COLOR_PROCESSOR;
-    private final OpenCvCamera OPEN_CV_CAMERA;
-    private final Color targetColor;
-    private ColorBlobLocatorProcessor colorLocator = new ColorBlobLocatorProcessor.Builder()
-        .setTargetColorRange(ColorRange.BLUE)         // use a predefined color match
-        .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
-        .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
-        .setDrawContours(true)                        // Show contours on the Stream Preview
-        .setBlurSize(5)                               // Smooth the transitions between different colors in image
-        .build();
-
-    /**
-     * A 3D vector to adjust for the camera's positioning on the robot.
-     */
-    private double[] poseAdjust;
-    private PipeLine pipeLine;
-
-    public static class PipeLine extends OpenCvPipeline {
-        private final Mat erodeElement =
-            Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new org.opencv.core.Size(12, 12));
-        private final Mat dilateElement =
-            Imgproc.getStructuringElement(Imgproc.MORPH_RECT,
-                new org.opencv.core.Size(12, 12));
-        private Color targetColor;
-        private int numContours = 0;
-        private double[] contourPosition;
-        // Convert to HSV color space for easier color detection
-        private Mat hsv = new Mat();
-        private Mat mask = new Mat();
-        private Mat yellowMask = new Mat();
-        private Mat redMask = new Mat();
-        private Mat magentaMask = new Mat();
-        private Mat allianceColorMask = new Mat();
-        private Mat hierarchy = new Mat();
-
-        @Override
-        public Mat processFrame(Mat input) {
-            Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
-
-            // Define range of the color you want to detect
-            // Scalar lowerBound = new Scalar(50, 100, 100); // Example for
-            // green
-            // Scalar upperBound = new Scalar(70, 255, 255);
-
-            // Create mask to filter out the desired color(s)
-            Core.inRange(hsv, Color.YELLOW.getLowerBound(),
-                Webcam.Color.RED.getUpperBound(), yellowMask);
-            switch (targetColor) {
-                case RED:
-                    Core.inRange(hsv, Color.RED.getLowerBound(),
-                        Color.RED.getUpperBound(), redMask);
-                    Core.inRange(hsv, Color.MAGENTA.getLowerBound(),
-                        Color.MAGENTA.getUpperBound(), magentaMask);
-                    Core.bitwise_or(redMask, magentaMask, allianceColorMask);
-                    break;
-
-                case BLUE:
-                    Core.inRange(hsv, Color.BLUE.getLowerBound(),
-                        Color.BLUE.getUpperBound(), allianceColorMask);
-                    break;
-            }
-            Core.bitwise_or(yellowMask, allianceColorMask, mask);
-
-            // Find contours
-            List<MatOfPoint> contours = new ArrayList<>();
-            Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE
-                , Imgproc.CHAIN_APPROX_SIMPLE);
-
-            // Draw contours on the original image
-            for (MatOfPoint contour : contours) {
-                Rect rect = Imgproc.boundingRect(contour);
-                Imgproc.rectangle(input, rect, new Scalar(0, 255, 0), 2); //
-                // Green rectangles around objects
-            }
-
-            // If any contours were found.
-            if (!contours.isEmpty()) {
-                numContours = contours.size();
-                contourPosition = getContourPosition(contours.get(0).toArray());
-            }
-
-            return input;
-        }
-
-        public int getNumContours() {
-            return numContours;
-        }
-
-        /**
-         * Find the middle point of a contour.
-         *
-         * @param contourPoints An array of the points in the contour.
-         * @return Returns the point in the middle of the contour as a double[] of format [x, y].
-         */
-        private double[] getContourPosition(Point[] contourPoints) {
-            double[] position = new double[2];
-
-            double xMax = contourPoints[0].x;
-            double xMin = contourPoints[0].x;
-
-            double yMax = contourPoints[0].y;
-            double yMin = contourPoints[0].y;
-
-            for (Point p : contourPoints) {
-                xMax = Math.max(xMax, p.x);
-                xMin = Math.min(xMin, p.x);
-
-                yMax = Math.max(yMax, p.y);
-                yMin = Math.min(yMin, p.y);
-            }
-
-            position[0] = (xMax + xMin) / 2.0;
-            position[1] = (yMax + yMin) / 2.0;
-
-            return position;
-        }
-    }
-
-    public Webcam(WebcamName webcamName, int[] resolution) {
-        this(webcamName, resolution, new double[]{0, 0, 0}, -1);
-    }
-
-    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust) {
-        this(webcamName, resolution, poseAdjust, -1);
-    }
-
-    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust, int cameraMonitorViewId) {
-        APRIL_TAG = new AprilTagProcessor.Builder().build();
-
-        COLOR_PROCESSOR = new PredominantColorProcessor.Builder()
-            .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5,
-                -0.5))
-            .setSwatches(
-                PredominantColorProcessor.Swatch.RED,
-                PredominantColorProcessor.Swatch.BLUE,
-                PredominantColorProcessor.Swatch.YELLOW,
-                PredominantColorProcessor.Swatch.BLACK,
-                PredominantColorProcessor.Swatch.WHITE)
-            .build();
-
-        targetColor = null;
-        colorLocator = null;
-
-        VISION_PORTAL = new VisionPortal.Builder()
-            .addProcessor(COLOR_PROCESSOR)
-            .addProcessor(APRIL_TAG)
-            .setCamera(webcamName)
-            .setCameraResolution(new Size(resolution[0], resolution[1]))
-            .build();
-
-        OPEN_CV_CAMERA = (cameraMonitorViewId == -1)
-            ? OpenCvCameraFactory.getInstance().createWebcam(webcamName)
-            : OpenCvCameraFactory.getInstance().createWebcam(webcamName,
-            cameraMonitorViewId);
-
-        this.poseAdjust = poseAdjust;
-
-        // Set the custom pipeline
-        pipeLine = new PipeLine();
-        OPEN_CV_CAMERA.setPipeline(pipeLine);
-
-        // Open the camera device and start streaming
-        OPEN_CV_CAMERA.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                OPEN_CV_CAMERA.startStreaming(resolution[0], resolution[1],
-                    OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode) {
-            }
-        });
-    }
-
-    public VisionPortal getVisionPortal() {
-        return VISION_PORTAL;
-    }
-
-    public AprilTagProcessor getAprilTag() {
-        return APRIL_TAG;
-    }
-
-    public double[] getPoseAdjust() {
-        return poseAdjust;
-    }
-
-    public void setPoseAdjust(double[] poseAdjust) {
-        this.poseAdjust = poseAdjust;
-    }
-
-    public List<AprilTagDetection> getAprilTagDetections() {
-        return APRIL_TAG.getDetections();
-    }
-
-    public PredominantColorProcessor getColorProcessor() {
-        return COLOR_PROCESSOR;
-    }
-
-    public PredominantColorProcessor.Result getColorResult() {
-        return COLOR_PROCESSOR.getAnalysis();
-    }
-
-    public OpenCvCamera getOpenCvCamera() {
-        return OPEN_CV_CAMERA;
-    }
-
-    public PipeLine getPipeLine() {
-        return pipeLine;
-    }
-
-    public Color getTargetColor() {
-        return pipeLine.targetColor;
-    }
-
-    public void setTargetColor(Color targetColor) {
-        pipeLine.targetColor = targetColor;
-    }
-
-    /**
-     * Get the last seen contour position. If the camera has never spotted a contour position, it will return `null`.
-     *
-     * @return The last seen contour position. If the camera has never spotted a contour position, it will return
-     * `null`.
-     */
-    public double[] getContourPosition() {
-        if (pipeLine == null) {
-            return new double[]{-1, -1};
-        }
-
-        return pipeLine.contourPosition;
-    }
-
-    /**
-     * Specify a range of HSV values for each color.
+     * Enum that holds HSV ranges for different colors used by the robot.
      */
     public enum Color {
         /**
-         * Red to reddish-orange.
+         * Red to reddish-orange hues.
          */
         RED(new Scalar(0, 128, 64), new Scalar(10, 255, 255)),
-
         /**
-         * Yellow-orange to lime-yellow.
+         * Yellow-orange to yellow-green hues.
          */
         YELLOW(new Scalar(20, 128, 64), new Scalar(33, 255, 255)),
-
-        GREEN(new Scalar(50, 128, 64), new Scalar(70, 255, 255)),
-
         /**
-         * Teal to indigo.
+         * Green hues (present for completeness / future use).
+         */
+        GREEN(new Scalar(50, 128, 64), new Scalar(70, 255, 255)),
+        /**
+         * Teal to blue hues (used for blue alliance pixels).
          */
         BLUE(new Scalar(90, 128, 64), new Scalar(125, 255, 255)),
-
         /**
-         * Magenta to red.
+         * Magenta to red hues (used for purple-style elements). The hue range conceptually wraps around zero in HSV.
          */
         MAGENTA(new Scalar(-170, 128, 64), new Scalar(180, 255, 255));
-
+        /**
+         * Lower HSV bound for this color.
+         */
         private final Scalar lowerBound;
+        /**
+         * Upper HSV bound for this color.
+         */
         private final Scalar upperBound;
 
+
+        /**
+         * Constructor for each color with its lower and upper HSV bounds.
+         *
+         * @param lowerBound The lower HSV bound of the color.
+         * @param upperBound The upper HSV bound of the color.
+         */
         Color(Scalar lowerBound, Scalar upperBound) {
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
         }
 
+        /**
+         * Return the lower HSV bound for this color.
+         *
+         * @return The lower HSV bound for this color.
+         */
         public Scalar getLowerBound() {
             return lowerBound;
         }
 
+        /**
+         * Return the upper HSV bound for this color.
+         *
+         * @return The upper HSV bound for this color.
+         */
         public Scalar getUpperBound() {
             return upperBound;
         }
 
+        /**
+         * Return both bounds as a two-element array [lower, upper].
+         *
+         * @return Both bounds as a two-element array [lower, upper].
+         */
         public Scalar[] getRange() {
             return new Scalar[]{lowerBound, upperBound};
         }
+    }
+
+    /**
+     * Store camera resolution so other code can compute pixel error.
+     */
+    private final int[] RESOLUTION;
+
+    /**
+     * VisionPortal used to communicate with the webcam and run vision processors.
+     */
+    private final VisionPortal VISION_PORTAL;
+    /**
+     * Processor that detects AprilTags in the camera image.
+     */
+    private final AprilTagProcessor APRIL_TAG;
+    /**
+     * Processor that finds the predominant color in a region of interest.
+     */
+    private final PredominantColorProcessor COLOR_PROCESSOR;
+
+    /**
+     * Alliance or team color you want to remember for this webcam (used by your code).
+     */
+    private Color targetColor;
+    /**
+     * Offset of the camera relative to the robot center [x, y, z] in inches. Used by localization or pose-estimation
+     * code outside this class.
+     */
+    private double[] poseAdjust;
+
+    /**
+     * Construct a webcam wrapper with default pose offset (0,0,0). This version does not use a custom preview
+     * container. VisionPortal will handle the normal RC/DS preview.
+     *
+     * @param webcamName The name used by the webcam.
+     * @param resolution The resolution that the camera uses.
+     */
+    public Webcam(WebcamName webcamName, int[] resolution) {
+        this(webcamName, resolution, new double[]{0.0, 0.0, 0.0});
+    }
+
+    /**
+     * Construct a webcam wrapper with a specified pose offset and default preview.
+     *
+     * @param webcamName The name used by the webcam.
+     * @param resolution The resolution that the camera uses.
+     * @param poseAdjust The adjustment for positioning of the camera relative to the robot.
+     */
+    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust) {
+        this(webcamName, resolution, poseAdjust, -1);
+    }
+
+    /**
+     * Construct a webcam wrapper with an optional preview container D. If{@code cameraMonitorViewId} is -1,
+     * VisionPortal uses the default preview. If `cameraMonitorViewId` is not -1, a custom preview container is used.
+     *
+     * @param webcamName          The name used by the webcam.
+     * @param resolution          The resolution that the camera uses.
+     * @param poseAdjust          The adjustment for positioning of the camera relative to the robot.
+     * @param cameraMonitorViewId The ID for the preview container.
+     */
+    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust, int cameraMonitorViewId) {
+        // Save pose adjustment values (reference is stored directly).
+        this.poseAdjust = poseAdjust;
+
+        // Saves resolution for pixel-based aiming
+        this.RESOLUTION = resolution;
+
+        // No target color selected by default.
+        this.targetColor = null;
+
+        // Create an AprilTag processor with default settings.
+        APRIL_TAG = new AprilTagProcessor.Builder().build();
+
+        // Create a predominant color processor with a center ROI and a set of swatches.
+        COLOR_PROCESSOR = new PredominantColorProcessor.Builder()
+            .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))
+            .setSwatches(
+                PredominantColorProcessor.Swatch.RED,
+                PredominantColorProcessor.Swatch.BLUE,
+                PredominantColorProcessor.Swatch.YELLOW,
+                PredominantColorProcessor.Swatch.BLACK,
+                PredominantColorProcessor.Swatch.WHITE
+            )
+            .build();
+
+        // Build the VisionPortal using the Builder pattern.
+        // It owns the USB camera and runs the color and AprilTag processors.
+        // autoStopLiveView means the RC preview pauses when no processors are enabled.
+        VisionPortal.Builder builder = new VisionPortal.Builder()
+            .addProcessor(COLOR_PROCESSOR)
+            .addProcessor(APRIL_TAG)
+            .setCamera(webcamName)
+            .setCameraResolution(new Size(resolution[0], resolution[1]))
+            .setAutoStopLiveView(true);
+
+        // Create the VisionPortal instance.
+        VISION_PORTAL = builder.build();
+    }
+
+    /**
+     * Return the VisionPortal managing this webcam. You can use this to enable/disable processors or pause/resume the
+     * preview.
+     *
+     * @return The VisionPortal managing this webcam.
+     */
+    public VisionPortal getVisionPortal() {
+        return VISION_PORTAL;
+    }
+
+    /**
+     * Return the AprilTag processor for this webcam.
+     *
+     * @return The AprilTag processor for this webcam.
+     */
+    public AprilTagProcessor getAprilTag() {
+        return APRIL_TAG;
+    }
+
+    /**
+     * Return a copy of the current AprilTag detections. The list may be empty if no tags are seen.
+     *
+     * @return A copy of the current AprilTag detections. The list may be empty if no tags are seen.
+     */
+    public List<AprilTagDetection> getAprilTagDetections() {
+        // Copy into a new list so callers cannot modify the internal list.
+        return new ArrayList<>(APRIL_TAG.getDetections());
+    }
+
+    /**
+     * Return the predominant color processor. You can use this directly if you want to read more detailed color info.
+     *
+     * @return The predominant color processor.
+     */
+    public PredominantColorProcessor getColorProcessor() {
+        return COLOR_PROCESSOR;
+    }
+
+    /**
+     * Return the camera resolution.
+     *
+     * @return Return the camera resolution.
+     */
+    public int[] getResolution() {
+        return RESOLUTION;
+    }
+
+    /**
+     * Tuning helper for AprilTags.
+     */
+    public void setAprilTagDecimation() {
+        setAprilTagDecimation(2.0f);
+    }
+
+    /**
+     * Tuning helper for AprilTags.
+     *
+     * @param decimation The frame rate to use.
+     */
+    public void setAprilTagDecimation(float decimation) {
+        APRIL_TAG.setDecimation(decimation);
+    }
+
+    /**
+     * Pick "best" detection out of the given alliance IDs. Favors detections closer to the center of the camera and
+     * detections with a shorter distance. If that fails, judge the best detection based on pixel error.
+     *
+     * @param detections  The AprilTags that have been detected.
+     * @param aprilTagIds The AprilTag IDs to detect.
+     * @return The AprilTag that best fits matches.
+     */
+    private AprilTagDetection pickBestDetection(List<AprilTagDetection> detections, int[] aprilTagIds) {
+        if (detections == null || detections.isEmpty()) {
+            return null;
+        }
+
+        // Need frame width for pixel scoring; fall back safely if webcam is null.
+        double frameWidth = RESOLUTION[0];
+        double halfWidth = frameWidth / 2.0;
+
+        AprilTagDetection best = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+
+        //
+        for (AprilTagDetection detection : detections) {
+            if (detection == null || detection.ftcPose == null || detection.center == null) {
+                continue;
+            }
+
+            boolean idMatch = false;
+            for (int id : aprilTagIds) {
+                if (detection.id == id) {
+                    idMatch = true;
+                    break;
+                }
+            }
+            if (!idMatch) {
+                continue;
+            }
+
+            // Prefer detections closest to camera center, then closer range.
+            double pixelError = Math.abs(detection.center.x - halfWidth);
+            double range = detection.ftcPose.range * 0.0254; // inches -> meters
+
+            // Higher score is better: small pixel error dominates.
+            double score = -pixelError - (25.0 * range);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = detection;
+            }
+        }
+
+        if (best != null) {
+            return best;
+        }
+
+        // Fallback: choose the smallest pixel error among all detections
+        for (AprilTagDetection detection : detections) {
+            if (detection == null || detection.center == null) {
+                continue;
+            }
+            double score = -Math.abs(detection.center.x - halfWidth);
+            if (score > bestScore) {
+                bestScore = score;
+                best = detection;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Return the current pose adjustment [x, y, z] for the camera.
+     *
+     * @return The current pose adjustment [x, y, z] for the camera.
+     */
+    public double[] getPoseAdjust() {
+        return poseAdjust;
+    }
+
+    /**
+     * Set a new pose adjustment [x, y, z] for the camera. This stores the array reference directly.
+     *
+     * @param poseAdjust The new pose adjustment [x, y, z].
+     */
+    public void setPoseAdjust(double[] poseAdjust) {
+        this.poseAdjust = poseAdjust;
+    }
+
+    /**
+     * Return the currently selected target color (maybe {@code null}).
+     *
+     * @return The currently selected target color (maybe {@code null}).
+     */
+    public Color getTargetColor() {
+        return targetColor;
+    }
+
+    /**
+     * Set the alliance or team color used by your own code.
+     *
+     * @param targetColor The alliance or team color used by your own code.
+     */
+    public void setTargetColor(Color targetColor) {
+        this.targetColor = targetColor;
+    }
+
+    /**
+     * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
+     * yet.
+     *
+     * @return The latest color analysis from the predominant color processor. May be {@code null} if no frame has been
+     * processed yet.
+     */
+    public PredominantColorProcessor.Result getColorResult() {
+        return COLOR_PROCESSOR.getAnalysis();
     }
 }

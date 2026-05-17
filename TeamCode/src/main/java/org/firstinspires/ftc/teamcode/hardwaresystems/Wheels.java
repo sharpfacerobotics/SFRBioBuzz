@@ -68,10 +68,7 @@ public abstract class Wheels {
      * @param motors       All the motors used by the robot.
      * @param ticksPerInch The number of ticks needed to move the robot by one inch.
      */
-    public Wheels(
-        HashSet<DcMotor> motors, WheelDistances wheelDistances,
-        double ticksPerInch
-    ) {
+    public Wheels(HashSet<DcMotor> motors, WheelDistances wheelDistances, double ticksPerInch) {
         MOTORS = motors;
         // Allow wheels to roll freely.
         for (DcMotor motor : MOTORS) {
@@ -100,7 +97,7 @@ public abstract class Wheels {
     /**
      * Drive forwards and backwards.
      *
-     * @param forwardPower What power to set the motors to.
+     * @param forwardPower The power to set the motors to.
      */
     public void drive(double forwardPower) {
         /*
@@ -114,7 +111,7 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive the wheels.
+     * Set the wheels to drive forward with a certain power.
      *
      * @param forwardPower Forward power. Positive is forward, negative is backward.
      * @param turn         Rotation power. Positive is clockwise, negative is counterclockwise.
@@ -124,13 +121,13 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive the wheels.
+     * Set the wheels to drive with a given power in for x, y,and turn.
      *
      * @param xPower Sideways power. Positive is rightward, negative is leftward.
      * @param yPower Forward power. Positive is forward, negative is backward.
-     * @param turn   Rotation power. Positive is clockwise, negative is counterclockwise.
+     * @param thetaPower   Rotation power. Positive is clockwise, negative is counterclockwise.
      */
-    public abstract void drive(double xPower, double yPower, double turn);
+    public abstract void drive(double xPower, double yPower, double thetaPower);
 
     /**
      * Drive the robot a certain distance forward.
@@ -149,10 +146,7 @@ public abstract class Wheels {
      * @param forwardDistance  The distance that the robot travels forward in inches. Positive is forward, negative is
      *                         backward.
      */
-    public abstract void driveDistance(
-        double sidewaysDistance,
-        double forwardDistance
-    );
+    public abstract void driveDistance(double sidewaysDistance, double forwardDistance);
 
     /**
      * Rotate the robot a certain number of degrees.
