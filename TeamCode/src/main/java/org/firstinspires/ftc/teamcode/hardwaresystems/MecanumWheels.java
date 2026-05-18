@@ -10,8 +10,24 @@ import java.util.HashSet;
  */
 public class MecanumWheels extends Wheels {
     public static class Builder {
-        public MecanumWheels build() {
-            return new MecanumWheels(new MotorSet(), null, 1.0);
+        private static MotorSet motorSet;
+        private static WheelDistances wheelDistances;
+        private static double ticksPerInch;
+
+        public static void setMotorSet(MotorSet newMotorSet) {
+            motorSet = newMotorSet;
+        }
+
+        public static void setWheelDistances(WheelDistances newWheelDistances) {
+            wheelDistances = newWheelDistances;
+        }
+
+        public static void setTicksPerInch(double newTicksPerInch) {
+            ticksPerInch = newTicksPerInch;
+        }
+
+        public static MecanumWheels build() {
+            return new MecanumWheels(motorSet, wheelDistances, ticksPerInch);
         }
     }
 
