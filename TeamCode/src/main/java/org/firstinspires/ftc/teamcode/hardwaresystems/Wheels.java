@@ -57,25 +57,78 @@ public abstract class Wheels {
         }
     }
 
+    /**
+     * Builder class to simplify the process of creating {@link Wheels}
+     * subclasses. Subclasses that extend {@link Wheels} can also have an inner
+     * class that extends {@link Builder}.
+     */
     public static abstract class Builder {
+        /**
+         * The distances between the wheels of the {@link Wheels} object to be
+         * created.
+         */
         protected WheelDistances wheelDistances;
+        /**
+         * The number of ticks it takes for the motors of the new {@link Wheels}
+         * object to travel one (1) inch.
+         */
         protected double ticksPerInch;
 
+        /**
+         * Set the {@link WheelDistances#lateralDistance} property of
+         * {@link #wheelDistances}.
+         *
+         * @param lateralDistance The distance between the left and right wheels
+         *                        in inches.
+         * @return Any builder class that extends {@link Builder} should
+         * implement the abstract setter methods with a <em>subclass</em> of
+         * {@link Wheels.Builder} as the return type. This allows for chaining
+         * of {@link Builder} methods without the need to cast the type.
+         * <p>
+         * See {@link MecanumWheels.Builder} for an example.
+         */
         public abstract Builder setLateralDistance(double lateralDistance);
 
+        /**
+         * Set the {@link WheelDistances#lateralDistance} property of
+         * {@link #wheelDistances}.
+         *
+         * @param longitudinalDistance The distance between the left and right
+         *                             wheels in inches.
+         * @return Any builder class that extends {@link Builder} should
+         * implement the abstract setter methods with a <em>subclass</em> of
+         * {@link Wheels.Builder} as the return type. This allows for chaining
+         * of {@link Builder} methods without the need to cast the type.
+         * <p>
+         * See {@link MecanumWheels.Builder} for an example.
+         */
         public abstract Builder setLongitudinalDistance(double longitudinalDistance);
 
-        public abstract Builder setTicksPerInch(double newTicksPerInch);
+        /**
+         * Set the {@link WheelDistances#lateralDistance} property of
+         * {@link #wheelDistances}.
+         *
+         * @param ticksPerInch The distance between the left and right wheels in
+         *                     inches.
+         * @return Any builder class that extends {@link Builder} should
+         * implement the abstract setter methods with a <em>subclass</em> of
+         * {@link Wheels.Builder} as the return type. This allows for chaining
+         * of {@link Builder} methods without the need to cast the type.
+         * <p>
+         * See {@link MecanumWheels.Builder} for an example.
+         */
+        public abstract Builder setTicksPerInch(double ticksPerInch);
 
         /**
-         * Using the given {@link MecanumWheels}, {@link WheelDistances}, and
-         * {@link #ticksPerInch}, construct a new instance of
-         * {@link MecanumWheels}.
+         * Using the given {@link WheelDistances}, and {@link #ticksPerInch},
+         * construct a new instance of {@link Wheels}.
          *
-         * @return A new instance of {@link MecanumWheels} if the values are
-         * valid.
+         * @return If the state of the {@link Builder} is valid, return a
+         * <em>subclass</em> of {@link Wheels}. Any class that extends
+         * {@link Builder} should replace the return type with a more specific
+         * one (i.e., the corresponding subclass of {@link Wheels}).
          * <p>
-         * Else, {@code null}.
+         * See {@link MecanumWheels.Builder#build()} for an example.
          */
         public abstract Wheels build();
     }

@@ -34,26 +34,26 @@ public class CustomLinearOp extends LinearOpMode {
     /**
      * Use for our own system.
      * TODO: By default, the class is set to {@link Wheels}. Replace as
-     * necessary.
+     *  necessary.
      */
     protected Wheels WHEELS;
     /**
      * Use for RoadRunner.
      * TODO: By default, the class is set to {@link MecanumDrive}. Replace as
-     * necessary.
+     *  necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
     /**
      * The arm used by the robot.
      * TODO: By default, the type is set to {@link Arm}. Replace or delete as
-     * necessary.
+     *  necessary.
      */
     protected Arm ARM;
 
     /**
      * The claw used by the robot.
      * TODO: By default, the type is set to {@link Claw}. Replace or delete
-     * as necessary.
+     *  as necessary.
      */
     protected Claw CLAW;
 

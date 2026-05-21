@@ -83,8 +83,8 @@ public class MecanumWheels extends Wheels {
          * {@inheritDoc}
          */
         @Override
-        public Builder setTicksPerInch(double newTicksPerInch) {
-            ticksPerInch = newTicksPerInch;
+        public Builder setTicksPerInch(double ticksPerInch) {
+            this.ticksPerInch = ticksPerInch;
             return this;
         }
 
