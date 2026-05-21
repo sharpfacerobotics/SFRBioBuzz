@@ -211,38 +211,34 @@ public class CustomLinearOp extends LinearOpMode {
              * Update the candidate lists if your team uses different
              * names (for example, "frontLeft", "lf", "leftFront", etc.).
              */
-            DcMotor frontLeft = pickMotor(
+            DcMotor frontLeftMotor = pickMotor(
                 "frontLeftWheel",
+                "frontLeftMotor",
                 "frontLeft",
                 "lf",
                 "leftFront"
             );
-            DcMotor frontRight = pickMotor(
+            DcMotor frontRightMotor = pickMotor(
                 "frontRightWheel",
+                "frontRightMotor",
                 "frontRight",
                 "rf",
                 "rightFront"
             );
-            DcMotor backLeft = pickMotor(
+            DcMotor backLeftMotor = pickMotor(
                 "backLeftWheel",
+                "backLeftMotor",
                 "backLeft",
                 "lb",
                 "leftBack"
             );
-            DcMotor backRight = pickMotor(
+            DcMotor backRightMotor = pickMotor(
                 "backRightWheel",
+                "backRightMotor",
                 "backRight",
                 "rb",
                 "rightBack"
             );
-
-            // Group the motors into a MecanumWheels.MotorSet. MotorSet is a
-            // convenient container for passing all four motors into the
-            // MecanumWheels constructor.
-            MecanumWheels.MecanumMotors mecanumMotors =
-                new MecanumWheels.MecanumMotors(
-                    frontLeft, frontRight, backLeft, backRight
-                );
 
             // Approximate measurements from the CAD model (in inches).
             // The wheel circumference is 4 inches in diameter multiplied by π.
@@ -252,17 +248,22 @@ public class CustomLinearOp extends LinearOpMode {
             double ticksPerInch =
                 MotorType.TETRIX_TORQUENADO.getTicksPerRotation()
                 * gearRatio / wheelCircumference;
-            // TODO: Approximate distances between wheels. Adjust as
-            //  necessary if your robot's chassis dimensions
-            //  differ.
-            Wheels.WheelDistances wheelDistances =
-                new org.firstinspires.ftc.teamcode.hardwaresystems.Wheels.WheelDistances(
-                    8.5,  // lateral distance (left‑to‑right)
-                    14.5  // longitudinal distance (front‑to‑back)
-                );
+
 
             // TODO: Replace with the necessary constructor.
-            WHEELS = new Wheels(mecanumMotors, wheelDistances, ticksPerInch);
+            WHEELS = new MecanumWheels.Builder()
+                // TODO: Approximate distances between wheels. Adjust as
+                //  necessary if your robot's chassis dimensions differ.
+                .setLateralDistance(8.5)
+                .setLongitudinalDistance(14.5)
+                .setTicksPerInch(ticksPerInch)
+                // TODO: Change as necessary in accordance with your type of
+                //  wheel system.
+                .setFrontLeftMotor(frontLeftMotor)
+                .setFrontRightMotor(frontRightMotor)
+                .setBackLeftMotor(backLeftMotor)
+                .setBackRightMotor(backRightMotor)
+                .build();
 
         } catch (Exception e) {
             /*
@@ -284,58 +285,6 @@ public class CustomLinearOp extends LinearOpMode {
         MECANUM_DRIVE = new MecanumDrive(
             hardwareMap,
             new Pose2d(0.0, 0.0, 0.0)
-        );
-    }
-
-    /**
-     * Initiate all hardware needed for the arm.
-     * <p>
-     * <strong>When starting a new season, change the type from {@link Arm} to
-     * the desired type.</strong>
-     */
-    private void initArm() {
-        // Prevent multiple instantiation.
-        if (ARM != null) {
-            return;
-        }
-
-        /*
-         * TODO: Replace Arm() with a constructor of the desired Arm subclass
-         *  (e.g., FoldingArm).
-         *  You might want to look at the class and code from previous years
-         * for reference.
-         */
-        ARM = new Arm();
-    }
-
-    /**
-     * Initiate all hardware needed for the claw.
-     * <p>
-     * <strong>When starting a new season, change the return type from
-     * {@link Claw} to the desired type.</strong>
-     */
-    public void initClaw() {
-        // Prevent multiple instantiation.
-        if (CLAW != null) {
-            return;
-        }
-
-        /*
-         * TODO: Replace Claw() with a constructor of the desired Claw
-         *  subclass(e.g., SingleServoIntakeClaw)
-         *  You might want to look at the class and code from previous years
-         * for reference.
-         */
-        CLAW = new Claw(
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null,
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null,
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null
         );
     }
 
@@ -419,8 +368,6 @@ public class CustomLinearOp extends LinearOpMode {
         );
 
         initWheels();
-        initArm();
-        initClaw();
 
         /*
          * Get camera ID to stream.

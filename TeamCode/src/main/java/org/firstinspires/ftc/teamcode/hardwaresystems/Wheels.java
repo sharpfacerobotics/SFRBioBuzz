@@ -12,13 +12,13 @@ public abstract class Wheels {
      * Contains the distances between wheels. Necessary for calculating
      * rotation.
      */
-    private static class WheelDistances {
-        /*
+    protected static class WheelDistances {
+        /**
          * The distance between the left and right wheels, measured in inches
          * from their centers.
          */
         protected double lateralDistance;
-        /*
+        /**
          * The distance between the front and back wheels, measured in inches
          * from their centers.
          */
@@ -44,8 +44,8 @@ public abstract class Wheels {
 
         /**
          * Check if the distances({@link #longitudinalDistance} and
-         * {@link #lateralDistance}) are physically possible (i.e., they must
-         * be positive values).
+         * {@link #lateralDistance}) are physically possible (i.e., they must be
+         * positive values).
          *
          * @return {@code true} if both {@link #longitudinalDistance} and
          * {@link #lateralDistance} are positive.
@@ -57,14 +57,38 @@ public abstract class Wheels {
         }
     }
 
+    public static abstract class Builder {
+        protected WheelDistances wheelDistances;
+        protected double ticksPerInch;
+
+        public abstract Builder setLateralDistance(double lateralDistance);
+
+        public abstract Builder setLongitudinalDistance(double longitudinalDistance);
+
+        public abstract Builder setTicksPerInch(double newTicksPerInch);
+
+        /**
+         * Using the given {@link MecanumWheels}, {@link WheelDistances}, and
+         * {@link #ticksPerInch}, construct a new instance of
+         * {@link MecanumWheels}.
+         *
+         * @return A new instance of {@link MecanumWheels} if the values are
+         * valid.
+         * <p>
+         * Else, {@code null}.
+         */
+        public abstract Wheels build();
+    }
+
     /**
-     * A modifier for much power the wheels run with (0.0 - 1.0)
+     * A modifier for how much power the wheels run with. The value should be in
+     * the range [0.0, 1.0].
      */
     protected final static double MOTOR_POWER = 1.0;
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
-    protected Set<DcMotor> MOTORS_SET;
+    protected final Set<DcMotor> motorsSet;
 
     /**
      * The distance between the left and right wheels, measured in inches from
@@ -76,11 +100,11 @@ public abstract class Wheels {
      * their centers.
      */
     protected final double LONGITUDINAL_DISTANCE;
-
     /**
      * The number of ticks needed to move the robot by 1 inch.
      */
     protected final double TICKS_PER_INCH;
+
 
     /**
      * Instantiate a {@link Wheels} object.
@@ -89,19 +113,19 @@ public abstract class Wheels {
      * @param ticksPerInch The number of ticks needed to move the robot by one
      *                     inch.
      */
-    public Wheels(
+    protected Wheels(
         Set<DcMotor> motors,
         WheelDistances wheelDistances,
         double ticksPerInch
     ) {
-        MOTORS_SET = motors;
+        motorsSet = motors;
         // Allow wheels to roll freely.
-        for (DcMotor motor : MOTORS_SET) {
+        for (DcMotor motor : motorsSet) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        this.LATERAL_DISTANCE = wheelDistances.lateralDistance;
-        this.LONGITUDINAL_DISTANCE = wheelDistances.longitudinalDistance;
+        LATERAL_DISTANCE = wheelDistances.lateralDistance;
+        LONGITUDINAL_DISTANCE = wheelDistances.longitudinalDistance;
 
         TICKS_PER_INCH = ticksPerInch;
     }
@@ -117,7 +141,7 @@ public abstract class Wheels {
      * this wheel system.
      */
     public Set<DcMotor> getMotors() {
-        return MOTORS_SET;
+        return motorsSet;
     }
 
     /**

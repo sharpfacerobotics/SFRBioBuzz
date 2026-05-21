@@ -139,7 +139,6 @@ public class AprilTagTest extends LinearOpMode {
                                             .setFrontRightMotor(frontRightMotor)
                                             .setBackLeftMotor(backLeftMotor)
                                             .setBackRightMotor(backRightMotor)
-                                            // Approximately measured from CAD
                                             .setLateralDistance(8.5)
                                             .setLongitudinalDistance(14.5)
                                             .setTicksPerInch(ticksPerInch)

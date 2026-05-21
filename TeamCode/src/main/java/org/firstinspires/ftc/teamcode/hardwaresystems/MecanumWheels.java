@@ -28,10 +28,8 @@ public class MecanumWheels extends Wheels {
      * }
      * </pre>
      */
-    public static class Builder {
+    public static class Builder extends Wheels.Builder {
         private final MecanumMotors mecanumMotors;
-        private final WheelDistances wheelDistances;
-        private double ticksPerInch;
 
         public Builder() {
             mecanumMotors = new MecanumMotors();
@@ -63,25 +61,28 @@ public class MecanumWheels extends Wheels {
             return this;
         }
 
-        @SuppressWarnings("UnusedReturnValue")
-        public Builder setWheelDistances(WheelDistances wheelDistances) {
-            setLateralDistance(wheelDistances.lateralDistance);
-            setLongitudinalDistance(wheelDistances.longitudinalDistance);
-            return this;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public Builder setLateralDistance(double lateralDistance) {
             wheelDistances.lateralDistance = lateralDistance;
             return this;
         }
 
-        @SuppressWarnings("UnusedReturnValue")
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public Builder setLongitudinalDistance(double longitudinalDistance) {
             wheelDistances.longitudinalDistance = longitudinalDistance;
             return this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public Builder setTicksPerInch(double newTicksPerInch) {
             ticksPerInch = newTicksPerInch;
             return this;
@@ -97,6 +98,7 @@ public class MecanumWheels extends Wheels {
          * <p>
          * Else, {@code null}.
          */
+        @Override
         public MecanumWheels build() {
             if (
                 mecanumMotors.containsNull()
@@ -153,7 +155,7 @@ public class MecanumWheels extends Wheels {
          * @param backLeftMotor   The motor that controls the back left wheel.
          * @param backRightMotor  The motor that controls the back right wheel.
          */
-        public MecanumMotors(
+        private MecanumMotors(
             DcMotor frontLeftMotor,
             DcMotor frontRightMotor,
             DcMotor backLeftMotor,
@@ -258,13 +260,6 @@ public class MecanumWheels extends Wheels {
             this.backRightMotor = backRightMotor;
             MOTORS_SET.add(backRightMotor);
         }
-
-        public void setAllMotors(MecanumMotors mecanumMotors) {
-            setFrontLeftMotor(mecanumMotors.frontLeftMotor);
-            setFrontRightMotor(mecanumMotors.frontRightMotor);
-            setBackLeftMotor(mecanumMotors.backLeftMotor);
-            setBackRightMotor(mecanumMotors.backRightMotor);
-        }
     }
 
     /**
@@ -297,7 +292,7 @@ public class MecanumWheels extends Wheels {
         BACK_RIGHT_MOTOR = mecanumMotors.backRightMotor;
 
         // Reset position to 0.
-        for (DcMotor motor : MOTORS_SET) {
+        for (DcMotor motor : motorsSet) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
@@ -336,7 +331,7 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void drive(double xPower, double yPower, double thetaPower) {
-        for (DcMotor motor : MOTORS_SET) {
+        for (DcMotor motor : motorsSet) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
@@ -447,7 +442,7 @@ public class MecanumWheels extends Wheels {
         BACK_LEFT_MOTOR.setTargetPosition(backLeftTickPosition);
         BACK_RIGHT_MOTOR.setTargetPosition(backRightTickPosition);
 
-        for (DcMotor motor : MOTORS_SET) {
+        for (DcMotor motor : motorsSet) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
@@ -489,7 +484,7 @@ public class MecanumWheels extends Wheels {
         );
         BACK_RIGHT_MOTOR.setPower(MOTOR_POWER);
 
-        for (DcMotor motor : MOTORS_SET) {
+        for (DcMotor motor : motorsSet) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
