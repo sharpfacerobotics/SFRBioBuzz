@@ -91,8 +91,14 @@ public class MecanumWheels extends Wheels {
         }
 
         /**
+         * Using the given {@link MotorSet}, {@link WheelDistances}, and
+         * {@link #ticksPerInch}, construct a new instance of
+         * {@link MecanumWheels}.
          *
-         * @return
+         * @return A new instance of {@link MecanumWheels} if the values are
+         * valid.
+         * <p>
+         * Else, {@code null}.
          */
         public MecanumWheels build() {
             if (
@@ -181,21 +187,21 @@ public class MecanumWheels extends Wheels {
     }
 
     /**
-     * The motor powering the front left wheel.
-     */
-    private final DcMotor frontLeftMotor;
-    /**
      * The motor powering the front right wheel.
      */
-    private final DcMotor FRONT_RIGHT_MOTOR;
+    private DcMotor frontRightMotor;
     /**
      * The motor powering the back left wheel.
      */
-    private final DcMotor BACK_LEFT_MOTOR;
+    private DcMotor backLeftMotor;
     /**
      * The motor powering the back right wheel.
      */
-    private final DcMotor BACK_RIGHT_MOTOR;
+    private DcMotor backRightMotor;
+    /**
+     * The motor powering the front left wheel.
+     */
+    private DcMotor frontLeftMotor;
 
     public MecanumWheels(
         MotorSet motorSet,
@@ -204,10 +210,10 @@ public class MecanumWheels extends Wheels {
     ) {
         super(motorSet.MOTORS, wheelDistances, ticksPerInch);
 
-        this.frontLeftMotor = motorSet.frontLeftMotor;
-        this.FRONT_RIGHT_MOTOR = motorSet.frontRightMotor;
-        this.BACK_LEFT_MOTOR = motorSet.backLeftMotor;
-        this.BACK_RIGHT_MOTOR = motorSet.backRightMotor;
+        frontLeftMotor = motorSet.frontLeftMotor;
+        frontRightMotor = motorSet.frontRightMotor;
+        backLeftMotor = motorSet.backLeftMotor;
+        backRightMotor = motorSet.backRightMotor;
 
         // Reset position to 0
         for (DcMotor motor : MOTORS) {
@@ -223,9 +229,9 @@ public class MecanumWheels extends Wheels {
          * In some cases, it may be necessary to reverse the signs.
          */
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        FRONT_RIGHT_MOTOR.setDirection(DcMotorSimple.Direction.FORWARD);
-        BACK_LEFT_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
-        BACK_RIGHT_MOTOR.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
     public DcMotor getFrontLeftMotor() {
@@ -233,15 +239,15 @@ public class MecanumWheels extends Wheels {
     }
 
     public DcMotor getFrontRightMotor() {
-        return FRONT_RIGHT_MOTOR;
+        return frontRightMotor;
     }
 
     public DcMotor getBackLeftMotor() {
-        return BACK_LEFT_MOTOR;
+        return backLeftMotor;
     }
 
     public DcMotor getBackRightMotor() {
-        return BACK_RIGHT_MOTOR;
+        return backRightMotor;
     }
 
     /**
@@ -254,15 +260,24 @@ public class MecanumWheels extends Wheels {
         }
 
         /*
-        double frontLeftPower = yPower + xPower + theta;
-        double frontRightPower = yPower - xPower - theta;
-        double backLeftPower = yPower - xPower + theta;
-        double backRightPower = yPower + xPower - theta;
+         * The code below should be correct. If for some reason the robot is
+         * moving in the wrong direction, reverse
+         * the direction of the motors in {@link MecanumWheels#MecanumWheels
+         * (MotorSet, WheelDistances, ticksPerInch)}.
+         *
+         * As a last resort, try
+         * ```
+         * double frontLeftPower = -thetaPower + xPower + yPower;
+         * double frontRightPower = thetaPower + xPower + yPower;
+         * double backLeftPower = -thetaPower - xPower + yPower;
+         * double backRightPower = thetaPower - xPower + yPower;
+         * ```
+         * It worked in a previous season, but it probably is not a good idea.
          */
-        double frontLeftPower = -thetaPower + xPower + yPower;
-        double frontRightPower = thetaPower + xPower + yPower;
-        double backLeftPower = -thetaPower - xPower + yPower;
-        double backRightPower = thetaPower - xPower + yPower;
+        double frontLeftPower = yPower + xPower + thetaPower;
+        double frontRightPower = yPower - xPower - thetaPower;
+        double backLeftPower = yPower - xPower + thetaPower;
+        double backRightPower = yPower + xPower - thetaPower;
 
         // Scale the motor powers to be within +/- 1.0.
         // Use the absolute maximum magnitude rather than the algebraic maximum
@@ -287,9 +302,9 @@ public class MecanumWheels extends Wheels {
         }
 
         frontLeftMotor.setPower(frontLeftPower);
-        FRONT_RIGHT_MOTOR.setPower(frontRightPower);
-        BACK_LEFT_MOTOR.setPower(backLeftPower);
-        BACK_RIGHT_MOTOR.setPower(backRightPower);
+        frontRightMotor.setPower(frontRightPower);
+        backLeftMotor.setPower(backLeftPower);
+        backRightMotor.setPower(backRightPower);
     }
 
     /**
@@ -309,7 +324,7 @@ public class MecanumWheels extends Wheels {
     public void driveDistance(double sidewaysDistance, double forwardDistance) {
         /*
          * Apply Pythagorean's Theorem to find the Euclidean distance. Use
-         * hypot to avoid overflow.
+         * Math.hypot() to avoid overflow.
          */
         double totalDistance = Math.hypot(forwardDistance, sidewaysDistance);
 
@@ -322,46 +337,34 @@ public class MecanumWheels extends Wheels {
             return;
         }
 
-        // Scale the motor power based on trigonometry. Multiply by MOTOR_POWER
-        // after normalizing by the total distance so that larger requested
-        // distances don't inadvertently increase motor power.
+        // Scale the motor power based on trigonometry. Multiply by
+        // `MOTOR_POWER` after normalizing by the total distance so that
+        // larger requested distances do not inadvertently increase motor power.
         double xPower = (sidewaysDistance / totalDistance) * MOTOR_POWER;
         double yPower = (forwardDistance / totalDistance) * MOTOR_POWER;
         drive(xPower, yPower, 0);
 
-        int frontLeftTickPosition = frontLeftMotor.getCurrentPosition()
-                                    + (int) (
-            (
-                sidewaysDistance
-                - forwardDistance
-            ) * TICKS_PER_INCH
-        );
-        int frontRightTickPosition = FRONT_RIGHT_MOTOR.getCurrentPosition()
-                                     - (int) (
-            (
-                -sidewaysDistance
-                + forwardDistance
-            ) * TICKS_PER_INCH
-        );
-        int backLeftTickPosition = BACK_LEFT_MOTOR.getCurrentPosition()
-                                   + (int) (
-            (
-                -sidewaysDistance
-                - forwardDistance
-            ) * TICKS_PER_INCH
-        );
-        int backRightTickPosition = BACK_RIGHT_MOTOR.getCurrentPosition()
-                                    - (int) (
-            (
-                sidewaysDistance
-                + forwardDistance
-            ) * TICKS_PER_INCH
-        );
+        int frontLeftTickPosition =
+            frontLeftMotor.getCurrentPosition() + (int) (
+                (sidewaysDistance - forwardDistance) * TICKS_PER_INCH
+            );
+        int frontRightTickPosition =
+            frontRightMotor.getCurrentPosition() - (int) (
+                (-sidewaysDistance + forwardDistance) * TICKS_PER_INCH
+            );
+        int backLeftTickPosition =
+            backLeftMotor.getCurrentPosition() + (int) (
+                (-sidewaysDistance - forwardDistance) * TICKS_PER_INCH
+            );
+        int backRightTickPosition =
+            backRightMotor.getCurrentPosition() - (int) (
+                (sidewaysDistance + forwardDistance) * TICKS_PER_INCH
+            );
 
         frontLeftMotor.setTargetPosition(frontLeftTickPosition);
-        FRONT_RIGHT_MOTOR.setTargetPosition(frontRightTickPosition);
-        BACK_LEFT_MOTOR.setTargetPosition(backLeftTickPosition);
-        BACK_RIGHT_MOTOR.setTargetPosition(backRightTickPosition);
+        frontRightMotor.setTargetPosition(frontRightTickPosition);
+        backLeftMotor.setTargetPosition(backLeftTickPosition);
+        backRightMotor.setTargetPosition(backRightTickPosition);
 
         for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -373,10 +376,11 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void turn(double degrees) {
-        // The diameter of the circle that the wheels make when rotating
-        // 360degrees.
+        // The diameter of the circle that the wheels make when rotating 360
+        // degrees.
         double diameter = Math.sqrt(
-            Math.pow(LATERAL_DISTANCE, 2) + Math.pow(LONGITUDINAL_DISTANCE, 2)
+            Math.pow(LATERAL_DISTANCE, 2)
+            + Math.pow(LONGITUDINAL_DISTANCE, 2)
         );
         double circumference = diameter * Math.PI;
 
@@ -385,20 +389,24 @@ public class MecanumWheels extends Wheels {
         int ticks = (int) Math.round(arcLength * TICKS_PER_INCH) * 4 / 3;
 
         // Left wheels
-        frontLeftMotor.setTargetPosition(frontLeftMotor.getCurrentPosition()
-                                         - ticks);
+        frontLeftMotor.setTargetPosition(
+            frontLeftMotor.getCurrentPosition() - ticks
+        );
         frontLeftMotor.setPower(-MOTOR_POWER);
-        BACK_LEFT_MOTOR.setTargetPosition(BACK_LEFT_MOTOR.getCurrentPosition()
-                                          - ticks);
-        BACK_LEFT_MOTOR.setPower(-MOTOR_POWER);
+        backLeftMotor.setTargetPosition(
+            backLeftMotor.getCurrentPosition() - ticks
+        );
+        backLeftMotor.setPower(-MOTOR_POWER);
 
         // Right wheels
-        FRONT_RIGHT_MOTOR.setTargetPosition(FRONT_RIGHT_MOTOR.getCurrentPosition()
-                                            + ticks);
-        FRONT_RIGHT_MOTOR.setPower(MOTOR_POWER);
-        BACK_RIGHT_MOTOR.setTargetPosition(BACK_RIGHT_MOTOR.getCurrentPosition()
-                                           + ticks);
-        BACK_RIGHT_MOTOR.setPower(MOTOR_POWER);
+        frontRightMotor.setTargetPosition(
+            frontRightMotor.getCurrentPosition() + ticks
+        );
+        frontRightMotor.setPower(MOTOR_POWER);
+        backRightMotor.setTargetPosition(
+            backRightMotor.getCurrentPosition() + ticks
+        );
+        backRightMotor.setPower(MOTOR_POWER);
 
         for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
