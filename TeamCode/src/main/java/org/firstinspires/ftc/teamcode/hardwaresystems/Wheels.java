@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -13,7 +12,7 @@ public abstract class Wheels {
      * Contains the distances between wheels. Necessary for calculating
      * rotation.
      */
-    public static class WheelDistances {
+    private static class WheelDistances {
         /*
          * The distance between the left and right wheels, measured in inches
          * from their centers.
@@ -65,7 +64,8 @@ public abstract class Wheels {
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
-    protected final Set<DcMotor> MOTORS;
+    protected Set<DcMotor> MOTORS_SET;
+
     /**
      * The distance between the left and right wheels, measured in inches from
      * their centers.
@@ -76,6 +76,7 @@ public abstract class Wheels {
      * their centers.
      */
     protected final double LONGITUDINAL_DISTANCE;
+
     /**
      * The number of ticks needed to move the robot by 1 inch.
      */
@@ -89,13 +90,13 @@ public abstract class Wheels {
      *                     inch.
      */
     public Wheels(
-        HashSet<DcMotor> motors,
+        Set<DcMotor> motors,
         WheelDistances wheelDistances,
         double ticksPerInch
     ) {
-        MOTORS = motors;
+        MOTORS_SET = motors;
         // Allow wheels to roll freely.
-        for (DcMotor motor : MOTORS) {
+        for (DcMotor motor : MOTORS_SET) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
@@ -116,7 +117,7 @@ public abstract class Wheels {
      * this wheel system.
      */
     public Set<DcMotor> getMotors() {
-        return MOTORS;
+        return MOTORS_SET;
     }
 
     /**
