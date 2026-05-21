@@ -8,21 +8,21 @@ public enum MotorType {
 
     /**
      * REV UltraPlanetary motor encoder counts per output shaft revolution.
-     *
-     * <p>The REV UltraPlanetary gearbox pairs an HD Hex motor with one
-     * or more interchangeable gear cartridges.  The HD Hex motor’s
-     * integrated encoder produces 28 counts per motor shaft revolution.
-     * When combined with a 20:1 gear stack (for example a 4:1 and 5:1
-     * cartridge), the effective output shaft encoder count becomes
-     * {@code 28 × 20 = 560} counts per revolution.  This value is a
-     * common configuration used for FTC drivetrains and provides a
-     * reasonable default for robots built with the UltraPlanetary system.
-     *
-     * <p>If your robot uses a different gear ratio (e.g. 15:1, 60:1,
-     * etc.), adjust this value accordingly.  For example, a 60:1
-     * UltraPlanetary stack would yield {@code 28 × 60 = 1680} counts
-     * per output shaft revolution.  Having the correct tick count is
-     * important for accurate odometry and distance control.</p>
+     * <p>
+     * The REV UltraPlanetary gearbox pairs an HD Hex motor with one or more
+     * interchangeable gear cartridges. The HD Hex motor’s integrated encoder
+     * produces 28 counts per motor shaft revolution. When combined with a 20:1
+     * gear stack (for example a 4:1 and 5:1 cartridge), the effective output
+     * shaft encoder count becomes {@code 28 × 20 = 560} counts per revolution.
+     * This value is a common configuration used for FTC drivetrains and
+     * provides a reasonable default for robots built with the UltraPlanetary
+     * system.
+     * <p>
+     * If your robot uses a different gear ratio (e.g. 15:1, 60:1, etc.), adjust
+     * this value accordingly. For example, a 60:1 UltraPlanetary stack would
+     * yield {@code 28 × 60 = 1680} counts per output shaft revolution. Having
+     * the correct tick count is important for accurate odometry and distance
+     * control.
      */
     REV_ULTRA_PLANETARY(560);
 
@@ -31,10 +31,21 @@ public enum MotorType {
      */
     private final int TICKS_PER_ROTATION;
 
+    /**
+     * Instantiate a new type of motor with an assigned number of ticks per
+     * rotation.
+     *
+     * @param ticksPerRotation The motor type's number of ticks per rotation.
+     */
     MotorType(int ticksPerRotation) {
         this.TICKS_PER_ROTATION = ticksPerRotation;
     }
 
+    /**
+     * Return {@link #TICKS_PER_ROTATION}
+     *
+     * @return {@link #TICKS_PER_ROTATION}
+     */
     public int getTicksPerRotation() {
         return TICKS_PER_ROTATION;
     }
