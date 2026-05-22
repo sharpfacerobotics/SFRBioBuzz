@@ -33,7 +33,7 @@ public class MecanumWheels extends Wheels {
      * </pre>
      */
     public static class Builder extends Wheels.Builder {
-        private final MecanumWheelMotors mecanumWheelMotors;
+        protected final MecanumWheelMotors mecanumWheelMotors;
 
         public Builder() {
             mecanumWheelMotors = new MecanumWheelMotors();
@@ -125,30 +125,30 @@ public class MecanumWheels extends Wheels {
      * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
      */
-    private static class MecanumWheelMotors {
+    protected static class MecanumWheelMotors {
         /**
          * A {@link Set} that contains {@link #frontLeftMotor},
          * {@link #frontRightMotor}, {@link #backLeftMotor}, and
          * {@link #backRightMotor}.
          */
-        public Set<DcMotor> MOTORS_SET;
+        protected Set<DcMotor> MOTORS_SET;
 
         /**
          * The {@link DcMotor}s powering the front left wheel.
          */
-        private DcMotor frontLeftMotor;
+        protected DcMotor frontLeftMotor;
         /**
          * The {@link DcMotor}s powering the front right wheel.
          */
-        private DcMotor frontRightMotor;
+        protected DcMotor frontRightMotor;
         /**
          * The {@link DcMotor}s powering the back left wheel.
          */
-        private DcMotor backLeftMotor;
+        protected DcMotor backLeftMotor;
         /**
          * The {@link DcMotor}s powering the back right wheel.
          */
-        private DcMotor backRightMotor;
+        protected DcMotor backRightMotor;
 
         /**
          * Instantiate a set of four {@link MecanumWheels}.
@@ -159,7 +159,7 @@ public class MecanumWheels extends Wheels {
          * @param backLeftMotor   The motor that controls the back left wheel.
          * @param backRightMotor  The motor that controls the back right wheel.
          */
-        private MecanumWheelMotors(
+        protected MecanumWheelMotors(
             DcMotor frontLeftMotor,
             DcMotor frontRightMotor,
             DcMotor backLeftMotor,
@@ -201,7 +201,7 @@ public class MecanumWheels extends Wheels {
          * <p>
          * {@code true} otherwise.
          */
-        public boolean containsNull() {
+        protected boolean containsNull() {
             return frontLeftMotor == null
                    || frontRightMotor == null
                    || backLeftMotor == null
@@ -215,7 +215,7 @@ public class MecanumWheels extends Wheels {
          *
          * @param frontLeftMotor The new motor to set as the front left motor.
          */
-        public void setFrontLeftMotor(DcMotor frontLeftMotor) {
+        protected void setFrontLeftMotor(DcMotor frontLeftMotor) {
             MOTORS_SET.remove(this.frontLeftMotor);
 
             this.frontLeftMotor = frontLeftMotor;
@@ -230,7 +230,7 @@ public class MecanumWheels extends Wheels {
          * @param frontRightMotor The new motor to set as the front right
          *                        motor.
          */
-        public void setFrontRightMotor(DcMotor frontRightMotor) {
+        protected void setFrontRightMotor(DcMotor frontRightMotor) {
             MOTORS_SET.remove(this.frontRightMotor);
 
             this.frontRightMotor = frontRightMotor;
@@ -244,7 +244,7 @@ public class MecanumWheels extends Wheels {
          *
          * @param backLeftMotor The new motor to set as the back left motor.
          */
-        public void setBackLeftMotor(DcMotor backLeftMotor) {
+        protected void setBackLeftMotor(DcMotor backLeftMotor) {
             MOTORS_SET.remove(this.backLeftMotor);
 
             this.backLeftMotor = backLeftMotor;
@@ -258,7 +258,7 @@ public class MecanumWheels extends Wheels {
          *
          * @param backRightMotor The new motor to set as the back right motor.
          */
-        public void setBackRightMotor(DcMotor backRightMotor) {
+        protected void setBackRightMotor(DcMotor backRightMotor) {
             MOTORS_SET.remove(this.backRightMotor);
 
             this.backRightMotor = backRightMotor;
@@ -269,21 +269,21 @@ public class MecanumWheels extends Wheels {
     /**
      * The motor powering the front left wheel.
      */
-    private final DcMotor FRONT_LEFT_MOTOR;
+    protected final DcMotor FRONT_LEFT_MOTOR;
     /**
      * The motor powering the front right wheel.
      */
-    private final DcMotor FRONT_RIGHT_MOTOR;
+    protected final DcMotor FRONT_RIGHT_MOTOR;
     /**
      * The motor powering the back left wheel.
      */
-    private final DcMotor BACK_LEFT_MOTOR;
+    protected final DcMotor BACK_LEFT_MOTOR;
     /**
      * The motor powering the back right wheel.
      */
-    private final DcMotor BACK_RIGHT_MOTOR;
+    protected final DcMotor BACK_RIGHT_MOTOR;
 
-    private MecanumWheels(
+    protected MecanumWheels(
         MecanumWheelMotors mecanumWheelMotors,
         WheelDistances wheelDistances,
         double ticksPerInch

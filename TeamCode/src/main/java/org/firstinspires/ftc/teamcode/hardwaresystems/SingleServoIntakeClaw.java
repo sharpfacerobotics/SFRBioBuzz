@@ -22,6 +22,7 @@ public class SingleServoIntakeClaw extends Claw {
      * How much power the intake spines with when ejecting.
      */
     private static final double EJECT_POWER = -1.0;
+
     /**
      * The servo that spins the intake.
      */
@@ -32,22 +33,22 @@ public class SingleServoIntakeClaw extends Claw {
     private final DigitalChannel INTAKE_SENSOR;
 
     public SingleServoIntakeClaw(
-        Servo xAxisServo,
-        Servo yAxisServo,
-        Servo zAxisServo,
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
         CRServo intakeServo
     ) {
-        this(xAxisServo, yAxisServo, zAxisServo, intakeServo, null);
+        this(rollServo, pitchServo, yawServo, intakeServo, null);
     }
 
     public SingleServoIntakeClaw(
-        Servo xAxisServo,
-        Servo yAxisServo,
-        Servo zAxisServo,
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
         CRServo intakeServo,
         DigitalChannel intakeSensor
     ) {
-        super(xAxisServo, yAxisServo, zAxisServo);
+        super(rollServo, pitchServo, yawServo);
 
         INTAKE_SERVO = intakeServo;
         INTAKE_SENSOR = intakeSensor;
@@ -76,7 +77,9 @@ public class SingleServoIntakeClaw extends Claw {
     /**
      * Get whether the intake servo is currently running.
      *
-     * @return true if the intake servo's power is non-zero, false otherwise.
+     * @return {@code true} if the intake servo's power is non-zero.
+     * <p>
+     * {@code false} otherwise.
      */
     public boolean isIntakeActive() {
         return INTAKE_SERVO.getPower() != 0;
@@ -96,10 +99,12 @@ public class SingleServoIntakeClaw extends Claw {
     /**
      * Get whether the sensor on the claw is pressed or not.
      *
-     * @return true when the sensor is pressed, false otherwise.
+     * @return {@code true} when the sensor is pressed.
+     * <p>
+     * {@code false} otherwise.
      */
     public boolean isSensorPressed() {
-        //  returns true when the sensor is not pressed.
+        // Returns true when the sensor is not pressed.
         return !INTAKE_SENSOR.getState();
     }
 }

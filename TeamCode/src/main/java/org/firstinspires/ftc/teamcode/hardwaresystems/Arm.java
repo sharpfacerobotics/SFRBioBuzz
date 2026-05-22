@@ -9,6 +9,14 @@ import java.util.Set;
  * their common characteristics.
  */
 public abstract class Arm {
+    public static abstract class Builder {
+        public abstract Arm build();
+    }
+
+    /**
+     * A {@link Set} containing all the {@link DcMotor}s that are used by this
+     * wheel system.
+     */
     protected final Set<DcMotor> motorSet;
 
     /**

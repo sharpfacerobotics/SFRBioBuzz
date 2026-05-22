@@ -4,11 +4,30 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
- * An arm that is capable of folding in the middle, much like a human elbow.
+ * An arm that is capable of folding in the middle (much like a human elbow)F
+ * and rotating the entire arm.
  */
 public class FoldingArm extends Arm {
+    public static class Builder extends Arm.Builder {
+        protected final Set<DcMotor> motorSet;
+
+        public Builder() {
+            motorSet = new HashSet<>();
+        }
+
+        public Builder setRotationMotor() {
+            return this;
+        }
+
+        @Override
+        public FoldingArm build() {
+            return new FoldingArm();
+        }
+    }
+
     /**
      * Passed into the
      * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationRange,
@@ -18,10 +37,10 @@ public class FoldingArm extends Arm {
         /**
          * All the motors to be used by {@link FoldingArm}.
          */
-        private final HashSet<DcMotor> motorsSet;
+        private final Set<DcMotor> motorSet;
 
         /**
-         * The motor that rotates the arm up and down.
+         * The motor that rotates the entire arm.
          */
         private final DcMotor ROTATION_MOTOR;
         /**
@@ -30,16 +49,16 @@ public class FoldingArm extends Arm {
         private final DcMotor FOLDING_MOTOR;
 
         public FoldingArmMotors(DcMotor rotationMotor, DcMotor foldingMotor) {
-            motorsSet = new HashSet<>();
-            motorsSet.add(rotationMotor);
-            motorsSet.add(foldingMotor);
+            motorSet = new HashSet<>();
+            motorSet.add(rotationMotor);
+            motorSet.add(foldingMotor);
 
             ROTATION_MOTOR = rotationMotor;
             FOLDING_MOTOR = foldingMotor;
         }
 
         public FoldingArmMotors() {
-            motorsSet = new HashSet<>();
+            motorSet = new HashSet<>();
 
             ROTATION_MOTOR = null;
             FOLDING_MOTOR = null;
@@ -153,6 +172,7 @@ public class FoldingArm extends Arm {
      * The motor power that the arm uses when rotating.
      */
     private static final double FOLDING_POWER = 0.75;
+
     /**
      * The motor that rotates the arm up and down.
      */
@@ -211,7 +231,7 @@ public class FoldingArm extends Arm {
         RotationRange rotationRange,
         FoldingRange foldingRange
     ) {
-        super(foldingArmMotors.motorsSet);
+        super(foldingArmMotors.motorSet);
 
         this.ROTATION_MOTOR = foldingArmMotors.ROTATION_MOTOR;
         this.MIN_ROTATION = rotationRange.MIN_ROTATION;
@@ -268,11 +288,12 @@ public class FoldingArm extends Arm {
      * Rotate the arm with a set velocity. Stop the motor if it is out of
      * bounds.
      *
-     * @param direction The direction that the arm should rotate in. Positive
-     *                  rotates it up, negative rotates it down, and zero stops
-     *                  the motor.
+     * @param power The power that the arm should rotate with. Positive values
+     *              rotate it up, negative values rotate it down, and zero stops
+     *              it.
      */
-    public void rotate(double direction) throws IllegalStateException {
+    public void rotate(double power) throws IllegalStateException {
+        // Check for out of bounds position.
         if (
             ROTATION_MOTOR.getCurrentPosition() > MAX_ROTATION
             || ROTATION_MOTOR.getCurrentPosition() < MIN_ROTATION
@@ -281,7 +302,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm rotation reached limits");
         }
 
-        ROTATION_MOTOR.setPower(direction * ROTATION_POWER);
+        ROTATION_MOTOR.setPower(power * ROTATION_POWER);
     }
 
     /**
