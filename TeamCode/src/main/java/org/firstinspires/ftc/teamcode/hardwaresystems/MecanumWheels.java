@@ -15,112 +15,6 @@ import java.util.Set;
  */
 public class MecanumWheels extends Wheels {
     /**
-     * Builder to simplify the construction of {@link MecanumWheels} objects.
-     * <p>
-     * <h1>Example</h1>
-     * <pre>
-     * {@code
-     * MecanumWheels mecanumWheels =
-     *      new MecanumWheels.Builder()
-     *                       .setFrontLeftMotor(frontLeftMotor)
-     *                       .setFrontRightMotor(frontRightMotor)
-     *                       .setBackLeftMotor(backLeftMotor)
-     *                       .setBackRightMotor(backRightMotor)
-     *                       .setLateralDistance(36.0)
-     *                       .setLongitudinalDistance(36.0)
-     *                       .build()
-     * }
-     * </pre>
-     */
-    public static class Builder extends Wheels.Builder {
-        protected final MecanumWheelMotors mecanumWheelMotors;
-
-        public Builder() {
-            mecanumWheelMotors = new MecanumWheelMotors();
-            wheelDistances = new WheelDistances(-1.0, -1.0);
-            ticksPerInch = -1.0;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public Builder setFrontLeftMotor(DcMotor frontLeftMotor) {
-            mecanumWheelMotors.setFrontLeftMotor(frontLeftMotor);
-            return this;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public Builder setFrontRightMotor(DcMotor frontRightMotor) {
-            mecanumWheelMotors.setFrontRightMotor(frontRightMotor);
-            return this;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public Builder setBackLeftMotor(DcMotor backLeftMotor) {
-            mecanumWheelMotors.setBackLeftMotor(backLeftMotor);
-            return this;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public Builder setBackRightMotor(DcMotor backRightMotor) {
-            mecanumWheelMotors.setBackRightMotor(backRightMotor);
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Builder setLateralDistance(double lateralDistance) {
-            wheelDistances.lateralDistance = lateralDistance;
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Builder setLongitudinalDistance(double longitudinalDistance) {
-            wheelDistances.longitudinalDistance = longitudinalDistance;
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Builder setTicksPerInch(double ticksPerInch) {
-            this.ticksPerInch = ticksPerInch;
-            return this;
-        }
-
-        /**
-         * Using the given {@link MecanumWheelMotors}, {@link WheelDistances},
-         * and {@link #ticksPerInch}, construct a new instance of
-         * {@link MecanumWheels}.
-         *
-         * @return A new instance of {@link MecanumWheels} if the values are
-         * valid.
-         * <p>
-         * Else, {@code null}.
-         */
-        @Override
-        public MecanumWheels build() {
-            if (
-                mecanumWheelMotors.containsNull()
-                || wheelDistances.isInvalid()
-                || ticksPerInch <= 0
-            ) {
-                return null;
-            }
-
-            return new MecanumWheels(
-                mecanumWheelMotors,
-                wheelDistances,
-                ticksPerInch
-            );
-        }
-    }
-
-    /**
      * Passed into the
      * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
@@ -263,6 +157,112 @@ public class MecanumWheels extends Wheels {
 
             this.backRightMotor = backRightMotor;
             MOTORS_SET.add(backRightMotor);
+        }
+    }
+
+    /**
+     * Builder to simplify the construction of {@link MecanumWheels} objects.
+     * <p>
+     * <h1>Example</h1>
+     * <pre>
+     * {@code
+     * MecanumWheels mecanumWheels =
+     *      new MecanumWheels.Builder()
+     *                       .setFrontLeftMotor(frontLeftMotor)
+     *                       .setFrontRightMotor(frontRightMotor)
+     *                       .setBackLeftMotor(backLeftMotor)
+     *                       .setBackRightMotor(backRightMotor)
+     *                       .setLateralDistance(36.0)
+     *                       .setLongitudinalDistance(36.0)
+     *                       .build()
+     * }
+     * </pre>
+     */
+    public static class Builder extends Wheels.Builder {
+        protected final MecanumWheelMotors mecanumWheelMotors;
+
+        public Builder() {
+            mecanumWheelMotors = new MecanumWheelMotors();
+            wheelDistances = new WheelDistances(-1.0, -1.0);
+            ticksPerInch = -1.0;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        public Builder setFrontLeftMotor(DcMotor frontLeftMotor) {
+            mecanumWheelMotors.setFrontLeftMotor(frontLeftMotor);
+            return this;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        public Builder setFrontRightMotor(DcMotor frontRightMotor) {
+            mecanumWheelMotors.setFrontRightMotor(frontRightMotor);
+            return this;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        public Builder setBackLeftMotor(DcMotor backLeftMotor) {
+            mecanumWheelMotors.setBackLeftMotor(backLeftMotor);
+            return this;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        public Builder setBackRightMotor(DcMotor backRightMotor) {
+            mecanumWheelMotors.setBackRightMotor(backRightMotor);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Builder setLateralDistance(double lateralDistance) {
+            wheelDistances.lateralDistance = lateralDistance;
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Builder setLongitudinalDistance(double longitudinalDistance) {
+            wheelDistances.longitudinalDistance = longitudinalDistance;
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Builder setTicksPerInch(double ticksPerInch) {
+            this.ticksPerInch = ticksPerInch;
+            return this;
+        }
+
+        /**
+         * Using the given {@link MecanumWheelMotors}, {@link WheelDistances},
+         * and {@link #ticksPerInch}, construct a new instance of
+         * {@link MecanumWheels}.
+         *
+         * @return A new instance of {@link MecanumWheels} if the values are
+         * valid.
+         * <p>
+         * Else, {@code null}.
+         */
+        @Override
+        public MecanumWheels build() {
+            if (
+                mecanumWheelMotors.containsNull()
+                || wheelDistances.isInvalid()
+                || ticksPerInch <= 0
+            ) {
+                return null;
+            }
+
+            return new MecanumWheels(
+                mecanumWheelMotors,
+                wheelDistances,
+                ticksPerInch
+            );
         }
     }
 
