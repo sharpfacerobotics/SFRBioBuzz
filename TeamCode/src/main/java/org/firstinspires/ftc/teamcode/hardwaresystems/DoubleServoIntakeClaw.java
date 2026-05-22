@@ -35,11 +35,18 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     private final DigitalChannel INTAKE_SENSOR;
 
-    public DoubleServoIntakeClaw(CRServo leftIntakeServo, CRServo rightIntakeServo) {
+    public DoubleServoIntakeClaw(
+        CRServo leftIntakeServo,
+        CRServo rightIntakeServo
+    ) {
         this(null, null, null, leftIntakeServo, rightIntakeServo, null);
     }
 
-    public DoubleServoIntakeClaw(CRServo leftIntakeServo, CRServo rightIntakeServo, DigitalChannel intakeSensor) {
+    public DoubleServoIntakeClaw(
+        CRServo leftIntakeServo,
+        CRServo rightIntakeServo,
+        DigitalChannel intakeSensor
+    ) {
         this(null, null, null, leftIntakeServo, rightIntakeServo, intakeSensor);
     }
 
@@ -50,7 +57,14 @@ public class DoubleServoIntakeClaw extends Claw {
         CRServo leftIntakeServo,
         CRServo rightIntakeServo
     ) {
-        this(rollServo, pitchServo, yawServo, leftIntakeServo, rightIntakeServo, null);
+        this(
+            rollServo,
+            pitchServo,
+            yawServo,
+            leftIntakeServo,
+            rightIntakeServo,
+            null
+        );
     }
 
     public DoubleServoIntakeClaw(
@@ -106,7 +120,8 @@ public class DoubleServoIntakeClaw extends Claw {
      * @return true if the intake servo's power is non-zero, false otherwise.
      */
     public boolean isIntakeActive() {
-        return LEFT_INTAKE_SERVO.getPower() != 0 && RIGHT_INTAKE_SERVO.getPower() != 0;
+        return LEFT_INTAKE_SERVO.getPower() != 0
+               && RIGHT_INTAKE_SERVO.getPower() != 0;
     }
 
     public void stopIntake() {
