@@ -484,31 +484,37 @@ public class FoldingArm extends Arm {
         }
     }
 
-    public double getRotationPower() {
-        return ROTATION_POWER;
-    }
-
-    public double getFoldingPower() {
-        return FOLDING_POWER;
-    }
-
+    /**
+     * Get the {@link DcMotor} that is used to rotate the arm.
+     *
+     * @return The {@link DcMotor} that is used to rotate the arm.
+     */
     public DcMotor getRotationMotor() {
         return ROTATION_MOTOR;
     }
 
-    public DcMotor getFoldingMotor() {
-        return FOLDING_MOTOR;
+    /**
+     * Get the power multiplier that the arm motor rotates with.
+     *
+     * @return The power multiplier that the arm motor rotates with.
+     */
+    public double getRotationPower() {
+        return ROTATION_POWER;
     }
 
+    /**
+     * Return the rotation position of the arm in motor ticks.
+     *
+     * @return The rotation position of the arm in motor ticks.
+     */
     public int getRotationTicks() {
         return ROTATION_MOTOR.getCurrentPosition();
     }
 
     /**
-     * Return the rotation of the arm in degrees.
+     * Return the rotation position of the arm in degrees.
      *
-     * @return A {@code double} representing the rotation angle of the arm in
-     * degrees.
+     * @return The rotation angle of the arm in degrees.
      */
     public double getRotationDegrees() {
         return ROTATION_MOTOR.getCurrentPosition() / TICKS_PER_ROTATION_DEGREE
@@ -566,6 +572,29 @@ public class FoldingArm extends Arm {
         ROTATION_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
+    /**
+     * Get the {@link DcMotor} that is used to fold the arm.
+     *
+     * @return The {@link DcMotor} that is used to fold the arm.
+     */
+    public DcMotor getFoldingMotor() {
+        return FOLDING_MOTOR;
+    }
+
+    /**
+     * Get the power multiplier that the arm motor rotates with.
+     *
+     * @return The power multiplier that the arm motor rotates with.
+     */
+    public double getFoldingPower() {
+        return FOLDING_POWER;
+    }
+
+    /**
+     * Get the current position of the folding motor in ticks.
+     *
+     * @return The current position of the folding motor in ticks.
+     */
     public int getFoldingTicks() {
         return FOLDING_MOTOR.getCurrentPosition();
     }
@@ -583,10 +612,11 @@ public class FoldingArm extends Arm {
     /**
      * Fold the arm with a given power.
      *
-     * @param direction The direction that the extension motor moves. Positive
-     *                  values fold the arm, negative values retract it.
+     * @param power The power that the extension motor moves wit. Positive
+     *              values fold the arm, negative values retract it, and zero
+     *              stops the motor.
      */
-    public void fold(double direction) throws IllegalStateException {
+    public void fold(double power) throws IllegalStateException {
         if (
             FOLDING_MOTOR.getCurrentPosition() > MAX_FOLDING
             || FOLDING_MOTOR.getCurrentPosition() < MIN_FOLDING
@@ -595,7 +625,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm folding reached limits.");
         }
 
-        FOLDING_MOTOR.setPower(direction * FOLDING_POWER);
+        FOLDING_MOTOR.setPower(power * FOLDING_POWER);
     }
 
     /**
