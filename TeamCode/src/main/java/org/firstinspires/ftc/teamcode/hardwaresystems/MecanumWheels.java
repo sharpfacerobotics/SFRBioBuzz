@@ -29,35 +29,35 @@ public class MecanumWheels extends Wheels {
      * </pre>
      */
     public static class Builder extends Wheels.Builder {
-        private final MecanumMotors mecanumMotors;
+        private final MecanumWheelMotors mecanumWheelMotors;
 
         public Builder() {
-            mecanumMotors = new MecanumMotors();
+            mecanumWheelMotors = new MecanumWheelMotors();
             wheelDistances = new WheelDistances(-1.0, -1.0);
             ticksPerInch = -1.0;
         }
 
         @SuppressWarnings("UnusedReturnValue")
         public Builder setFrontLeftMotor(DcMotor frontLeftMotor) {
-            mecanumMotors.setFrontLeftMotor(frontLeftMotor);
+            mecanumWheelMotors.setFrontLeftMotor(frontLeftMotor);
             return this;
         }
 
         @SuppressWarnings("UnusedReturnValue")
         public Builder setFrontRightMotor(DcMotor frontRightMotor) {
-            mecanumMotors.setFrontRightMotor(frontRightMotor);
+            mecanumWheelMotors.setFrontRightMotor(frontRightMotor);
             return this;
         }
 
         @SuppressWarnings("UnusedReturnValue")
         public Builder setBackLeftMotor(DcMotor backLeftMotor) {
-            mecanumMotors.setBackLeftMotor(backLeftMotor);
+            mecanumWheelMotors.setBackLeftMotor(backLeftMotor);
             return this;
         }
 
         @SuppressWarnings("UnusedReturnValue")
         public Builder setBackRightMotor(DcMotor backRightMotor) {
-            mecanumMotors.setBackRightMotor(backRightMotor);
+            mecanumWheelMotors.setBackRightMotor(backRightMotor);
             return this;
         }
 
@@ -89,8 +89,8 @@ public class MecanumWheels extends Wheels {
         }
 
         /**
-         * Using the given {@link MecanumMotors}, {@link WheelDistances}, and
-         * {@link #ticksPerInch}, construct a new instance of
+         * Using the given {@link MecanumWheelMotors}, {@link WheelDistances},
+         * and {@link #ticksPerInch}, construct a new instance of
          * {@link MecanumWheels}.
          *
          * @return A new instance of {@link MecanumWheels} if the values are
@@ -101,7 +101,7 @@ public class MecanumWheels extends Wheels {
         @Override
         public MecanumWheels build() {
             if (
-                mecanumMotors.containsNull()
+                mecanumWheelMotors.containsNull()
                 || wheelDistances.isInvalid()
                 || ticksPerInch <= 0
             ) {
@@ -109,7 +109,7 @@ public class MecanumWheels extends Wheels {
             }
 
             return new MecanumWheels(
-                mecanumMotors,
+                mecanumWheelMotors,
                 wheelDistances,
                 ticksPerInch
             );
@@ -118,10 +118,10 @@ public class MecanumWheels extends Wheels {
 
     /**
      * Passed into the
-     * {@link MecanumWheels#MecanumWheels(MecanumMotors, WheelDistances,
+     * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
      */
-    private static class MecanumMotors {
+    private static class MecanumWheelMotors {
         /**
          * A {@link Set} that contains {@link #frontLeftMotor},
          * {@link #frontRightMotor}, {@link #backLeftMotor}, and
@@ -155,7 +155,7 @@ public class MecanumWheels extends Wheels {
          * @param backLeftMotor   The motor that controls the back left wheel.
          * @param backRightMotor  The motor that controls the back right wheel.
          */
-        private MecanumMotors(
+        private MecanumWheelMotors(
             DcMotor frontLeftMotor,
             DcMotor frontRightMotor,
             DcMotor backLeftMotor,
@@ -176,7 +176,7 @@ public class MecanumWheels extends Wheels {
         /**
          * Instantiate an empty motor set. Mostly used for dummy purposes.
          */
-        public MecanumMotors() {
+        public MecanumWheelMotors() {
             MOTORS_SET = new HashSet<>();
 
             frontLeftMotor = null;
@@ -280,16 +280,16 @@ public class MecanumWheels extends Wheels {
     private final DcMotor BACK_RIGHT_MOTOR;
 
     private MecanumWheels(
-        MecanumMotors mecanumMotors,
+        MecanumWheelMotors mecanumWheelMotors,
         WheelDistances wheelDistances,
         double ticksPerInch
     ) {
-        super(mecanumMotors.MOTORS_SET, wheelDistances, ticksPerInch);
+        super(mecanumWheelMotors.MOTORS_SET, wheelDistances, ticksPerInch);
 
-        FRONT_LEFT_MOTOR = mecanumMotors.frontLeftMotor;
-        FRONT_RIGHT_MOTOR = mecanumMotors.frontRightMotor;
-        BACK_LEFT_MOTOR = mecanumMotors.backLeftMotor;
-        BACK_RIGHT_MOTOR = mecanumMotors.backRightMotor;
+        FRONT_LEFT_MOTOR = mecanumWheelMotors.frontLeftMotor;
+        FRONT_RIGHT_MOTOR = mecanumWheelMotors.frontRightMotor;
+        BACK_LEFT_MOTOR = mecanumWheelMotors.backLeftMotor;
+        BACK_RIGHT_MOTOR = mecanumWheelMotors.backRightMotor;
 
         // Reset position to 0.
         for (DcMotor motor : motorsSet) {

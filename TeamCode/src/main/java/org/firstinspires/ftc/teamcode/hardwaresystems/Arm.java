@@ -5,20 +5,22 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import java.util.Set;
 
 /**
- * Abstract class to define the methods that robot arms are capable of.
+ * Abstract class to represent all possible arms that a robot could have and
+ * their common characteristics.
  */
 public abstract class Arm {
-    protected final Set<DcMotor> MOTORS;
+    protected final Set<DcMotor> motorsSet;
 
     /**
      * Instantiate a new {@link Arm} with a {@link Set} of {@link DcMotor}s.
      *
-     * @param motors The {@link DcMotor}s contained within this {@link Arm}.
+     * @param motorsSet The {@link DcMotor}s contained within this {@link Arm}.
      */
-    public Arm(Set<DcMotor> motors) {
-        MOTORS = motors;
-        // The arm motors will attempt to resist external forces　(e.g., gravity).
-        for (DcMotor motor : MOTORS) {
+    public Arm(Set<DcMotor> motorsSet) {
+        this.motorsSet = motorsSet;
+        // The arm motors will attempt to resist external forces　(e.g.,
+        // gravity).
+        for (DcMotor motor : this.motorsSet) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }
@@ -26,9 +28,10 @@ public abstract class Arm {
     /**
      * Get all the {@link DcMotor}s that are included in this arm system.
      *
-     * @return A {@link Set} that contains every DcMotor included in this arm system.
+     * @return A {@link Set} that contains every {@link DcMotor} included in
+     * this arm system.
      */
     public Set<DcMotor> getMotors() {
-        return MOTORS;
+        return motorsSet;
     }
 }
