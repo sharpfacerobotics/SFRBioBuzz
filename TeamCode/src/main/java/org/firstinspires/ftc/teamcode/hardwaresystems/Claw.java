@@ -28,7 +28,8 @@ public abstract class Claw {
      */
     private final Set<Servo> servoSet;
     /**
-     * How much to gradually move the servo.
+     * The number of motor ticks that the {@link Servo}s move with every loop.
+     * Essentially serves as the "speed" or "power"　of the servo.
      */
     private double servoIncrement;
 
@@ -81,10 +82,24 @@ public abstract class Claw {
         return servoSet;
     }
 
+    /**
+     * Get the number of motor ticks that the {@link Servo}s move with every
+     * loop.
+     *
+     * @return The number of motor ticks that the {@link Servo}s move with every
+     * loop.
+     * @see #servoIncrement
+     */
     public double getServoIncrement() {
         return servoIncrement;
     }
 
+    /**
+     * Get the number of motor ticks that the {@link Servo}s move with every
+     * loop.
+     *
+     * @see #servoIncrement
+     */
     public void setServoIncrement(double servoIncrement) {
         this.servoIncrement = servoIncrement;
     }
