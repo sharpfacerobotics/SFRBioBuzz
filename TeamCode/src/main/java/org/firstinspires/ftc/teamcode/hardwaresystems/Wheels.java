@@ -141,7 +141,7 @@ public abstract class Wheels {
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
-    protected final Set<DcMotor> motorsSet;
+    protected final Set<DcMotor> motorSet;
 
     /**
      * The distance between the left and right wheels, measured in inches from
@@ -171,9 +171,9 @@ public abstract class Wheels {
         WheelDistances wheelDistances,
         double ticksPerInch
     ) {
-        motorsSet = motors;
+        motorSet = motors;
         // Allow wheels to roll freely.
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
@@ -194,7 +194,7 @@ public abstract class Wheels {
      * this wheel system.
      */
     public Set<DcMotor> getMotors() {
-        return motorsSet;
+        return motorSet;
     }
 
     /**

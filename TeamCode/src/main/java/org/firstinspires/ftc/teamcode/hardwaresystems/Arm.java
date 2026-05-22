@@ -9,18 +9,18 @@ import java.util.Set;
  * their common characteristics.
  */
 public abstract class Arm {
-    protected final Set<DcMotor> motorsSet;
+    protected final Set<DcMotor> motorSet;
 
     /**
      * Instantiate a new {@link Arm} with a {@link Set} of {@link DcMotor}s.
      *
-     * @param motorsSet The {@link DcMotor}s contained within this {@link Arm}.
+     * @param motorSet The {@link DcMotor}s contained within this {@link Arm}.
      */
-    public Arm(Set<DcMotor> motorsSet) {
-        this.motorsSet = motorsSet;
+    public Arm(Set<DcMotor> motorSet) {
+        this.motorSet = motorSet;
         // The arm motors will attempt to resist external forces　(e.g.,
         // gravity).
-        for (DcMotor motor : this.motorsSet) {
+        for (DcMotor motor : this.motorSet) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }
@@ -32,6 +32,6 @@ public abstract class Arm {
      * this arm system.
      */
     public Set<DcMotor> getMotors() {
-        return motorsSet;
+        return motorSet;
     }
 }

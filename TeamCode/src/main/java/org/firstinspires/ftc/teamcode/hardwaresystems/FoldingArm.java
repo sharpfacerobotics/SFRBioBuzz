@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import java.util.HashSet;
 
 /**
- * An arm that is capable of folding in the middle.
+ * An arm that is capable of folding in the middle, much like a human elbow.
  */
 public class FoldingArm extends Arm {
     /**
@@ -227,7 +227,7 @@ public class FoldingArm extends Arm {
         this.TICKS_PER_FOLDING_DEGREE = foldingRange.TICKS_PER_DEGREE;
 
         // Reset position to 0
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }

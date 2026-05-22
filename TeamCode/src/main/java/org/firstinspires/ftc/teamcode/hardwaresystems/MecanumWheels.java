@@ -7,7 +7,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A set of four mecanum wheels, each controlled separately.
+ * A system of four mecanum wheels, each controlled separately by their own
+ * motor.
+ * <p>
+ * Mecanum wheels are capable of moving in any direction, whether horizontally,
+ * vertically, or diagonally.
  */
 public class MecanumWheels extends Wheels {
     /**
@@ -292,7 +296,7 @@ public class MecanumWheels extends Wheels {
         BACK_RIGHT_MOTOR = mecanumWheelMotors.backRightMotor;
 
         // Reset position to 0.
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
@@ -331,7 +335,7 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void drive(double xPower, double yPower, double thetaPower) {
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
@@ -442,7 +446,7 @@ public class MecanumWheels extends Wheels {
         BACK_LEFT_MOTOR.setTargetPosition(backLeftTickPosition);
         BACK_RIGHT_MOTOR.setTargetPosition(backRightTickPosition);
 
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
@@ -484,7 +488,7 @@ public class MecanumWheels extends Wheels {
         );
         BACK_RIGHT_MOTOR.setPower(MOTOR_POWER);
 
-        for (DcMotor motor : motorsSet) {
+        for (DcMotor motor : motorSet) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }

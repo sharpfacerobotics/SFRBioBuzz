@@ -31,7 +31,12 @@ public class SingleServoIntakeClaw extends Claw {
      */
     private final DigitalChannel INTAKE_SENSOR;
 
-    public SingleServoIntakeClaw(Servo xAxisServo, Servo yAxisServo, Servo zAxisServo, CRServo intakeServo) {
+    public SingleServoIntakeClaw(
+        Servo xAxisServo,
+        Servo yAxisServo,
+        Servo zAxisServo,
+        CRServo intakeServo
+    ) {
         this(xAxisServo, yAxisServo, zAxisServo, intakeServo, null);
     }
 

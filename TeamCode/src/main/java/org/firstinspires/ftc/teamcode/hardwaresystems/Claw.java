@@ -6,7 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Abstract class to define what methods all robot claws should be capable of.
+ * Abstract class to represent all possible robot claws and their common
+ * characteristics.
  */
 public abstract class Claw {
     /**
@@ -25,7 +26,7 @@ public abstract class Claw {
     /**
      * A {@link Set} of all the {@link Servo}s that are in this claw.
      */
-    private final Set<Servo> SERVOS;
+    private final Set<Servo> servoSet;
     /**
      * How much to gradually move the servo.
      */
@@ -39,11 +40,16 @@ public abstract class Claw {
      * @param yawServo       The servo that controls the claw's yaw.
      * @param servoIncrement The increment that the servos use per robot loop.
      */
-    public Claw(Servo rollServo, Servo pitchServo, Servo yawServo, double servoIncrement) {
-        SERVOS = new HashSet<>();
-        SERVOS.add(rollServo);
-        SERVOS.add(pitchServo);
-        SERVOS.add(yawServo);
+    public Claw(
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
+        double servoIncrement
+    ) {
+        servoSet = new HashSet<>();
+        servoSet.add(rollServo);
+        servoSet.add(pitchServo);
+        servoSet.add(yawServo);
 
         ROLL_SERVO = rollServo;
         PITCH_SERVO = pitchServo;
@@ -53,7 +59,8 @@ public abstract class Claw {
     }
 
     /**
-     * Overloads {@link Claw#Claw(Servo, Servo, Servo, double)} with {@link #servoIncrement} defaulting to 0.1.
+     * Overloads {@link Claw#Claw(Servo, Servo, Servo, double)} with
+     * {@link #servoIncrement} defaulting to 0.1.
      *
      * @param rollServo  The servo that controls the claw's roll.
      * @param pitchServo The servo that controls the claw's pitch.
@@ -67,10 +74,11 @@ public abstract class Claw {
     /**
      * Get all the {@link Servo}s that are included in this claw system.
      *
-     * @return A {@link Set} that contains every {@code Claw} included in this claw system.
+     * @return A {@link Set} that contains every {@code Claw} included in this
+     * claw system.
      */
     public Set<Servo> getServos() {
-        return SERVOS;
+        return servoSet;
     }
 
     public double getServoIncrement() {
@@ -82,13 +90,17 @@ public abstract class Claw {
     }
 
     /**
-     * Rotate the {@link #ROLL_SERVO} in a certain direction by {@link Claw#servoIncrement}.
+     * Rotate the {@link #ROLL_SERVO} in a certain direction by
+     * {@link Claw#servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in. Positive values rotate it clockwise; negative values
-     *                  rotate it counterclockwise.
+     * @param direction The direction to rotate the servo in, as seen from the
+     *                  <em>front</em> of the servo. Positive values rotate it
+     *                  counterclockwise, and negative values rotate it
+     *                  clockwise.
      */
     public void rotateRollServo(double direction) {
-        double targetPosition = ROLL_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+        double targetPosition = ROLL_SERVO.getPosition()
+                                + Math.signum(direction) * servoIncrement;
         ROLL_SERVO.setPosition(targetPosition);
     }
 
@@ -102,13 +114,17 @@ public abstract class Claw {
     }
 
     /**
-     * Rotate the {@link #PITCH_SERVO} in a certain direction by {@link #servoIncrement}.
+     * Rotate the {@link #PITCH_SERVO} in a certain direction by
+     * {@link #servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in. Positive values rotate it clockwise; negative values
-     *                  rotate it counterclockwise.
+     * @param direction The direction to rotate the servo in, as seen from the
+     *                  <em>front</em> of the servo. Positive values rotate it
+     *                  counterclockwise, and negative values rotate it
+     *                  clockwise.
      */
     public void rotatePitchAxisServo(double direction) {
-        double targetPosition = PITCH_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+        double targetPosition = PITCH_SERVO.getPosition()
+                                + Math.signum(direction) * servoIncrement;
         PITCH_SERVO.setPosition(targetPosition);
     }
 
@@ -122,13 +138,17 @@ public abstract class Claw {
     }
 
     /**
-     * Rotate the {@link  #YAW_SERVO} in a certain direction by {@link #servoIncrement}.
+     * Rotate the {@link  #YAW_SERVO} in a certain direction by
+     * {@link #servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in. Positive values rotate it clockwise; negative values
-     *                  rotate it counterclockwise.
+     * @param direction The direction to rotate the servo in, as seen from the
+     *                  <em>front</em> of the servo. Positive values rotate it
+     *                  counterclockwise, and negative values rotate it
+     *                  clockwise.
      */
     public void rotateYawServo(double direction) {
-        double targetPosition = YAW_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+        double targetPosition = YAW_SERVO.getPosition()
+                                + Math.signum(direction) * servoIncrement;
         YAW_SERVO.setPosition(targetPosition);
     }
 
