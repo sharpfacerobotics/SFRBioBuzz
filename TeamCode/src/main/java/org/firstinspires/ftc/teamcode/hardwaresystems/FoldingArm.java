@@ -150,14 +150,6 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
-        /**
-         *
-         * @return
-         */
-        protected boolean isInvalid() {
-            return minTicks >= maxTicks || ticksPerDegree <= 0 || power <= 0;
-        }
-
         public boolean isValid() {
             return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
@@ -169,7 +161,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum folding, maximum
      * folding, and ticks per degree.
      */
-    public static class FoldingParameters {
+    public static class FoldingParameters implements BuilderParameters {
         /**
          * The minimum folding of the arm in ticks.
          */
@@ -195,22 +187,22 @@ public class FoldingArm extends Arm {
          */
         private double initialAngle;
 
+        private double power;
+
         public FoldingParameters(
             int minTicks,
             int maxTicks,
             double ticksPerDegree
         ) {
-            this.minTicks = minTicks;
-            this.maxTicks = maxTicks;
-
-            this.ticksPerDegree = ticksPerDegree;
+            this(minTicks, maxTicks, 0, ticksPerDegree, 1);
         }
 
         public FoldingParameters(
             int minTicks,
             int maxTicks,
             double initialAngle,
-            double ticksPerDegree
+            double ticksPerDegree,
+            double power
         ) {
             this.minTicks = minTicks;
             this.maxTicks = maxTicks;
@@ -218,10 +210,13 @@ public class FoldingArm extends Arm {
 
             this.initialAngle = initialAngle;
             this.ticksPerDegree = ticksPerDegree;
+
+            this.power = power;
         }
 
-        protected boolean isInvalid() {
-            return minTicks >= maxTicks || ticksPerDegree <= 0;
+        @Override
+        public boolean isValid() {
+            return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
     }
 
@@ -397,8 +392,8 @@ public class FoldingArm extends Arm {
         public FoldingArm build() {
             if (
                 foldingArmMotors.containsNull()
-                || rotationParameters.isInvalid()
-                || foldingParameters.isInvalid()
+                || !rotationParameters.isValid()
+                || !foldingParameters.isValid()
             ) {
                 return null;
             }
