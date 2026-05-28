@@ -96,7 +96,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum rotation, maximum
      * rotation, and ticks per degree.
      */
-    public static class RotationParameters {
+    public static class RotationParameters implements BuilderParameters {
         /**
          * The minimum rotation of the arm in ticks.
          */
@@ -123,19 +123,22 @@ public class FoldingArm extends Arm {
          */
         private double ticksPerDegree;
 
+        private double power;
+
         public RotationParameters(
             int minTicks,
             int maxTicks,
             double ticksPerDegree
         ) {
-            this(minTicks, maxTicks, 0, ticksPerDegree);
+            this(minTicks, maxTicks, 0, ticksPerDegree, 1);
         }
 
         public RotationParameters(
             int minTicks,
             int maxTicks,
             double initialAngle,
-            double ticksPerDegree
+            double ticksPerDegree,
+            double power
         ) {
             this.minTicks = minTicks;
             this.maxTicks = maxTicks;
@@ -143,10 +146,20 @@ public class FoldingArm extends Arm {
 
             this.initialAngle = initialAngle;
             this.ticksPerDegree = ticksPerDegree;
+
+            this.power = power;
         }
 
+        /**
+         *
+         * @return
+         */
         protected boolean isInvalid() {
-            return minTicks >= maxTicks || ticksPerDegree <= 0;
+            return minTicks >= maxTicks || ticksPerDegree <= 0 || power <= 0;
+        }
+
+        public boolean isValid() {
+            return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
     }
 
@@ -212,6 +225,9 @@ public class FoldingArm extends Arm {
         }
     }
 
+    /**
+     *
+     */
     @SuppressWarnings("UnusedReturnValue")
     public static class Builder extends Arm.Builder {
         protected final FoldingArmMotors foldingArmMotors;
@@ -396,15 +412,6 @@ public class FoldingArm extends Arm {
     }
 
     /**
-     * The motor power that the arm uses when rotating.
-     */
-    private static final double ROTATION_POWER = 1;
-    /**
-     * The motor power that the arm uses when rotating.
-     */
-    private static final double FOLDING_POWER = 0.75;
-
-    /**
      * The motor that rotates the arm up and down.
      */
     private final DcMotor ROTATION_MOTOR;
@@ -425,7 +432,6 @@ public class FoldingArm extends Arm {
      * How many ticks it takes to rotate the arm by one degree.
      */
     private final double TICKS_PER_ROTATION_DEGREE;
-
     /**
      * The motor that folds and retracts the arm.
      */
@@ -447,6 +453,14 @@ public class FoldingArm extends Arm {
      * How many ticks it takes to rotate the arm by one degree.
      */
     private final double TICKS_PER_FOLDING_DEGREE;
+    /**
+     * The motor power that the arm uses when rotating.
+     */
+    private double rotationPower = 1;
+    /**
+     * The motor power that the arm uses when rotating.
+     */
+    private double foldingPower = 0.75;
 
     /**
      * Instantiate a foldable arm.
@@ -499,7 +513,7 @@ public class FoldingArm extends Arm {
      * @return The power multiplier that the arm motor rotates with.
      */
     public double getRotationPower() {
-        return ROTATION_POWER;
+        return rotationPower;
     }
 
     /**
@@ -539,7 +553,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm rotation reached limits");
         }
 
-        ROTATION_MOTOR.setPower(power * ROTATION_POWER);
+        ROTATION_MOTOR.setPower(power * rotationPower);
     }
 
     /**
@@ -567,7 +581,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - ROTATION_MOTOR.getCurrentPosition()
         );
-        ROTATION_MOTOR.setPower(direction * ROTATION_POWER);
+        ROTATION_MOTOR.setPower(direction * rotationPower);
 
         ROTATION_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
@@ -587,7 +601,7 @@ public class FoldingArm extends Arm {
      * @return The power multiplier that the arm motor rotates with.
      */
     public double getFoldingPower() {
-        return FOLDING_POWER;
+        return foldingPower;
     }
 
     /**
@@ -625,7 +639,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm folding reached limits.");
         }
 
-        FOLDING_MOTOR.setPower(power * FOLDING_POWER);
+        FOLDING_MOTOR.setPower(power * foldingPower);
     }
 
     /**
@@ -649,7 +663,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - FOLDING_MOTOR.getCurrentPosition()
         );
-        FOLDING_MOTOR.setPower(direction * FOLDING_POWER);
+        FOLDING_MOTOR.setPower(direction * foldingPower);
 
         FOLDING_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
@@ -673,7 +687,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - FOLDING_MOTOR.getCurrentPosition()
         );
-        FOLDING_MOTOR.setPower(direction * FOLDING_POWER);
+        FOLDING_MOTOR.setPower(direction * foldingPower);
 
         FOLDING_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
