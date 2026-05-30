@@ -252,7 +252,7 @@ public class MecanumWheels extends Wheels {
         public MecanumWheels build() {
             if (
                 mecanumWheelMotors.containsNull()
-                || wheelDistances.isInvalid()
+                || !wheelDistances.isValid()
                 || ticksPerInch <= 0
             ) {
                 return null;

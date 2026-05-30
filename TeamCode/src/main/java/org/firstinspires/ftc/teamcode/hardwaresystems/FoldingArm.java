@@ -57,8 +57,8 @@ public class FoldingArm extends Arm {
          * <p>
          * {@code false} otherwise.
          */
-        protected boolean containsNull() {
-            return rotationMotor == null || foldingMotor == null;
+        public boolean isValid() {
+            return rotationMotor != null && foldingMotor != null;
         }
 
         /**
@@ -96,7 +96,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum rotation, maximum
      * rotation, and ticks per degree.
      */
-    public static class RotationParameters implements BuilderParameters {
+    public static class RotationParameters {
         /**
          * The minimum rotation of the arm in ticks.
          */
@@ -150,7 +150,6 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
-        @Override
         public boolean isValid() {
             return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
@@ -162,7 +161,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum folding, maximum
      * folding, and ticks per degree.
      */
-    public static class FoldingParameters implements BuilderParameters {
+    public static class FoldingParameters {
         /**
          * The minimum folding of the arm in ticks.
          */
@@ -215,7 +214,6 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
-        @Override
         public boolean isValid() {
             return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
@@ -392,7 +390,7 @@ public class FoldingArm extends Arm {
         @Override
         public FoldingArm build() {
             if (
-                foldingArmMotors.containsNull()
+                !foldingArmMotors.isValid()
                 || !rotationParameters.isValid()
                 || !foldingParameters.isValid()
             ) {

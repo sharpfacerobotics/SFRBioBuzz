@@ -52,8 +52,8 @@ public abstract class Wheels {
          * <p>
          * {@code false} otherwise.
          */
-        public boolean isInvalid() {
-            return longitudinalDistance <= 0 || lateralDistance <= 0;
+        public boolean isValid() {
+            return longitudinalDistance > 0 && lateralDistance > 0;
         }
     }
 
