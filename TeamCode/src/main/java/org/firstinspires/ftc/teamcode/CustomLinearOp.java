@@ -11,7 +11,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Arm;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Claw;
 import org.firstinspires.ftc.teamcode.hardwaresystems.MecanumWheels;
-import org.firstinspires.ftc.teamcode.hardwaresystems.MotorType;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Wheels;
 
@@ -245,9 +244,8 @@ public class CustomLinearOp extends LinearOpMode {
             double wheelCircumference = 4.0 * Math.PI;
             double gearRatio = 1.0;
             // TODO: Change the motor type as necessary.
-            double ticksPerInch =
-                MotorType.TETRIX_TORQUENADO.getTicksPerRotation()
-                * gearRatio / wheelCircumference;
+            double ticksPerInch = frontLeftMotor.getMotorType().getTicksPerRev()
+                                  * gearRatio / wheelCircumference;
 
 
             // TODO: Replace with the necessary constructor.
@@ -277,7 +275,7 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * Assume the robot starts at (0, 0, 0) in the Road Runner field
+         * Assume the robot starts at (0, 0, 0) in the RoadRunner field
          * coordinate frame.
          * TODO: If your autonomous program uses a different starting pose,
          *  modify the pose here accordingly.
@@ -285,6 +283,58 @@ public class CustomLinearOp extends LinearOpMode {
         MECANUM_DRIVE = new MecanumDrive(
             hardwareMap,
             new Pose2d(0.0, 0.0, 0.0)
+        );
+    }
+
+    /**
+     * Initiate all hardware needed for the arm.
+     * <p>
+     * <strong>When starting a new season, change the type from {@link Arm} to
+     * the desired type.</strong>
+     */
+    private void initArm() {
+        // Prevent multiple instantiation.
+        if (ARM != null) {
+            return;
+        }
+
+        /*
+         * TODO: Replace Arm() with a constructor of the desired Arm subclass
+         *  (e.g., FoldingArm).
+         *  You might want to look at the class and code from previous years
+         *  for reference.
+         */
+        ARM = new Arm();
+    }
+
+    /**
+     * Initiate all hardware needed for the claw.
+     * <p>
+     * <strong>When starting a new season, change the return type from
+     * {@link Claw} to the desired type.</strong>
+     */
+    public void initClaw() {
+        // Prevent multiple instantiation.
+        if (CLAW != null) {
+            return;
+        }
+
+        /*
+         * TODO: Replace Claw() with a constructor of the desired Claw
+         *  subclass(e.g., SingleServoIntakeClaw)
+         *  You might want to look at the class and code from previous years
+         *  for reference.
+         */
+        CLAW = new Claw(
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null,
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null,
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null
         );
     }
 
@@ -324,9 +374,9 @@ public class CustomLinearOp extends LinearOpMode {
      *                            with existing call sites.
      */
     public void initWebcam(int cameraMonitorViewId) {
-        // Lenovo webcams typically support 640×480 resolution. Use this
-        // as a sensible default. If your camera can benefit from
-        // higher resolution, adjust the numbers here.
+        // Lenovo webcams typically support 640×480 resolution. Use this as a
+        // sensible default. If your camera can benefit from higher
+        // resolution, adjust the numbers here.
         int[] resolution = {640, 480};
 
         // Adjust the camera pose offsets in inches. Positive x is to the
@@ -368,6 +418,8 @@ public class CustomLinearOp extends LinearOpMode {
         );
 
         initWheels();
+        initArm();
+        initClaw();
 
         /*
          * Get camera ID to stream.

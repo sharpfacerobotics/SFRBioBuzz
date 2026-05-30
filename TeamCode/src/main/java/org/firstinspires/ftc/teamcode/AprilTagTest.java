@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.hardwaresystems.MecanumWheels;
-import org.firstinspires.ftc.teamcode.hardwaresystems.MotorType;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -132,13 +131,14 @@ public class AprilTagTest extends LinearOpMode {
         // Approximately measured from the CAD model in inches
         double wheelCircumference = 4.0 * Math.PI;
         double gearRatio = 1.0;
-        double ticksPerInch = MotorType.TETRIX_TORQUENADO.getTicksPerRotation()
+        double ticksPerInch = frontLeftMotor.getMotorType().getTicksPerRev()
                               * gearRatio / wheelCircumference;
 
         WHEELS = new MecanumWheels.Builder().setFrontLeftMotor(frontLeftMotor)
                                             .setFrontRightMotor(frontRightMotor)
                                             .setBackLeftMotor(backLeftMotor)
                                             .setBackRightMotor(backRightMotor)
+                                            // Approximately measured from CAD
                                             .setLateralDistance(8.5)
                                             .setLongitudinalDistance(14.5)
                                             .setTicksPerInch(ticksPerInch)
