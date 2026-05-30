@@ -150,6 +150,7 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
+        @Override
         public boolean isValid() {
             return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
