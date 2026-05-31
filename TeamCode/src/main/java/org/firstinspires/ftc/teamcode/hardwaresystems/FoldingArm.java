@@ -450,11 +450,11 @@ public class FoldingArm extends Arm {
     /**
      * The motor power that the arm uses when rotating.
      */
-    private double rotationPower = 1;
+    private final double ROTATION_POWER;
     /**
      * The motor power that the arm uses when rotating.
      */
-    private double foldingPower = 0.75;
+    private double FOLDING_POWER;
 
     /**
      * Instantiate a foldable arm.
@@ -472,18 +472,21 @@ public class FoldingArm extends Arm {
     ) {
         super(foldingArmMotors.motorSet);
 
-        this.ROTATION_MOTOR = foldingArmMotors.rotationMotor;
-        this.MIN_ROTATION = rotationParameters.minTicks;
-        this.MAX_ROTATION = rotationParameters.maxTicks;
-        this.INITIAL_ROTATION_ANGLE = rotationParameters.initialAngle;
-        this.TICKS_PER_ROTATION_DEGREE = rotationParameters.ticksPerDegree;
+        ROTATION_MOTOR = foldingArmMotors.rotationMotor;
+        MIN_ROTATION = rotationParameters.minTicks;
+        MAX_ROTATION = rotationParameters.maxTicks;
+        INITIAL_ROTATION_ANGLE = rotationParameters.initialAngle;
+        TICKS_PER_ROTATION_DEGREE = rotationParameters.ticksPerDegree;
+        ROTATION_POWER = rotationParameters.power;
 
-        this.FOLDING_MOTOR = foldingArmMotors.foldingMotor;
-        this.FOLDING_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.MIN_FOLDING = foldingParameters.minTicks;
-        this.MAX_FOLDING = foldingParameters.maxTicks;
-        this.INITIAL_FOLDING_ANGLE = foldingParameters.initialAngle;
-        this.TICKS_PER_FOLDING_DEGREE = foldingParameters.ticksPerDegree;
+        FOLDING_MOTOR = foldingArmMotors.foldingMotor;
+        // TODO: You may need to change the direction.
+        FOLDING_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
+        MIN_FOLDING = foldingParameters.minTicks;
+        MAX_FOLDING = foldingParameters.maxTicks;
+        INITIAL_FOLDING_ANGLE = foldingParameters.initialAngle;
+        TICKS_PER_FOLDING_DEGREE = foldingParameters.ticksPerDegree;
+        FOLDING_POWER = foldingParameters.power;
 
         // Reset position to 0
         for (DcMotor motor : motorSet) {
@@ -507,7 +510,7 @@ public class FoldingArm extends Arm {
      * @return The power multiplier that the arm motor rotates with.
      */
     public double getRotationPower() {
-        return rotationPower;
+        return ROTATION_POWER;
     }
 
     /**
@@ -547,7 +550,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm rotation reached limits");
         }
 
-        ROTATION_MOTOR.setPower(power * rotationPower);
+        ROTATION_MOTOR.setPower(power * ROTATION_POWER);
     }
 
     /**
@@ -575,7 +578,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - ROTATION_MOTOR.getCurrentPosition()
         );
-        ROTATION_MOTOR.setPower(direction * rotationPower);
+        ROTATION_MOTOR.setPower(direction * ROTATION_POWER);
 
         ROTATION_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
@@ -595,7 +598,7 @@ public class FoldingArm extends Arm {
      * @return The power multiplier that the arm motor rotates with.
      */
     public double getFoldingPower() {
-        return foldingPower;
+        return FOLDING_POWER;
     }
 
     /**
@@ -633,7 +636,7 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm folding reached limits.");
         }
 
-        FOLDING_MOTOR.setPower(power * foldingPower);
+        FOLDING_MOTOR.setPower(power * FOLDING_POWER);
     }
 
     /**
@@ -657,7 +660,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - FOLDING_MOTOR.getCurrentPosition()
         );
-        FOLDING_MOTOR.setPower(direction * foldingPower);
+        FOLDING_MOTOR.setPower(direction * FOLDING_POWER);
 
         FOLDING_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
@@ -681,7 +684,7 @@ public class FoldingArm extends Arm {
             targetPosition
             - FOLDING_MOTOR.getCurrentPosition()
         );
-        FOLDING_MOTOR.setPower(direction * foldingPower);
+        FOLDING_MOTOR.setPower(direction * FOLDING_POWER);
 
         FOLDING_MOTOR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
