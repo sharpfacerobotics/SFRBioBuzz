@@ -62,7 +62,7 @@ public abstract class Wheels {
      * subclasses. Subclasses that extend {@link Wheels} can also have an inner
      * class that extends {@link Builder}.
      */
-    public static abstract class Builder implements org.firstinspires.ftc.teamcode.hardwaresystems.Builder {
+    public static abstract class Builder implements HardwareSystemBuilder {
         /**
          * The distances between the wheels of the {@link Wheels} object to be
          * created.

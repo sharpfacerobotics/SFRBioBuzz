@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Parameters to store the state of {@link Builder}.
+ * Parameters to store the state of {@link HardwareSystemBuilder}.
  */
 public interface BuilderParameters {
     Set<DcMotor> motors = new HashSet<>();
