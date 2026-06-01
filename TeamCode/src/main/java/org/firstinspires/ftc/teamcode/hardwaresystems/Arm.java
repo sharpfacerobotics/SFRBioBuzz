@@ -17,18 +17,18 @@ public abstract class Arm {
      * A {@link Set} containing all the {@link DcMotor}s that are used by this
      * wheel system.
      */
-    protected final Set<DcMotor> motorSet;
+    protected final Set<DcMotor> motors;
 
     /**
      * Instantiate a new {@link Arm} with a {@link Set} of {@link DcMotor}s.
      *
-     * @param motorSet The {@link DcMotor}s contained within this {@link Arm}.
+     * @param motors The {@link DcMotor}s contained within this {@link Arm}.
      */
-    public Arm(Set<DcMotor> motorSet) {
-        this.motorSet = motorSet;
+    public Arm(Set<DcMotor> motors) {
+        this.motors = motors;
         // The arm motors will attempt to resist external forces　(e.g.,
         // gravity).
-        for (DcMotor motor : this.motorSet) {
+        for (DcMotor motor : this.motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }
@@ -40,6 +40,6 @@ public abstract class Arm {
      * this arm system.
      */
     public Set<DcMotor> getMotors() {
-        return motorSet;
+        return motors;
     }
 }

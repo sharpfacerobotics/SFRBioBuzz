@@ -17,7 +17,7 @@ public class FoldingArm extends Arm {
      * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
      * FoldingParameters)} constructor. Contains the motors and motor types.
      */
-    public static class FoldingArmMotors {
+    public static class FoldingArmMotors implements BuilderParameters {
         /**
          * All the motors to be used by {@link FoldingArm}.
          */
@@ -96,7 +96,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum rotation, maximum
      * rotation, and ticks per degree.
      */
-    public static class RotationParameters {
+    public static class RotationParameters implements BuilderParameters {
         /**
          * The minimum rotation of the arm in ticks.
          */
@@ -161,7 +161,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum folding, maximum
      * folding, and ticks per degree.
      */
-    public static class FoldingParameters {
+    public static class FoldingParameters implements BuilderParameters {
         /**
          * The minimum folding of the arm in ticks.
          */
@@ -214,6 +214,7 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
+        @Override
         public boolean isValid() {
             return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
         }
@@ -489,7 +490,7 @@ public class FoldingArm extends Arm {
         FOLDING_POWER = foldingParameters.power;
 
         // Reset position to 0
-        for (DcMotor motor : motorSet) {
+        for (DcMotor motor : motors) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }

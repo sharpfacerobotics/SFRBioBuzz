@@ -12,7 +12,7 @@ public abstract class Wheels {
      * Contains the distances between wheels. Necessary for calculating
      * rotation.
      */
-    protected static class WheelDistances {
+    protected static class WheelDistances implements BuilderParameters {
         /**
          * The distance between the left and right wheels, measured in inches
          * from their centers.
@@ -62,7 +62,7 @@ public abstract class Wheels {
      * subclasses. Subclasses that extend {@link Wheels} can also have an inner
      * class that extends {@link Builder}.
      */
-    public static abstract class Builder {
+    public static abstract class Builder implements org.firstinspires.ftc.teamcode.hardwaresystems.Builder {
         /**
          * The distances between the wheels of the {@link Wheels} object to be
          * created.
@@ -141,7 +141,7 @@ public abstract class Wheels {
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
-    protected final Set<DcMotor> motorSet;
+    protected final Set<DcMotor> motors;
 
     /**
      * The distance between the left and right wheels, measured in inches from
@@ -171,9 +171,9 @@ public abstract class Wheels {
         WheelDistances wheelDistances,
         double ticksPerInch
     ) {
-        motorSet = motors;
+        this.motors = motors;
         // Allow wheels to roll freely.
-        for (DcMotor motor : motorSet) {
+        for (DcMotor motor : this.motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
@@ -194,7 +194,7 @@ public abstract class Wheels {
      * this wheel system.
      */
     public Set<DcMotor> getMotors() {
-        return motorSet;
+        return motors;
     }
 
     /**
