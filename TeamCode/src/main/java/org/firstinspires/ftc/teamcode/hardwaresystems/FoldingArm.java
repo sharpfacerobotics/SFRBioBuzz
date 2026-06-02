@@ -19,25 +19,28 @@ public class FoldingArm extends Arm {
      */
     public static class FoldingArmMotors extends BuilderParameters {
         /**
-         * All the motors to be used by {@link FoldingArm}.
+         * All the motors to be used by {@link FoldingArm}. Used to set
+         * {@link Arm#motors}.
          */
         protected final Set<DcMotor> motors;
 
         /**
-         * The motor that rotates the entire arm.
+         * The motor that rotates the entire arm. Used to set
+         * {@link #ROTATION_MOTOR}.
          */
         protected DcMotor rotationMotor;
         /**
-         * The motor that folds the arm.
+         * The motor that folds the arm in the middle. Used to set
+         * {@link #FOLDING_MOTOR}.
          */
         protected DcMotor foldingMotor;
 
         /**
          * Create a new instance of {@link FoldingArmMotors}. If the parameters
-         * are {@code null}, they will not be
+         * are {@code null}, they will not be added to {@link #motors}.
          *
-         * @param rotationMotor
-         * @param foldingMotor
+         * @param rotationMotor The motor that rotates the entire arm around.
+         * @param foldingMotor  The motor that folds the arm in the middle.
          */
         public FoldingArmMotors(DcMotor rotationMotor, DcMotor foldingMotor) {
             motors = new HashSet<>();
@@ -53,6 +56,13 @@ public class FoldingArm extends Arm {
             this.foldingMotor = foldingMotor;
         }
 
+        /**
+         * Override {@link FoldingArmMotors#FoldingArmMotors(DcMotor, DcMotor)}
+         * with two {@code null} {@link DcMotor}s, essentially serving as a
+         * blank constructor.
+         * <p>
+         * Note that in this state, it will fail {@link Builder#build()}.
+         */
         public FoldingArmMotors() {
             this(null, null);
         }
@@ -196,10 +206,15 @@ public class FoldingArm extends Arm {
         private double ticksPerDegree;
         /**
          * The angle that the arm folding starts from. 0 ticks will be
-         * considered to be equal to this angle.
+         * considered to be equal to this angle. Used to set
+         * {@link #INITIAL_FOLDING_ANGLE}
          */
         private double initialAngle;
 
+        /**
+         * The maximum power that the folding arm moves with. Used to set
+         * {@link #FOLDING_POWER}.
+         */
         private double power;
 
         public FoldingParameters(
@@ -441,6 +456,11 @@ public class FoldingArm extends Arm {
      */
     private final double TICKS_PER_ROTATION_DEGREE;
     /**
+     * The maximum power that the {@link #ROTATION_MOTOR} moves with.
+     */
+    private final double ROTATION_POWER;
+
+    /**
      * The motor that folds and retracts the arm.
      */
     private final DcMotor FOLDING_MOTOR;
@@ -462,13 +482,9 @@ public class FoldingArm extends Arm {
      */
     private final double TICKS_PER_FOLDING_DEGREE;
     /**
-     * The motor power that the arm uses when rotating.
+     * The maximum motor power that the {@link #FOLDING_MOTOR} moves with.
      */
-    private final double ROTATION_POWER;
-    /**
-     * The motor power that the arm uses when rotating.
-     */
-    private double FOLDING_POWER;
+    private final double FOLDING_POWER;
 
     /**
      * Instantiate a foldable arm.
@@ -502,7 +518,7 @@ public class FoldingArm extends Arm {
         TICKS_PER_FOLDING_DEGREE = foldingParameters.ticksPerDegree;
         FOLDING_POWER = foldingParameters.power;
 
-        // Reset position to 0
+        // Reset position to 0.
         for (DcMotor motor : motors) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

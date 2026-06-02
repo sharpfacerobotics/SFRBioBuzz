@@ -26,7 +26,7 @@ public abstract class Claw {
     /**
      * A {@link Set} of all the {@link Servo}s that are in this claw.
      */
-    private final Set<Servo> servoSet;
+    private final Set<Servo> servos;
     /**
      * The number of motor ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.
@@ -47,10 +47,10 @@ public abstract class Claw {
         Servo yawServo,
         double servoIncrement
     ) {
-        servoSet = new HashSet<>();
-        servoSet.add(rollServo);
-        servoSet.add(pitchServo);
-        servoSet.add(yawServo);
+        servos = new HashSet<>();
+        servos.add(rollServo);
+        servos.add(pitchServo);
+        servos.add(yawServo);
 
         ROLL_SERVO = rollServo;
         PITCH_SERVO = pitchServo;
@@ -60,7 +60,7 @@ public abstract class Claw {
     }
 
     /**
-     * Overloads {@link Claw#Claw(Servo, Servo, Servo, double)} with
+     * Overload {@link Claw#Claw(Servo, Servo, Servo, double)} with
      * {@link #servoIncrement} defaulting to 0.1.
      *
      * @param rollServo  The servo that controls the claw's roll.
@@ -71,7 +71,6 @@ public abstract class Claw {
         this(rollServo, pitchServo, yawServo, 0.1);
     }
 
-
     /**
      * Get all the {@link Servo}s that are included in this claw system.
      *
@@ -79,7 +78,7 @@ public abstract class Claw {
      * claw system.
      */
     public Set<Servo> getServos() {
-        return servoSet;
+        return servos;
     }
 
     /**
