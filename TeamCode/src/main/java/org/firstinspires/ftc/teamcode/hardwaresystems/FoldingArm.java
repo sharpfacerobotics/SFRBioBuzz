@@ -17,11 +17,11 @@ public class FoldingArm extends Arm {
      * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
      * FoldingParameters)} constructor. Contains the motors and motor types.
      */
-    public static class FoldingArmMotors implements BuilderParameters {
+    public static class FoldingArmMotors extends BuilderParameters {
         /**
          * All the motors to be used by {@link FoldingArm}.
          */
-        protected final Set<DcMotor> motorSet;
+        protected final Set<DcMotor> motors;
 
         /**
          * The motor that rotates the entire arm.
@@ -32,20 +32,29 @@ public class FoldingArm extends Arm {
          */
         protected DcMotor foldingMotor;
 
+        /**
+         * Create a new instance of {@link FoldingArmMotors}. If the parameters
+         * are {@code null}, they will not be
+         *
+         * @param rotationMotor
+         * @param foldingMotor
+         */
         public FoldingArmMotors(DcMotor rotationMotor, DcMotor foldingMotor) {
-            motorSet = new HashSet<>();
-            motorSet.add(rotationMotor);
-            motorSet.add(foldingMotor);
+            motors = new HashSet<>();
+
+            if (rotationMotor != null) {
+                motors.add(rotationMotor);
+            }
+            if (foldingMotor != null) {
+                motors.add(foldingMotor);
+            }
 
             this.rotationMotor = rotationMotor;
             this.foldingMotor = foldingMotor;
         }
 
         public FoldingArmMotors() {
-            motorSet = new HashSet<>();
-
-            rotationMotor = null;
-            foldingMotor = null;
+            this(null, null);
         }
 
         /**
@@ -69,10 +78,12 @@ public class FoldingArm extends Arm {
          *                      the entire arm in a circular manner.
          */
         protected void setRotationMotor(DcMotor rotationMotor) {
-            motorSet.remove(this.rotationMotor);
+            motors.remove(this.rotationMotor);
 
             this.rotationMotor = rotationMotor;
-            motorSet.add(rotationMotor);
+            if (rotationMotor != null) {
+                motors.add(rotationMotor);
+            }
         }
 
         /**
@@ -83,10 +94,12 @@ public class FoldingArm extends Arm {
          *                     the arm in the middle.
          */
         protected void setFoldingMotor(DcMotor foldingMotor) {
-            motorSet.remove(this.foldingMotor);
+            motors.remove(this.foldingMotor);
 
             this.foldingMotor = foldingMotor;
-            motorSet.add(foldingMotor);
+            if (foldingMotor != null) {
+                motors.add(foldingMotor);
+            }
         }
     }
 
@@ -96,7 +109,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum rotation, maximum
      * rotation, and ticks per degree.
      */
-    public static class RotationParameters implements BuilderParameters {
+    public static class RotationParameters extends BuilderParameters {
         /**
          * The minimum rotation of the arm in ticks.
          */
@@ -161,7 +174,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum folding, maximum
      * folding, and ticks per degree.
      */
-    public static class FoldingParameters implements BuilderParameters {
+    public static class FoldingParameters extends BuilderParameters {
         /**
          * The minimum folding of the arm in ticks.
          */
@@ -471,7 +484,7 @@ public class FoldingArm extends Arm {
         RotationParameters rotationParameters,
         FoldingParameters foldingParameters
     ) {
-        super(foldingArmMotors.motorSet);
+        super(foldingArmMotors.motors);
 
         ROTATION_MOTOR = foldingArmMotors.rotationMotor;
         MIN_ROTATION = rotationParameters.minTicks;

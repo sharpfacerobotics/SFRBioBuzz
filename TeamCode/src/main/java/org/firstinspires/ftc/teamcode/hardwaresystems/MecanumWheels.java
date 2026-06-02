@@ -16,7 +16,7 @@ public class MecanumWheels extends Wheels {
      * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
      */
-    protected static class MecanumWheelMotors implements BuilderParameters {
+    protected static class MecanumWheelMotors extends BuilderParameters {
         /**
          * The {@link DcMotor}s powering the front left wheel.
          */
@@ -49,10 +49,18 @@ public class MecanumWheels extends Wheels {
             DcMotor backLeftMotor,
             DcMotor backRightMotor
         ) {
-            motors.add(frontLeftMotor);
-            motors.add(frontRightMotor);
-            motors.add(backLeftMotor);
-            motors.add(backRightMotor);
+            if (frontLeftMotor != null) {
+                motors.add(frontLeftMotor);
+            }
+            if (frontRightMotor != null) {
+                motors.add(frontRightMotor);
+            }
+            if (backLeftMotor != null) {
+                motors.add(backLeftMotor);
+            }
+            if (backRightMotor != null) {
+                motors.add(backRightMotor);
+            }
 
             this.frontLeftMotor = frontLeftMotor;
             this.frontRightMotor = frontRightMotor;
@@ -64,10 +72,7 @@ public class MecanumWheels extends Wheels {
          * Instantiate an empty motor set. Mostly used for dummy purposes.
          */
         public MecanumWheelMotors() {
-            frontLeftMotor = null;
-            frontRightMotor = null;
-            backLeftMotor = null;
-            backRightMotor = null;
+            this(null, null, null, null);
         }
 
         /**
@@ -102,7 +107,9 @@ public class MecanumWheels extends Wheels {
             motors.remove(this.frontLeftMotor);
 
             this.frontLeftMotor = frontLeftMotor;
-            motors.add(frontLeftMotor);
+            if (frontLeftMotor != null) {
+                motors.add(frontLeftMotor);
+            }
         }
 
         /**
@@ -116,7 +123,9 @@ public class MecanumWheels extends Wheels {
             motors.remove(this.frontRightMotor);
 
             this.frontRightMotor = frontRightMotor;
-            motors.add(frontRightMotor);
+            if (frontRightMotor != null) {
+                motors.add(frontRightMotor);
+            }
         }
 
         /**
@@ -129,7 +138,9 @@ public class MecanumWheels extends Wheels {
             motors.remove(this.backLeftMotor);
 
             this.backLeftMotor = backLeftMotor;
-            motors.add(backLeftMotor);
+            if (backLeftMotor != null) {
+                motors.add(backLeftMotor);
+            }
         }
 
         /**
@@ -142,7 +153,9 @@ public class MecanumWheels extends Wheels {
             motors.remove(this.backRightMotor);
 
             this.backRightMotor = backRightMotor;
-            motors.add(backRightMotor);
+            if (backRightMotor != null) {
+                motors.add(backRightMotor);
+            }
         }
     }
 

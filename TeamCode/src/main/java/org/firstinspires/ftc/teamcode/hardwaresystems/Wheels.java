@@ -12,7 +12,7 @@ public abstract class Wheels {
      * Contains the distances between wheels. Necessary for calculating
      * rotation.
      */
-    protected static class WheelDistances implements BuilderParameters {
+    protected static class WheelDistances extends BuilderParameters {
         /**
          * The distance between the left and right wheels, measured in inches
          * from their centers.
