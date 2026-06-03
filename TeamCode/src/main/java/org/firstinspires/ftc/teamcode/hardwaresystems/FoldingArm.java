@@ -145,7 +145,10 @@ public class FoldingArm extends Arm {
          * How many ticks it takes to rotate the arm by one degree.
          */
         private double ticksPerDegree;
-
+        /**
+         * The maximum power that the {@link #ROTATION_MOTOR} moves with. Used
+         * to set {@link #ROTATION_POWER}.
+         */
         private double power;
 
         public RotationParameters(
@@ -173,8 +176,26 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
+
+        /**
+         * Return whether the current {@link RotationParameters} are valid,
+         * i.e., {@link #minTicks} is less than {@link #maxTicks},
+         * {@link #ticksPerDegree} is positive, and {@link #power} is between
+         * 0.0 and 1.0 (inclusive).
+         *
+         * @return {@code true} current {@link RotationParameters} are valid,
+         * i.e., {@link #minTicks} is less than {@link #maxTicks},
+         * {@link #ticksPerDegree} is positive, and {@link #power} is between
+         * 0.0 and 1.0 (inclusive).
+         * <p>
+         * {@code false} otherise.
+         */
+        @Override
         public boolean isValid() {
-            return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
+            return minTicks < maxTicks
+                   && ticksPerDegree > 0.0
+                   && 0.0 < power
+                   && power < 1.0;
         }
     }
 
@@ -212,8 +233,8 @@ public class FoldingArm extends Arm {
         private double initialAngle;
 
         /**
-         * The maximum power that the folding arm moves with. Used to set
-         * {@link #FOLDING_POWER}.
+         * The maximum power that the {@link #FOLDING_MOTOR} moves with. Used to
+         * set {@link #FOLDING_POWER}.
          */
         private double power;
 
@@ -242,14 +263,30 @@ public class FoldingArm extends Arm {
             this.power = power;
         }
 
+        /**
+         * Return whether the current {@link FoldingParameters} are valid, i.e.,
+         * {@link #minTicks} is less than {@link #maxTicks},
+         * {@link #ticksPerDegree} is positive, and {@link #power} is between
+         * 0.0 and 1.0 (inclusive).
+         *
+         * @return {@code true} current {@link FoldingParameters} are valid,
+         * i.e., {@link #minTicks} is less than {@link #maxTicks},
+         * {@link #ticksPerDegree} is positive, and {@link #power} is between
+         * 0.0 and 1.0 (inclusive).
+         * <p>
+         * {@code false} otherise.
+         */
         @Override
         public boolean isValid() {
-            return minTicks < maxTicks && ticksPerDegree > 0 && power > 0;
+            return minTicks < maxTicks
+                   && ticksPerDegree > 0.0
+                   && 0.0 < power
+                   && power < 1.0;
         }
     }
 
     /**
-     *
+     * A builder for creating instances of {@link FoldingArm}.
      */
     @SuppressWarnings("UnusedReturnValue")
     public static class Builder extends Arm.Builder {
@@ -349,6 +386,20 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the power that the {@link #ROTATION_MOTOR} moves with, which is
+         * clamped to be between 0.0 and 1.0 (inclusive).
+         *
+         * @param power The power to set the {@link #ROTATION_MOTOR} to. Any
+         *              values less than 0.0 or greater than 1.0 will be
+         *              clamped.
+         * @return The {@link Builder} instance to allow for method chaining.
+         */
+        public Builder setRotationPower(double power) {
+            rotationParameters.power = Math.min(Math.max(power, 0.0), 1.0);
+            return this;
+        }
+
         public Builder setFoldingRangeTicks(int minTicks, int maxTicks) {
             foldingParameters.minTicks = minTicks;
             foldingParameters.maxTicks = maxTicks;
@@ -413,6 +464,20 @@ public class FoldingArm extends Arm {
             }
 
             foldingParameters.initialAngle = initialAngle;
+            return this;
+        }
+
+        /**
+         * Set the power that the {@link #FOLDING_MOTOR} moves with, which is
+         * clamped to be between 0.0 and 1.0 (inclusive).
+         *
+         * @param power The power to set the {@link #FOLDING_MOTOR} to. Any
+         *              values less than 0.0 or greater than 1.0 will be
+         *              clamped.
+         * @return The {@link Builder} instance to allow for method chaining.
+         */
+        public Builder setFoldingPower(double power) {
+            foldingParameters.power = Math.min(Math.max(power, 0.0), 1.0);
             return this;
         }
 
@@ -580,7 +645,9 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm rotation reached limits");
         }
 
-        ROTATION_MOTOR.setPower(power * ROTATION_POWER);
+        double clampedPower = Math.max(Math.min(power, 1.0), -1.0);
+
+        ROTATION_MOTOR.setPower(clampedPower * ROTATION_POWER);
     }
 
     /**
@@ -666,7 +733,9 @@ public class FoldingArm extends Arm {
             throw new IllegalStateException("Arm folding reached limits.");
         }
 
-        FOLDING_MOTOR.setPower(power * FOLDING_POWER);
+        double clampedPower = Math.max(Math.min(power, 1.0), -1.0);
+
+        FOLDING_MOTOR.setPower(clampedPower * FOLDING_POWER);
     }
 
     /**
