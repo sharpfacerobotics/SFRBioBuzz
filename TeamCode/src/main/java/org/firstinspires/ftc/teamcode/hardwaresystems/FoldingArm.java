@@ -20,7 +20,7 @@ public class FoldingArm extends Arm {
      */
     protected static class FoldingArmMotors extends BuilderParameters {
         /**
-         * All the motors to be used by {@link FoldingArm}. Used to set
+         * All the motors to be used by this {@link FoldingArm}. Used to set
          * {@link Arm#motors}.
          */
         protected final Set<DcMotor> motors;

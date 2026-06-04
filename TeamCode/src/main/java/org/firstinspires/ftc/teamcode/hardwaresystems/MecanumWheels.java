@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * A system of four mecanum wheels, each controlled separately by their own
  * motor.
@@ -17,6 +20,12 @@ public class MecanumWheels extends Wheels {
      * double)} constructor. Contains all four motors.
      */
     protected static class MecanumWheelMotors extends BuilderParameters {
+        /**
+         * All the motors that are used by this {@link Wheels} system. Should
+         * never contain {@code null}.
+         */
+        protected Set<DcMotor> motors = new HashSet<>();
+
         /**
          * The {@link DcMotor}s powering the front left wheel.
          */
