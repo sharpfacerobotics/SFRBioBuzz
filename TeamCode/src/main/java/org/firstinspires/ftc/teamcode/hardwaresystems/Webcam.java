@@ -13,6 +13,9 @@ import org.opencv.core.Scalar;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The webcam that process visual input such as colors and AprilTags.
+ */
 public class Webcam {
     /**
      * Enum that holds HSV ranges for different colors used by the robot.
@@ -47,7 +50,6 @@ public class Webcam {
          * Upper HSV bound for this color.
          */
         private final Scalar upperBound;
-
 
         /**
          * Constructor for each color with its lower and upper HSV bounds.
