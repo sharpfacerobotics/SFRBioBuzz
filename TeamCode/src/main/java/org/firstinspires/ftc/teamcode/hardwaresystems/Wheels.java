@@ -73,6 +73,11 @@ public abstract class Wheels {
          * object to travel one (1) inch.
          */
         protected double ticksPerInch;
+        /**
+         * The maximum power sent to the {@link DcMotor}s. Should be from 0.0
+         * (exclusive) to 1.0 (inclusive).
+         */
+        protected double maxMotorPower;
 
         /**
          * Set the {@link WheelDistances#lateralDistance} property of
@@ -117,7 +122,24 @@ public abstract class Wheels {
          * <p>
          * See {@link MecanumWheels.Builder} for an example.
          */
-        public abstract Builder setTicksPerInch(double ticksPerInch);
+        public Builder setTicksPerInch(double ticksPerInch) {
+            this.ticksPerInch = ticksPerInch;
+            return this;
+        }
+
+        /**
+         * Set the maximum amount of power that can be sent to the wheel
+         * motors.
+         *
+         * @param maxMotorPower The maximum amount of power that can be sent to
+         *                      the wheel motors. Should be between 0.0
+         *                      (exclusive) to 1.0 (inclusive).
+         * @return This {@link Builder} so that setters can be chained.
+         */
+        public Builder setMaxMotorPower(double maxMotorPower) {
+            this.maxMotorPower = maxMotorPower;
+            return this;
+        }
 
         /**
          * Using the given {@link WheelDistances}, and {@link #ticksPerInch},
@@ -134,10 +156,10 @@ public abstract class Wheels {
     }
 
     /**
-     * A modifier for how much power the wheels run with. The value should be in
-     * the range [0.0, 1.0].
+     * A multiplier for how much power the wheels run with. The value should be
+     * in the range [0.0, 1.0].
      */
-    protected final static double MOTOR_POWER = 1.0;
+    protected final double MAX_MOTOR_POWER = 1.0;
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
@@ -157,7 +179,6 @@ public abstract class Wheels {
      * The number of ticks needed to move the robot by 1 inch.
      */
     protected final double TICKS_PER_INCH;
-
 
     /**
      * Instantiate a {@link Wheels} object.
@@ -183,8 +204,13 @@ public abstract class Wheels {
         TICKS_PER_INCH = ticksPerInch;
     }
 
+    /**
+     * Get the power that the motors drive with.
+     *
+     * @return The power that the motors drive with.
+     */
     public double getMotorPower() {
-        return MOTOR_POWER;
+        return MAX_MOTOR_POWER;
     }
 
     /**

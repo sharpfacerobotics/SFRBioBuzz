@@ -240,7 +240,7 @@ public class MecanumWheels extends Wheels {
          */
         @Override
         public Builder setTicksPerInch(double ticksPerInch) {
-            this.ticksPerInch = ticksPerInch;
+            super.setTicksPerInch(ticksPerInch);
             return this;
         }
 
@@ -260,6 +260,7 @@ public class MecanumWheels extends Wheels {
                 !mecanumWheelMotors.isValid()
                 || !wheelDistances.isValid()
                 || ticksPerInch <= 0
+                || maxMotorPower <= 0
             ) {
                 return null;
             }
@@ -289,6 +290,16 @@ public class MecanumWheels extends Wheels {
      */
     protected final DcMotor BACK_RIGHT_MOTOR;
 
+    /**
+     * Instantiate a new {@link MecanumWheels} object with the motors,
+     * distances, and ticks per inch all set.
+     *
+     * @param mecanumWheelMotors THe motors used to drive the mecanum wheels.
+     * @param wheelDistances     The distances between the mecanum wheels for
+     *                           calculations involving distances and turning.
+     * @param ticksPerInch       The number of ticks per inch, assuming that
+     *                           each wheel is identical.
+     */
     protected MecanumWheels(
         MecanumWheelMotors mecanumWheelMotors,
         WheelDistances wheelDistances,
@@ -320,18 +331,38 @@ public class MecanumWheels extends Wheels {
         BACK_RIGHT_MOTOR.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
+    /**
+     * Get the motor that drives the front-left mecanum wheel.
+     *
+     * @return The motor that drives the front-left mecanum wheel.
+     */
     public DcMotor getFrontLeftMotor() {
         return FRONT_LEFT_MOTOR;
     }
 
+    /**
+     * Get the motor that drives the front-right mecanum wheel.
+     *
+     * @return The motor that drives the front-right mecanum wheel.
+     */
     public DcMotor getFrontRightMotor() {
         return FRONT_RIGHT_MOTOR;
     }
 
+    /**
+     * Get the motor that drives the back-left mecanum wheel.
+     *
+     * @return The motor that drives the back-left mecanum wheel.
+     */
     public DcMotor getBackLeftMotor() {
         return BACK_LEFT_MOTOR;
     }
 
+    /**
+     * Get the motor that drives the back-right mecanum wheel.
+     *
+     * @return The motor that drives the back-right mecanum wheel.
+     */
     public DcMotor getBackRightMotor() {
         return BACK_RIGHT_MOTOR;
     }
@@ -426,8 +457,8 @@ public class MecanumWheels extends Wheels {
         // Scale the motor power based on trigonometry. Multiply by
         // `MOTOR_POWER` after normalizing by the total distance so that
         // larger requested distances do not inadvertently increase motor power.
-        double xPower = (sidewaysDistance / totalDistance) * MOTOR_POWER;
-        double yPower = (forwardDistance / totalDistance) * MOTOR_POWER;
+        double xPower = (sidewaysDistance / totalDistance) * MAX_MOTOR_POWER;
+        double yPower = (forwardDistance / totalDistance) * MAX_MOTOR_POWER;
         drive(xPower, yPower, 0);
 
         int frontLeftTickPosition =
@@ -478,21 +509,21 @@ public class MecanumWheels extends Wheels {
         FRONT_LEFT_MOTOR.setTargetPosition(
             FRONT_LEFT_MOTOR.getCurrentPosition() - ticks
         );
-        FRONT_LEFT_MOTOR.setPower(-MOTOR_POWER);
+        FRONT_LEFT_MOTOR.setPower(-MAX_MOTOR_POWER);
         BACK_LEFT_MOTOR.setTargetPosition(
             BACK_LEFT_MOTOR.getCurrentPosition() - ticks
         );
-        BACK_LEFT_MOTOR.setPower(-MOTOR_POWER);
+        BACK_LEFT_MOTOR.setPower(-MAX_MOTOR_POWER);
 
         // Right wheels
         FRONT_RIGHT_MOTOR.setTargetPosition(
             FRONT_RIGHT_MOTOR.getCurrentPosition() + ticks
         );
-        FRONT_RIGHT_MOTOR.setPower(MOTOR_POWER);
+        FRONT_RIGHT_MOTOR.setPower(MAX_MOTOR_POWER);
         BACK_RIGHT_MOTOR.setTargetPosition(
             BACK_RIGHT_MOTOR.getCurrentPosition() + ticks
         );
-        BACK_RIGHT_MOTOR.setPower(MOTOR_POWER);
+        BACK_RIGHT_MOTOR.setPower(MAX_MOTOR_POWER);
 
         for (DcMotor motor : motors) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
