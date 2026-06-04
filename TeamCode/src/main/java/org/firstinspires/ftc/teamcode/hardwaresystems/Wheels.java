@@ -80,6 +80,18 @@ public abstract class Wheels {
         protected double maxMotorPower;
 
         /**
+         * Instantiate the {@link Builder} with default values. The default
+         * values are invalid and will not pass the validity check for
+         * {@link Builder#build()}.
+         */
+        public Builder() {
+            wheelDistances = new WheelDistances(-1.0, -1.0);
+            ticksPerInch = -1.0;
+
+            maxMotorPower = 1.0;
+        }
+
+        /**
          * Set the {@link WheelDistances#lateralDistance} property of
          * {@link #wheelDistances}.
          *
@@ -157,9 +169,9 @@ public abstract class Wheels {
 
     /**
      * A multiplier for how much power the wheels run with. The value should be
-     * in the range [0.0, 1.0].
+     * between 0.0 (exclusive) and 1.0 (inclusive).
      */
-    protected final double MAX_MOTOR_POWER = 1.0;
+    protected final double MAX_MOTOR_POWER;
     /**
      * A {@link Set} of all the motors included by the wheel system.
      */
@@ -181,16 +193,41 @@ public abstract class Wheels {
     protected final double TICKS_PER_INCH;
 
     /**
-     * Instantiate a {@link Wheels} object.
+     * Instantiate a {@link Wheels} object with only motors, wheel distances,
+     * and ticks per inch. Assume the maximum power to be 1.0.
      *
-     * @param motors       All the motors used by the robot.
-     * @param ticksPerInch The number of ticks needed to move the robot by one
-     *                     inch.
+     * @param motors         All the motors used by the robot.
+     * @param wheelDistances The distances between the wheels, which is used for
+     *                       determining turning angles.
+     * @param ticksPerInch   The number of ticks needed to move the robot by one
+     *                       inch.
      */
     protected Wheels(
         Set<DcMotor> motors,
         WheelDistances wheelDistances,
         double ticksPerInch
+    ) {
+        this(motors, wheelDistances, ticksPerInch, 1.0);
+    }
+
+    /**
+     * Instantiate a {@link Wheels} object with motors, wheel distances, ticks
+     * per inch, and motor powers all set up.
+     *
+     * @param motors         All the motors used by the robot.
+     * @param wheelDistances The distances between the wheels, which is used for
+     *                       determining turning angles.
+     * @param ticksPerInch   The number of ticks needed to move the robot by one
+     *                       inch.
+     * @param maxMotorPower  The maximum power that the wheel motors drive with.
+     *                       Should be between 0.0 (exclusive) and 1.0
+     *                       (inclusive).
+     */
+    protected Wheels(
+        Set<DcMotor> motors,
+        WheelDistances wheelDistances,
+        double ticksPerInch,
+        double maxMotorPower
     ) {
         this.motors = motors;
         // Allow wheels to roll freely.
@@ -202,6 +239,8 @@ public abstract class Wheels {
         LONGITUDINAL_DISTANCE = wheelDistances.longitudinalDistance;
 
         TICKS_PER_INCH = ticksPerInch;
+
+        MAX_MOTOR_POWER = maxMotorPower;
     }
 
     /**

@@ -411,7 +411,7 @@ public class MecanumWheels extends Wheels {
                 Math.abs(backRightPower)
             )
         );
-        if (maxMagnitude > 1.0) {
+        if (maxMagnitude > MAX_MOTOR_POWER) {
             frontLeftPower /= maxMagnitude;
             frontRightPower /= maxMagnitude;
             backLeftPower /= maxMagnitude;
