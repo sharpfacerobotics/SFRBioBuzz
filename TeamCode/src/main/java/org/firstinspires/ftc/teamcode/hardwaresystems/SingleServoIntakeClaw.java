@@ -32,6 +32,19 @@ public class SingleServoIntakeClaw extends Claw {
      */
     private final DigitalChannel INTAKE_SENSOR;
 
+    /**
+     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
+     * to control rotation in three degrees of freedom and a servo to control
+     * intake and output.
+     *
+     * @param rollServo   The servo that controls roll, i.e., rotation along the
+     *                    x-axis.
+     * @param pitchServo  The servo that controls pitch, i.e., rotation along
+     *                    the y-axis.
+     * @param yawServo    The servo that controls yaw, i.e., rotation along the
+     *                    z-axis.
+     * @param intakeServo The servo that controls intake and output.
+     */
     public SingleServoIntakeClaw(
         Servo rollServo,
         Servo pitchServo,
@@ -41,6 +54,22 @@ public class SingleServoIntakeClaw extends Claw {
         this(rollServo, pitchServo, yawServo, intakeServo, null);
     }
 
+    /**
+     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
+     * to control rotation in three degrees of freedom, a servo to control
+     * intake and output, and a touch sensor to detect whether an object has
+     * been picked up.
+     *
+     * @param rollServo    The servo that controls roll, i.e., rotation along
+     *                     the x-axis.
+     * @param pitchServo   The servo that controls pitch, i.e., rotation along
+     *                     the y-axis.
+     * @param yawServo     The servo that controls yaw, i.e., rotation along the
+     *                     z-axis.
+     * @param intakeServo  The servo that controls intake and output.
+     * @param intakeSensor The touch sensor that detects whether an object has
+     *                     been picked up.
+     */
     public SingleServoIntakeClaw(
         Servo rollServo,
         Servo pitchServo,
@@ -54,22 +83,48 @@ public class SingleServoIntakeClaw extends Claw {
         INTAKE_SENSOR = intakeSensor;
     }
 
+    /**
+     * Get the power that the {@link #INTAKE_SERVO} intakes with.
+     *
+     * @return The power that the {@link #INTAKE_SERVO} intakes with.
+     */
     public double getIntakePower() {
         return INTAKE_POWER;
     }
 
+    /**
+     * Get the power that the {@link #INTAKE_SERVO} ejects with.
+     *
+     * @return The power that the {@link #INTAKE_SERVO} ejects with.
+     */
     public double getEjectPower() {
         return EJECT_POWER;
     }
 
+    /**
+     * Get all the {@link CRServo}s used by this claw, which should just be the
+     * {@link #INTAKE_SERVO}.
+     *
+     * @return all the {@link CRServo}s used by this claw, which should just be
+     * the {@link #INTAKE_SERVO}.
+     */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Collections.singletonList(INTAKE_SERVO));
     }
 
+    /**
+     * Get the intake servo, which draws objects into the claw.
+     *
+     * @return The intake servo, which draws objects into the claw.
+     */
     public CRServo getIntakeServo() {
         return INTAKE_SERVO;
     }
 
+    /**
+     * Set the {@link #INTAKE_SERVO} to draw in any objects that come into
+     * contact with it.
+     */
     public void startIntake() {
         INTAKE_SERVO.setPower(INTAKE_POWER);
     }
@@ -85,6 +140,9 @@ public class SingleServoIntakeClaw extends Claw {
         return INTAKE_SERVO.getPower() != 0;
     }
 
+    /**
+     * Stop the {@link #INTAKE_SERVO} from running.
+     */
     public void stopIntake() {
         INTAKE_SERVO.setPower(0);
     }
