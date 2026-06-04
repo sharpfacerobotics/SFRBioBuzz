@@ -375,8 +375,20 @@ public class FoldingArm extends Arm {
      */
     @SuppressWarnings("UnusedReturnValue")
     public static class Builder extends Arm.Builder {
+        /**
+         * The current configuration of the {@link Builder}'s motors.
+         */
         protected final FoldingArmMotors foldingArmMotors;
+        /**
+         * The current configuration of the {@link Builder}'s
+         * {@link RotationParameters}.
+         */
         protected final RotationParameters rotationParameters;
+        /**
+         * The current configuration of the {@link Builder}'s
+         * {@link FoldingParameters}.
+         *
+         */
         protected final FoldingParameters foldingParameters;
 
         /**
@@ -386,6 +398,10 @@ public class FoldingArm extends Arm {
          */
         protected boolean degreesMode;
 
+        /**
+         * Instantiate a new {@link Builder} with all {@link BuilderParameters}
+         * set to their default value.
+         */
         public Builder() {
             foldingArmMotors = new FoldingArmMotors();
             rotationParameters = new RotationParameters(0, 0, 0);
@@ -394,16 +410,38 @@ public class FoldingArm extends Arm {
             degreesMode = false;
         }
 
+        /**
+         * Set the motor that controls the {@link Arm}'s rotation.
+         *
+         * @param rotationMotor The new {@link DcMotor} to control the
+         *                      {@link Arm}'s rotation.
+         * @return This {@link Builder} so that methods can be chained.
+         */
         public Builder setRotationMotor(DcMotor rotationMotor) {
             foldingArmMotors.setRotationMotor(rotationMotor);
             return this;
         }
 
+        /**
+         * Set the motor that controls the {@link Arm}'s folding.
+         *
+         * @param foldingMotor The new motor to set the {@link Arm}'s folding.
+         * @return This {@link Builder} so that methods can be chained.
+         */
         public Builder setFoldingMotor(DcMotor foldingMotor) {
             foldingArmMotors.setFoldingMotor(foldingMotor);
             return this;
         }
 
+        /**
+         * Set the minimum and maximum rotation in ticks.
+         *
+         * @param minTicks The minimum number of ticks the
+         *                 {@link #ROTATION_MOTOR} can reach.
+         * @param maxTicks The maximum number of ticks the
+         *                 {@link #ROTATION_MOTOR} can reach.
+         * @return This {@link Builder} so that the methods can be chained.
+         */
         public Builder setRotationRangeTicks(int minTicks, int maxTicks) {
             rotationParameters.minTicks = minTicks;
             rotationParameters.maxTicks = maxTicks;
@@ -412,6 +450,20 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the minimum and maximum rotation in degrees. Internally, it
+         * converts the degrees to ticks using the
+         * {@link RotationParameters#initialAngle} and
+         * {@link RotationParameters#ticksPerDegree} properties, so everytime
+         * those two properties are updated, the ticks will also be
+         * automatically updated.
+         *
+         * @param minDegrees The minimum range of the {@link #ROTATION_MOTOR} in
+         *                   degrees.
+         * @param maxDegrees The maximum range of the {@link #ROTATION_MOTOR} in
+         *                   degrees.
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setRotationRangeDegrees(
             double minDegrees,
             double maxDegrees
@@ -429,6 +481,17 @@ public class FoldingArm extends Arm {
             );
         }
 
+        /**
+         * Set the number of ticks it takes to rotate the
+         * {@link #ROTATION_MOTOR} by one degree.
+         * <p>
+         * If {@link #setRotationRangeDegrees(double, double)} was used, update
+         * the range.
+         *
+         * @param ticksPerDegree The number of ticks it takes to rotate the
+         *                       {@link #ROTATION_MOTOR} by one degree
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setRotationTicksPerDegree(double ticksPerDegree) {
             // setRotationRangeDegrees() relies on ticksPerDegree, so we also
             // need to correct the range.
@@ -449,6 +512,19 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the initial rotation angle of the {@link Arm}. It does
+         * <em>not</em> move the {@link Arm}. Rather, it just changes the
+         * baseline for 0 degrees.
+         * <p>
+         * If {@link #setRotationRangeDegrees(double, double)} was used, update
+         * the range.
+         *
+         * @param initialAngle The initial rotation angle of the {@link Arm},
+         *                     which determines the offset that the angle is
+         *                     measured from.
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setRotationInitialAngle(double initialAngle) {
             // If the range was set using degrees, correct for the new
             // initial angle.
@@ -485,6 +561,15 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the minimum and maximum folding in ticks.
+         *
+         * @param minTicks The minimum number of ticks the
+         *                 {@link #FOLDING_MOTOR} can reach.
+         * @param maxTicks The maximum number of ticks the
+         *                 {@link #FOLDING_MOTOR} can reach.
+         * @return This {@link Builder} so that the methods can be chained.
+         */
         public Builder setFoldingRangeTicks(int minTicks, int maxTicks) {
             foldingParameters.minTicks = minTicks;
             foldingParameters.maxTicks = maxTicks;
@@ -493,6 +578,20 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the minimum and maximum folding in degrees. Internally, it
+         * converts the degrees to ticks using the
+         * {@link FoldingParameters#initialAngle} and
+         * {@link FoldingParameters#ticksPerDegree} properties, so everytime
+         * those two properties are updated, the ticks will also be
+         * automatically updated.
+         *
+         * @param minDegrees The minimum range of the {@link #FOLDING_MOTOR} in
+         *                   degrees.
+         * @param maxDegrees The maximum range of the {@link #FOLDING_MOTOR} in
+         *                   degrees.
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setFoldingRangeDegrees(
             double minDegrees,
             double maxDegrees
@@ -510,6 +609,17 @@ public class FoldingArm extends Arm {
             );
         }
 
+        /**
+         * Set the number of ticks it takes to rotate the {@link #FOLDING_MOTOR}
+         * by one degree.
+         * <p>
+         * If {@link #setRotationRangeDegrees(double, double)} was used, update
+         * the range.
+         *
+         * @param ticksPerDegree The number of ticks it takes to rotate the
+         *                       {@link #FOLDING_MOTOR} by one degree
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setFoldingTicksPerDegree(int ticksPerDegree) {
             // setFoldingRangeDegrees() relies on ticksPerDegree, so we also
             // need to correct the range.
@@ -530,6 +640,19 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * Set the initial folding angle of the {@link Arm}. It does
+         * <em>not</em> move the {@link Arm}. Rather, it just changes the
+         * baseline for 0 degrees.
+         * <p>
+         * If {@link #setRotationRangeDegrees(double, double)} was used, update
+         * the range.
+         *
+         * @param initialAngle The initial folding angle of the {@link Arm},
+         *                     which determines the offset that the angle is
+         *                     measured from.
+         * @return This {@link Builder} so that setters can be chained.
+         */
         public Builder setFoldingInitialAngle(double initialAngle) {
             // If the range was set using degrees, correct for the new
             // initial angle.
@@ -566,6 +689,9 @@ public class FoldingArm extends Arm {
             return this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public FoldingArm build() {
             if (

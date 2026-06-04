@@ -178,8 +178,15 @@ public class MecanumWheels extends Wheels {
      * </pre>
      */
     public static class Builder extends Wheels.Builder {
+        /**
+         * The current state of the {@link Builder}.
+         */
         protected final MecanumWheelMotors mecanumWheelMotors;
 
+        /**
+         * Instantiate a new {@link FoldingArm.Builder} with all
+         * {@link BuilderParameters} set to their default value.
+         */
         public Builder() {
             mecanumWheelMotors = new MecanumWheelMotors();
             wheelDistances = new WheelDistances(-1.0, -1.0);

@@ -9,7 +9,24 @@ import java.util.Set;
  * their common characteristics.
  */
 public abstract class Arm {
-    public static abstract class Builder {
+    /**
+     * A builder to simplify instantiation of {@link Arm} objects since arms are
+     * complex, with possibly multiple motors and settings for each motor.
+     */
+    public static abstract class Builder implements HardwareSystemBuilder {
+        /**
+         * Instantiate an {@link Arm} object using the given
+         * {@link BuilderParameters}. If the {@link BuilderParameters} are not
+         * valid (as defined by {@link BuilderParameters#isValid()}), fail and
+         * return {@code null}.
+         *
+         * @return If the {@link BuilderParameters} are valid (as defined by
+         * {@link BuilderParameters#isValid()}), a new {@link Arm} instance
+         * based on the values set in instances of {@link BuilderParameters}.
+         * <p>
+         * If the {@link BuilderParameters} are invalid (as defined by
+         * {@link BuilderParameters#isValid()}), fail and return {@code null}.
+         */
         public abstract Arm build();
     }
 
