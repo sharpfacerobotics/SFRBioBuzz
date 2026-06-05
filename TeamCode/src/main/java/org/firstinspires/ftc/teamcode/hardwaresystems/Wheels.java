@@ -168,14 +168,14 @@ public abstract class Wheels {
     }
 
     /**
+     * A {@link Set} of all the motors included by the wheel system.
+     */
+    protected final Set<DcMotor> motors;
+    /**
      * A multiplier for how much power the wheels run with. The value should be
      * between 0.0 (exclusive) and 1.0 (inclusive).
      */
     protected final double MAX_MOTOR_POWER;
-    /**
-     * A {@link Set} of all the motors included by the wheel system.
-     */
-    protected final Set<DcMotor> motors;
 
     /**
      * The distance between the left and right wheels, measured in inches from
@@ -263,9 +263,10 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive forwards and backwards.
+     * Start to drive forwards or backwards.
      *
-     * @param forwardPower The power to set the motors to.
+     * @param forwardPower The power to set the motors to as a proportion of
+     *                     {@link #MAX_MOTOR_POWER}.
      */
     public void drive(double forwardPower) {
         /*
@@ -281,8 +282,9 @@ public abstract class Wheels {
     /**
      * Set the wheels to drive forward with a certain power.
      *
-     * @param forwardPower Forward power. Positive is forward, negative is
-     *                     backward.
+     * @param forwardPower Forward power as a proportion of
+     *                     {@link #MAX_MOTOR_POWER}. Positive is forward,
+     *                     negative is backward.
      * @param turn         Rotation power. Positive is clockwise, negative is
      *                     counterclockwise.
      */
@@ -293,17 +295,21 @@ public abstract class Wheels {
     /**
      * Set the wheels to drive with a given power in for x, y,and turn.
      *
-     * @param xPower     Sideways power. Positive is rightward, negative is
-     *                   leftward.
-     * @param yPower     Forward power. Positive is forward, negative is
-     *                   backward.
-     * @param thetaPower Rotation power. Positive is clockwise, negative is
-     *                   counterclockwise.
+     * @param xPower     Sideways power as a proportion of
+     *                   {@link #MAX_MOTOR_POWER}. Positive is rightward,
+     *                   negative is leftward.
+     * @param yPower     Forward power as a proportion of
+     *                   {@link #MAX_MOTOR_POWER}. Positive is forward, negative
+     *                   is backward.
+     * @param thetaPower Rotation power as a proportion of
+     *                   {@link #MAX_MOTOR_POWER}. Positive is clockwise,
+     *                   negative is counterclockwise.
      */
     public abstract void drive(double xPower, double yPower, double thetaPower);
 
     /**
-     * Drive the robot a certain distance forward.
+     * Drive the robot a certain distance forward with power
+     * {@link #MAX_MOTOR_POWER}.
      *
      * @param forwardDistance The distance that the robot travels in inches.
      *                        Positive is forward, negative is backward.
@@ -313,7 +319,8 @@ public abstract class Wheels {
     }
 
     /**
-     * Drive the robot a certain distance in two dimensions.
+     * Drive the robot a certain distance in two dimensions with power
+     * {@link #MAX_MOTOR_POWER}.
      *
      * @param sidewaysDistance The distance that the robot travels sideways in
      *                         inches. Positive is rightward, negative is
