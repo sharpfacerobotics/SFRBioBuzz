@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Servo with two continuous rotation servos to pick up objects.
@@ -93,12 +94,11 @@ public class DoubleServoIntakeClaw extends Claw {
         return EJECT_POWER;
     }
 
-    public HashSet<CRServo> getCrServos() {
-        HashSet<CRServo> crServos = new HashSet<>();
-        crServos.add(LEFT_INTAKE_SERVO);
-        crServos.add(RIGHT_INTAKE_SERVO);
-
-        return new HashSet<>(crServos);
+    public Set<CRServo> getCrServos() {
+        return new HashSet<>(Set.of(
+            LEFT_INTAKE_SERVO,
+            RIGHT_INTAKE_SERVO
+        ));
     }
 
     public CRServo getLeftIntakeServo() {
@@ -110,40 +110,58 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     public void startIntake() {
-        LEFT_INTAKE_SERVO.setPower(INTAKE_POWER);
-        RIGHT_INTAKE_SERVO.setPower(INTAKE_POWER);
+        if (LEFT_INTAKE_SERVO != null) {
+            LEFT_INTAKE_SERVO.setPower(INTAKE_POWER);
+        }
+        if (RIGHT_INTAKE_SERVO != null) {
+            RIGHT_INTAKE_SERVO.setPower(INTAKE_POWER);
+        }
     }
 
     /**
-     * Get whether the intake servo is currently running.
+     * Get whether both intake servos are currently running.
      *
-     * @return true if the intake servo's power is non-zero, false otherwise.
+     * @return {@code true} if the intake servo's power is non-zero.
+     * <p>
+     * {@code false} otherwise.
      */
     public boolean isIntakeActive() {
-        return LEFT_INTAKE_SERVO.getPower() != 0
+        return LEFT_INTAKE_SERVO != null
+               && LEFT_INTAKE_SERVO.getPower() != 0
+               && RIGHT_INTAKE_SERVO != null
                && RIGHT_INTAKE_SERVO.getPower() != 0;
     }
 
     public void stopIntake() {
-        LEFT_INTAKE_SERVO.setPower(0);
-        RIGHT_INTAKE_SERVO.setPower(0);
+        if (LEFT_INTAKE_SERVO != null) {
+            LEFT_INTAKE_SERVO.setPower(0);
+        }
+        if (RIGHT_INTAKE_SERVO != null) {
+            RIGHT_INTAKE_SERVO.setPower(0);
+        }
     }
 
     /**
      * Make the intake spin in reverse and eject the object.
      */
     public void ejectIntake() {
-        LEFT_INTAKE_SERVO.setPower(EJECT_POWER);
-        RIGHT_INTAKE_SERVO.setPower(EJECT_POWER);
+        if (LEFT_INTAKE_SERVO != null) {
+            LEFT_INTAKE_SERVO.setPower(EJECT_POWER);
+        }
+        if (RIGHT_INTAKE_SERVO != null) {
+            RIGHT_INTAKE_SERVO.setPower(EJECT_POWER);
+        }
     }
 
     /**
      * Get whether the sensor on the claw is pressed or not.
      *
-     * @return true when the sensor is pressed, false otherwise.
+     * @return {@code true} when the sensor is pressed.
+     * <p>
+     * {@code false} otherwise.
      */
     public boolean isSensorPressed() {
-        //  returns true when the sensor is not pressed.
-        return !INTAKE_SENSOR.getState();
+        //  Returns true when the sensor is not pressed.
+        return INTAKE_SENSOR != null && !INTAKE_SENSOR.getState();
     }
 }

@@ -36,6 +36,9 @@ public class SingleServoIntakeClaw extends Claw {
      * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
      * to control rotation in three degrees of freedom and a servo to control
      * intake and output.
+     * <p>
+     * The servo arguments may be {@code null}. If so, any commands to a
+     * {@code null} servo are safe, but will do nothing.
      *
      * @param rollServo   The servo that controls roll, i.e., rotation along the
      *                    x-axis.
@@ -59,6 +62,9 @@ public class SingleServoIntakeClaw extends Claw {
      * to control rotation in three degrees of freedom, a servo to control
      * intake and output, and a touch sensor to detect whether an object has
      * been picked up.
+     * <p>
+     * The servo arguments may be {@code null}. If so, any commands to a
+     * {@code null} servo are safe, but will do nothing.
      *
      * @param rollServo    The servo that controls roll, i.e., rotation along
      *                     the x-axis.
@@ -126,43 +132,52 @@ public class SingleServoIntakeClaw extends Claw {
      * contact with it.
      */
     public void startIntake() {
-        INTAKE_SERVO.setPower(INTAKE_POWER);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(INTAKE_POWER);
+        }
     }
 
     /**
-     * Get whether the intake servo is currently running.
+     * Get whether the intake servo is currently running. If the servo is
+     * {@code null}, trivially return {@code false}.
      *
      * @return {@code true} if the intake servo's power is non-zero.
      * <p>
-     * {@code false} otherwise.
+     * {@code false} otherwise, including if the servo is {@code null}.
      */
     public boolean isIntakeActive() {
-        return INTAKE_SERVO.getPower() != 0;
+        return INTAKE_SERVO != null && INTAKE_SERVO.getPower() != 0;
     }
 
     /**
-     * Stop the {@link #INTAKE_SERVO} from running.
+     * Stop the {@link #INTAKE_SERVO} from running. Do nothing if the servo is
+     * {@code null}.
      */
     public void stopIntake() {
-        INTAKE_SERVO.setPower(0);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(0);
+        }
     }
 
     /**
      * Make the intake spin in reverse and eject the object.
      */
     public void ejectIntake() {
-        INTAKE_SERVO.setPower(EJECT_POWER);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(EJECT_POWER);
+        }
     }
 
     /**
-     * Get whether the sensor on the claw is pressed or not.
+     * Get whether the sensor on the claw is pressed or not. If the sensor is
+     * {@code null}, trivially return {@code false}.
      *
      * @return {@code true} when the sensor is pressed.
      * <p>
-     * {@code false} otherwise.
+     * {@code false} otherwise, including if the sensor is {@code null}.
      */
     public boolean isSensorPressed() {
         // Returns true when the sensor is not pressed.
-        return !INTAKE_SENSOR.getState();
+        return INTAKE_SENSOR != null && !INTAKE_SENSOR.getState();
     }
 }
