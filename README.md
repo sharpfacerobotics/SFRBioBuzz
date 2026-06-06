@@ -25,7 +25,7 @@ this template, e.g., motor names or autonomous commands.
 
 ## Connecting to the Robot Remotely
 
-See [`wifi.md`](./WIFI.md).
+See [`wifi.md`](wifi.md).
 
 ## Creating a New Repo
 

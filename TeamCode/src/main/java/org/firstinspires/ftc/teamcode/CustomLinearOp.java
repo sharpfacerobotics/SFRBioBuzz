@@ -10,45 +10,74 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Arm;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Claw;
+import org.firstinspires.ftc.teamcode.hardwaresystems.MecanumWheels;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Wheels;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+/**
+ * A custom linear opmode to be used as a basis for {@link Auto} and
+ * {@link DriverMode}.
+ */
 public class CustomLinearOp extends LinearOpMode {
+    /* Robot systems */
+
     /**
      * Whether the robot will automatically sleep after each command.
      */
     protected boolean autoSleepEnabled;
-
-    /* Robot systems */
-
+    /**
+     * Use for our own system.
+     * TODO: By default, the class is set to {@link Wheels}. Replace as
+     *  necessary.
+     */
     protected Wheels WHEELS;
-    /*
-     *  TODO: For default purposes, the class is set to MecanumDrive.
-     *      Replace as necessary
+    /**
+     * Use for RoadRunner.
+     * TODO: By default, the class is set to {@link MecanumDrive}. Replace as
+     *  necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
-
+    /**
+     * The arm used by the robot.
+     * TODO: By default, the type is set to {@link Arm}. Replace or delete as
+     *  necessary.
+     */
     protected Arm ARM;
+
+    /**
+     * The claw used by the robot.
+     * TODO: By default, the type is set to {@link Claw}. Replace or delete
+     *  as necessary.
+     */
     protected Claw CLAW;
+
+    /**
+     * The webcam used by the robot.
+     */
     protected Webcam WEBCAM;
 
     /**
-     * Store which alliance the robot is on.
+     * The AprilTag ID for the red alliance.
+     * TODO: Replace with your real AprilTag IDs for this season.
      */
-    protected AllianceColor ALLIANCE_COLOR;
+    protected Set<Integer> RED_APRILTAG_IDS = Set.of(-1);
     /**
-     * Store which side the robot is on(i.e. far or near).
+     * The AprilTag ID for the red alliance.
+     * TODO: Replace with your real AprilTag IDs for this season.
      */
-    protected TeamSide TEAM_SIDE;
+    protected Set<Integer> BLUE_APRILTAG_IDS = Set.of(-1);
 
-    public HashSet<DcMotor> getAllDcMotors() {
+    /**
+     * Store the data required to run {@link Auto}.
+     */
+    protected AutoConfigurator.AutoConfig AUTO_CONFIG;
+
+    public Set<DcMotor> getAllDcMotors() {
         HashSet<DcMotor> motors = new HashSet<>();
         // hardware.dcMotor stores all the DcMotors as name-device pairs.
         for (Map.Entry<String, DcMotor> ele : hardwareMap.dcMotor.entrySet()) {
@@ -59,15 +88,16 @@ public class CustomLinearOp extends LinearOpMode {
     }
 
     /**
-     * Gets all CR servos if they are present.
+     * Get all {@link CRServo}s if they are present.
      *
-     * @return A HashSet containing all the CR servos used by this robot.
+     * @return A {@link Set} containing all the {@link CRServo}s used by this
+     * robot.
      */
-    public HashSet<CRServo> getAllCrServos() {
+    public Set<CRServo> getAllCrServos() {
         HashSet<CRServo> crServos = new HashSet<>();
-        // `hardwareMap.crservo` stores all the CRServos as name-device pairs.
+        // hardwareMap.crservo stores all the CRServos as name-device pairs.
         for (Map.Entry<String, CRServo> hardwareDevice :
-                hardwareMap.crservo.entrySet()) {
+            hardwareMap.crservo.entrySet()) {
             crServos.add(hardwareDevice.getValue());
         }
 
@@ -75,21 +105,21 @@ public class CustomLinearOp extends LinearOpMode {
     }
 
     /**
-     * Get all the names in the `HardwareMap` that that are not connected to a
+     * Get all the names in the {@link HardwareMap} that are not connected to a
      * device.
-     * <br>
+     * <p>
      * TODO: <em><strong>THIS METHOD IS NOT WORKING CURRENTLY!!!</strong></em>
      *
-     * @return A `HashSet` of all the hardware devices that can not be found.
+     * @return A {@link Set} of all the hardware devices that can not be found.
      */
-    public HashSet<String> getMissingHardwareDevices() {
+    public Set<String> getMissingHardwareDevices() {
         HashSet<String> missingHardwareDevices = new HashSet<>();
 
-        // Loop through each `DeviceMapping`(e.g. `Servo`s and `DcMotor`s).
+        // Loop through each DeviceMapping (e.g., Servos and DcMotors).
         for (HardwareMap.DeviceMapping<? extends HardwareDevice> deviceMapping : hardwareMap.allDeviceMappings) {
             // Check if each device in the mapping is null.
             for (Map.Entry<String, ? extends HardwareDevice> hardwareDevice :
-                    deviceMapping.entrySet()) {
+                deviceMapping.entrySet()) {
                 if (hardwareDevice.getValue() == null) {
                     missingHardwareDevices.add(hardwareDevice.getKey());
                 }
@@ -97,6 +127,31 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         return missingHardwareDevices;
+    }
+
+    /**
+     * Try to retrieve a {@link DcMotor} from the hardware map using one of
+     * several candidate names. This helper makes the drive train code resilient
+     * to different naming conventions in the Robot Controller configuration. It
+     * iterates through the provided names and returns the first motor that
+     * exists. If none of the names are present, an
+     * {@link IllegalArgumentException} is thrown.
+     *
+     * @param candidates One or more hardware device names to try.
+     * @return The {@link DcMotor} associated with the first name found.
+     * @throws IllegalArgumentException if no candidate names match a motor.
+     */
+    private DcMotor pickMotor(String... candidates) {
+        for (String name : candidates) {
+            try {
+                return hardwareMap.get(DcMotor.class, name);
+            } catch (IllegalArgumentException e) {
+                // Continue to next candidate
+            }
+        }
+        throw new IllegalArgumentException(
+            "Unable to find a hardware device with names "
+            + java.util.Arrays.toString(candidates));
     }
 
     /**
@@ -120,7 +175,7 @@ public class CustomLinearOp extends LinearOpMode {
      *
      * @param motors The motors that are running.
      */
-    public void autoSleep(HashSet<DcMotor> motors) {
+    public void autoSleep(Set<DcMotor> motors) {
         // Sleep while any of the motors are still running.
         while (motors.stream().anyMatch(DcMotor::isBusy)) {
             sleep(1);
@@ -129,9 +184,9 @@ public class CustomLinearOp extends LinearOpMode {
 
     /**
      * Initiates all hardware needed for the wheels.
-     * <br>
-     * <strong>When starting a new season, change the return type from `Wheels`
-     * to the desired return type.</strong>
+     * <p>
+     * <strong>When starting a new season, change the return type from
+     * {@link Wheels} to the desired type.</strong>
      */
     private void initWheels() {
         // Prevent multiple instantiation.
@@ -140,26 +195,102 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * TODO: Replace `Wheels()` with a constructor of the desired
-         *  `Wheels` subclass(e.g. `MecanumWheels`).
-         *  You might want to look at the class and code from previous years
-         * for reference.
+         * Instantiate the wheel system. For a mecanum drive robot we use the
+         * MecanumWheels implementation. The expected hardware names for the
+         * four wheel motors are "frontLeftWheel", "frontRightWheel",
+         * "backLeftWheel", and "backRightWheel". Adjust these names to
+         * match your robot configuration. The wheel distances and ticks per
+         * inch are approximate; tune them for your specific robot.
          */
-        WHEELS = new Wheels();
+        try {
+            /*
+             * Acquire each of the four drive motors. To be tolerant of
+             * different naming conventions in the Robot Controller config,
+             * we attempt to fetch several candidate names for each motor.
+             * Update the candidate lists if your team uses different
+             * names (for example, "frontLeft", "lf", "leftFront", etc.).
+             */
+            DcMotor frontLeftMotor = pickMotor(
+                "frontLeftWheel",
+                "frontLeftMotor",
+                "frontLeft",
+                "lf",
+                "leftFront"
+            );
+            DcMotor frontRightMotor = pickMotor(
+                "frontRightWheel",
+                "frontRightMotor",
+                "frontRight",
+                "rf",
+                "rightFront"
+            );
+            DcMotor backLeftMotor = pickMotor(
+                "backLeftWheel",
+                "backLeftMotor",
+                "backLeft",
+                "lb",
+                "leftBack"
+            );
+            DcMotor backRightMotor = pickMotor(
+                "backRightWheel",
+                "backRightMotor",
+                "backRight",
+                "rb",
+                "rightBack"
+            );
+
+            // Approximate measurements from the CAD model (in inches).
+            // The wheel circumference is 4 inches in diameter multiplied by π.
+            double wheelCircumference = 4.0 * Math.PI;
+            double gearRatio = 1.0;
+            // TODO: Change the motor type as necessary.
+            double ticksPerInch = frontLeftMotor.getMotorType().getTicksPerRev()
+                                  * gearRatio / wheelCircumference;
+
+
+            // TODO: Replace with the necessary constructor.
+            WHEELS = new MecanumWheels.Builder()
+                // TODO: Approximate distances between wheels. Adjust as
+                //  necessary if your robot's chassis dimensions differ.
+                .setLateralDistance(8.5)
+                .setLongitudinalDistance(14.5)
+                .setTicksPerInch(ticksPerInch)
+                // TODO: Change as necessary in accordance with your type of
+                //  wheel system.
+                .setFrontLeftMotor(frontLeftMotor)
+                .setFrontRightMotor(frontRightMotor)
+                .setBackLeftMotor(backLeftMotor)
+                .setBackRightMotor(backRightMotor)
+                .build();
+
+        } catch (Exception e) {
+            /*
+             * If any motor could not be found, report the error. This keeps
+             * the telemetry output informative and
+             * avoids a null pointer exception later on. Leave WHEELS as null
+             *  to signal an initialization failure.
+             */
+            telemetry.addLine("ERROR: Failed to initialize wheels: \n"
+                              + e.getMessage());
+        }
 
         /*
-         * TODO: Assumes the robot starts at (0,0) facing the direction 0.0
-         *  degrees.
-         *  Adjust as necessary.
+         * Assume the robot starts at (0, 0, 0) in the RoadRunner field
+         * coordinate frame.
+         * TODO: If your autonomous program uses a different starting pose,
+         *  modify the pose here accordingly.
          */
-        MECANUM_DRIVE = new MecanumDrive(hardwareMap, new Pose2d(0.0, 0.0,
-                0.0));
+        MECANUM_DRIVE = new MecanumDrive(
+            hardwareMap,
+            new Pose2d(0.0, 0.0, 0.0)
+        );
     }
 
     /**
      * Initiate all hardware needed for the arm.
-     * <strong>When starting a new season, change the return type from `Arm` to
-     * the desired return type.</strong>
+     * <p>
+     * <strong>When starting a new season, change the type from {@link Arm} to
+     * the desired type.</strong>
      */
     private void initArm() {
         // Prevent multiple instantiation.
@@ -167,17 +298,20 @@ public class CustomLinearOp extends LinearOpMode {
             return;
         }
 
-        // TODO: Replace `Arm()` with a constructor of the desired `Arm`
-        //  subclass(e.g. `FoldingArm`)
-        //  You might want to look at the class and code from previous years
-        //  for reference.
+        /*
+         * TODO: Replace Arm() with a constructor of the desired Arm subclass
+         *  (e.g., FoldingArm).
+         *  You might want to look at the class and code from previous years
+         *  for reference.
+         */
         ARM = new Arm();
     }
 
     /**
      * Initiate all hardware needed for the claw.
-     * <strong>When starting a new season, change the return type from `Claw` to
-     * the desired return type.</strong>
+     * <p>
+     * <strong>When starting a new season, change the return type from
+     * {@link Claw} to the desired type.</strong>
      */
     public void initClaw() {
         // Prevent multiple instantiation.
@@ -185,85 +319,86 @@ public class CustomLinearOp extends LinearOpMode {
             return;
         }
 
-        // TODO: Replace `Claw()` with a constructor of the desired `Claw`
-        //  subclass(e.g. `SingleServoIntakeClaw`)
-        //  You might want to look at the class and code from previous years
-        //  for reference.
+        /*
+         * TODO: Replace Claw() with a constructor of the desired Claw
+         *  subclass(e.g., SingleServoIntakeClaw)
+         *  You might want to look at the class and code from previous years
+         *  for reference.
+         */
         CLAW = new Claw(
-                null, // TODO: Replace with the appropriate servo object, e.g
-                // . `hardwareMap.get(Servo.class, "exampleServo");`
-                null, // TODO: Replace with the appropriate servo object, e.g
-                // . `hardwareMap.get(Servo.class, "exampleServo");`
-                null // TODO: Replace with the appropriate servo object, e.g.
-                // `hardwareMap.get(Servo.class, "exampleServo");`
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null,
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null,
+            // TODO: Replace with the appropriate servo object, e.g.,
+            //  hardwareMap.get(Servo.class, "exampleServo");
+            null
         );
+    }
+
+    /**
+     * Apply the currently selected alliance to the webcam’s color target.
+     * Called in both {@link DriverMode} and {@link Auto} after
+     * {@link AutoConfigurator#readConfigFile()}.
+     */
+    protected void applyAllianceToWebcam() {
+        if (WEBCAM == null) {
+            // No camera configured
+            return;
+        }
+
+        // Map alliance to webcam color enum.
+        Webcam.Color color =
+            (
+                AUTO_CONFIG.getAllianceColor()
+                == AutoConfigurator.AllianceColor.RED
+            )
+            ? Webcam.Color.RED :
+            Webcam.Color.BLUE;
+        WEBCAM.setTargetColor(color);
     }
 
     /**
      * Initiate the webcam.
+     * <p>
+     * This method ignores the supplied {@code cameraMonitorViewId} and always
+     * constructs the {@link Webcam} using the default EasyOpenCV behavior
+     * (i.e., no custom viewport container). Passing a non‑empty container ID
+     * into EasyOpenCV can lead to the exception "Viewport container specified
+     * by user is not empty". By always using the three‑argument {@link Webcam}
+     * constructor, we avoid that error.
+     *
+     * @param cameraMonitorViewId An unused resource ID. Kept for compatibility
+     *                            with existing call sites.
      */
     public void initWebcam(int cameraMonitorViewId) {
-        // TODO: This is the lowest resolution(width, height) supported by a
-        //  Logitech webcam.
-        //  Adjust as necessary.
-        int[] resolution = {160, 120};
+        // Lenovo webcams typically support 640×480 resolution. Use this as a
+        // sensible default. If your camera can benefit from higher
+        // resolution, adjust the numbers here.
+        int[] resolution = {640, 480};
 
-        // TODO: This adjusts the pose to account for where the camera is
-        //  positioned.
-        //  Probably best to measure from the intake to the camera.
-        //  Measured in inches.
+        // Adjust the camera pose offsets in inches. Positive x is to the
+        // right, positive y is forward, and positive z is up. Tweak
+        // these values based on the physical mounting of your webcam.
         double[] poseAdjust = new double[]{
-                0,
-                0,
-                0
+            0.0, // x offset (inches)
+            0.0, // y offset (forward/back)
+            0.0  // z offset (height)
         };
 
+        // Initialize the webcam without specifying a viewport container.
+        // The fourth parameter (view ID) is intentionally omitted to
+        // prevent the OpenCvCameraException related to a non‑empty
+        // container. VisionPortal manages its own view.
         WEBCAM = new Webcam(
-                hardwareMap.get(WebcamName.class, "Webcam 1"), // Default
-                // camera name
-                resolution,
-                poseAdjust
+            hardwareMap.get(WebcamName.class, "Webcam"),
+            resolution,
+            poseAdjust
         );
-    }
 
-    /**
-     * Retrieve the contents of the auto config file as a `String`, or `null`
-     * if there is nothing to read.
-     *
-     * @param autoConfigFile A `String` representing the file path to be read.
-     * @return A `String` representation of the setting file's contents.
-     */
-    public String readAutoConfigFile(String autoConfigFile) {
-        // Try to read the auto config.
-        try (BufferedReader reader =
-                     new BufferedReader(new FileReader(autoConfigFile))) {
-            // Read first line.
-            String data = reader.readLine();
-            telemetry.addData("Starting position: ", data);
-
-            return data;
-
-        } catch (IOException | NullPointerException e) {
-            telemetry.addLine(
-                    (e instanceof IOException)
-                            ? "ERROR: FAILED TO READ AUTO CONFIG FILE!"
-                            : "The position file is blank."
-            );
-            telemetry.addLine("Defaulting to RED NEAR");
-
-            return null;
-        }
-    }
-
-    /**
-     * Overloads {@link CustomLinearOp#readAutoConfigFile(String)}.
-     * {@code autoConfigFile} defaults to
-     * {@link AutoConfig#getPositionFile()}.
-     *
-     * @see CustomLinearOp#readAutoConfigFile(String)
-     */
-    public String readAutoConfigFile() {
-        return readAutoConfigFile(AutoConfig.getPositionFile());
+        applyAllianceToWebcam();
     }
 
     /**
@@ -274,6 +409,14 @@ public class CustomLinearOp extends LinearOpMode {
     public void runOpMode() {
         autoSleepEnabled = true;
 
+        AUTO_CONFIG = AutoConfigurator.parseConfigFile();
+        telemetry.addData(
+            "Starting position",
+            AUTO_CONFIG.getAllianceColor()
+            + ", "
+            + AUTO_CONFIG.getAllianceSide().name()
+        );
+
         initWheels();
         initArm();
         initClaw();
@@ -282,38 +425,16 @@ public class CustomLinearOp extends LinearOpMode {
          * Get camera ID to stream.
          * TODO: Currently not working.
          */
-        int cameraMonitorViewId =
-                hardwareMap.appContext.getResources().getIdentifier(
-                "cameraMonitorViewId", "id",
-                        hardwareMap.appContext.getPackageName()
-        );
-        telemetry.addData("cameraMonitorViewId", cameraMonitorViewId);
-        telemetry.update();
+        int cameraMonitorViewId = hardwareMap.appContext.getResources()
+                                                        .getIdentifier(
+                                                            "cameraMonitorViewId",
+                                                            "id",
+                                                            hardwareMap.appContext.getPackageName()
+                                                        );
         initWebcam(cameraMonitorViewId);
 
-        // Try to read the auto config
-        String autoConfig =
-                readAutoConfigFile(AutoConfig.getPositionFile());
-        ALLIANCE_COLOR = autoConfig != null ?
-                AllianceColor.valueOf(autoConfig.split(",")[0]) :
-                AllianceColor.RED;
-        TEAM_SIDE = autoConfig != null ?
-                TeamSide.valueOf(autoConfig.split(",")[1]) : TeamSide.NEAR;
-
-        // Set the camera color.
-        /*
-        switch (ALLIANCE_COLOR) {
-            case RED:
-                WEBCAM.setTargetColor(Webcam.Color.RED);
-                break;
-
-            case BLUE:
-                WEBCAM.setTargetColor(Webcam.Color.BLUE);
-                break;
-        }
-         */
-        telemetry.addData("Starting position",
-                ALLIANCE_COLOR.name() + ", " + TEAM_SIDE.name());
+        telemetry.addData("cameraMonitorViewId", cameraMonitorViewId);
+        telemetry.update();
 
         waitForStart();
     }

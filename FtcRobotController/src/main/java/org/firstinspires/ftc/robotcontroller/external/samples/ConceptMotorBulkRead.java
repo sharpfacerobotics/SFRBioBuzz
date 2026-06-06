@@ -158,7 +158,7 @@ public class ConceptMotorBulkRead extends LinearOpMode {
         cycles = 0;
         while (opModeIsActive() && (cycles++ < TEST_CYCLES)) {
             e1 = m1.getCurrentPosition();  // Uses 1 bulk-read for all 4 encoder/velocity reads,
-            e2 = m2.getCurrentPosition();  // but don't do any `get` operations more than once per cycle.
+            e2 = m2.getCurrentPosition();  // but don't do any  operations more than once per cycle.
             e3 = m3.getCurrentPosition();
             e4 = m4.getCurrentPosition();
 
@@ -195,7 +195,7 @@ public class ConceptMotorBulkRead extends LinearOpMode {
             }
 
             e1 = m1.getCurrentPosition();   // Uses 1 bulk-read to obtain ALL the motor data
-            e2 = m2.getCurrentPosition();   // There is no penalty for doing more `get` operations in this cycle,
+            e2 = m2.getCurrentPosition();   // There is no penalty for doing more  operations in this cycle,
             e3 = m3.getCurrentPosition();   // but they will return the same data.
             e4 = m4.getCurrentPosition();
 
