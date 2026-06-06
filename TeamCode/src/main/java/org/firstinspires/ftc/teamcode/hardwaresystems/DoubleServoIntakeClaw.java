@@ -86,14 +86,32 @@ public class DoubleServoIntakeClaw extends Claw {
         INTAKE_SENSOR = intakeSensor;
     }
 
+    /**
+     * Get the power used to intake an object, i.e., pull it into the claw.
+     *
+     * @return The power used to intake an object, i.e., pull it into the claw.
+     */
     public double getIntakePower() {
         return INTAKE_POWER;
     }
 
+    /**
+     * Get the power used to eject an object, i.e., push it out of the claw.
+     *
+     * @return The power used to intake an object, i.e., push it out of the
+     * claw.
+     */
     public double getEjectPower() {
         return EJECT_POWER;
     }
 
+    /**
+     * Get all the continuous rotation servos ({@link CRServo}s) used by this
+     * {@link Claw}, i.e., the left and right intake servos.
+     *
+     * @return All the continuous rotation servos ({@link CRServo}s) used by
+     * this {@link Claw}, i.e., the left and right intake servos.
+     */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Set.of(
             LEFT_INTAKE_SERVO,
@@ -101,14 +119,31 @@ public class DoubleServoIntakeClaw extends Claw {
         ));
     }
 
+    /**
+     * Get the continuous rotation servo ({@link CRServo}) used to run the left
+     * intake.
+     *
+     * @return The continuous rotation servo ({@link CRServo}) used to run the
+     * left intake.
+     */
     public CRServo getLeftIntakeServo() {
         return LEFT_INTAKE_SERVO;
     }
 
+    /**
+     * Get the continuous rotation servo ({@link CRServo}) used to run the right
+     * intake.
+     *
+     * @return The continuous rotation servo ({@link CRServo}) used to run the
+     * right intake.
+     */
     public CRServo getRightIntakeServo() {
         return RIGHT_INTAKE_SERVO;
     }
 
+    /**
+     * Spin both intake servos to pull in an object.
+     */
     public void startIntake() {
         if (LEFT_INTAKE_SERVO != null) {
             LEFT_INTAKE_SERVO.setPower(INTAKE_POWER);
@@ -119,11 +154,14 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     /**
-     * Get whether both intake servos are currently running.
+     * Get whether <em>both</em> intake servos are currently running. If either
+     * {@link Servo} is {@code null}, trivially return {@code false}.
      *
-     * @return {@code true} if the intake servo's power is non-zero.
+     * @return {@code true} if the intake servos' powers are <em>both</em>
+     * non-zero.
      * <p>
-     * {@code false} otherwise.
+     * {@code false} otherwise, including if either {@link Servo} is
+     * {@code null}.
      */
     public boolean isIntakeActive() {
         return LEFT_INTAKE_SERVO != null
@@ -132,6 +170,9 @@ public class DoubleServoIntakeClaw extends Claw {
                && RIGHT_INTAKE_SERVO.getPower() != 0;
     }
 
+    /**
+     * Stop both intake servos from either intaking or ejecting.
+     */
     public void stopIntake() {
         if (LEFT_INTAKE_SERVO != null) {
             LEFT_INTAKE_SERVO.setPower(0);
@@ -154,11 +195,14 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     /**
-     * Get whether the sensor on the claw is pressed or not.
+     * Get whether the sensor on the claw is pressed or not. If there is no
+     * sensor, i.e., the sensor is {@code null}, then trivially return
+     * {@code false}.
      *
      * @return {@code true} when the sensor is pressed.
      * <p>
-     * {@code false} otherwise.
+     * {@code false} otherwise, including if the {@link #INTAKE_SENSOR} is
+     * {@code null}.
      */
     public boolean isSensorPressed() {
         //  Returns true when the sensor is not pressed.
