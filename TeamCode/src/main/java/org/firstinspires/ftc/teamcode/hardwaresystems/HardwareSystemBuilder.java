@@ -29,6 +29,17 @@ public abstract class HardwareSystemBuilder {
     }
 
     /**
+     * Return whether the current values stored for the parameters are valid,
+     * such that the builder can create a meaningful object (e.g., the motors
+     * are not {@code null} or the power is negative).
+     *
+     * @return Whether the current values stored for the parameters are valid,
+     * such that the builder can create a meaningful object (e.g., the motors
+     * are not {@code null} or the power is negative).
+     */
+    public abstract boolean isValid();
+
+    /**
      * Instantiate a <em>specific</em> type of hardware system (i.e., one of the
      * classes in {@code hardwaresystems}), rather than a general
      * {@link Object}, using the given {@link BuilderParameters}.

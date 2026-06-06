@@ -28,6 +28,13 @@ public abstract class Claw {
         protected Servo yawServo;
 
         /**
+         * The number of motor ticks that the {@link Servo}s move with every
+         * loop. Essentially serves as the "speed" or "power"　of the servo. Used
+         * to set {@link Claw#servoIncrement}.
+         */
+        protected double servoIncrement;
+
+        /**
          * Instantiate a new {@link Claw} object with no {@link Servo}s.
          */
         public Builder() {
@@ -35,6 +42,28 @@ public abstract class Claw {
             rollServo = null;
             pitchServo = null;
             yawServo = null;
+        }
+
+        /**
+         * Return whether the current parameters (i.e., {@link #rollServo},
+         * {@link #pitchServo} {@link #yawServo}, {@link #servoIncrement}) are
+         * valid, which is {@code true} if and only if {@link #servoIncrement}
+         * is positive.
+         * <p>
+         * {@code null} values for {@link #rollServo}, {@link #pitchServo},
+         * {@link #yawServo} are acceptable, indicating that the given axis is
+         * not used. However, because of this, all methods
+         * <em><strong>must</strong></em> check for {@code null} {@link Servo}
+         * values.
+         *
+         * @return Whether the current parameters (i.e., {@link #rollServo},
+         * {@link #pitchServo} {@link #yawServo}, {@link #servoIncrement}) are
+         * valid, which is {@code true} if and only if {@link #servoIncrement}
+         * is positive.
+         */
+        @Override
+        public boolean isValid() {
+            return servoIncrement > 0;
         }
 
         /**

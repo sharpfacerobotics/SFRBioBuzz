@@ -14,6 +14,9 @@ import java.util.Set;
  * See {@link DoubleServoIntakeClaw} for the double servo version.
  */
 public class SingleServoIntakeClaw extends Claw {
+    /**
+     * Simplifies the instantiation of {@link SingleServoIntakeClaw} objects.
+     */
     public static class Builder extends Claw.Builder {
         /**
          * The continuous rotation servo that takes in objects. Used to set
@@ -95,10 +98,10 @@ public class SingleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Set the continuous rotation servo used to control roll (see
-         * {@link #ROLL_SERVO}).
+         * Set the continuous rotation servo used to control the intake (see
+         * {@link #INTAKE_SERVO}).
          *
-         * @param intakeServo The servo used to intake objects.
+         * @param intakeServo The servo used to take in objects.
          * @return This {@link Builder} to allow for chaining setters.
          */
         public Builder setIntakeServo(CRServo intakeServo) {
@@ -120,11 +123,11 @@ public class SingleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Set the power used by {@link #intakeServo} to take in objects (see
-         * {@link #intakePower}).
+         * Set the power used by the {@link #intakeServo} to take in objects
+         * (see {@link #intakePower}).
          *
-         * @param intakePower The power used by {@link #intakeServo} to take in
-         *                    objects.
+         * @param intakePower The power used by the {@link #intakeServo} to take
+         *                    in objects.
          * @return This {@link Builder} to allow for chaining setters.
          */
         public Builder setIntakePower(double intakePower) {

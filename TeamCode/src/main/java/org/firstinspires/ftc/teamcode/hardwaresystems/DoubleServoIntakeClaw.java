@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -15,13 +14,165 @@ import java.util.Set;
  */
 public class DoubleServoIntakeClaw extends Claw {
     /**
-     * How much power the intake spins with when intaking.
+     * Simplifies the instantiation of {@link DoubleServoIntakeClaw} objects.
      */
-    private static final double INTAKE_POWER = 1.0;
+    public static class Builder extends Claw.Builder {
+        /**
+         * The sensor that detects whether an object has been taken in. Used to
+         * set {@link #INTAKE_SENSOR}.
+         */
+        protected DigitalChannel intakeSensor;
+        /**
+         * The power used by the intake servos to take in objects. Used to set
+         * {@link #INTAKE_POWER}.
+         */
+        protected double intakePower;
+        /**
+         * The power used by the intake servos to eject objects. Used to set
+         * {@link #EJECT_POWER}.
+         */
+        protected double ejectPower;
+        /**
+         * The continuous rotation servo that spins the left part of the
+         * intake.
+         */
+        private CRServo leftIntakeServo;
+        /**
+         * The continuous rotation servo that spins the right part of the
+         * intake.
+         */
+        private CRServo rightIntakeServo;
+
+        /**
+         * Instantiate a {@link SingleServoIntakeClaw} with no movement servos,
+         * intake CR servo, or touch sensor; intake power set to 0.5; and eject
+         * power set to -1.0.
+         */
+        public Builder() {
+            super();
+            leftIntakeServo = null;
+            rightIntakeServo = null;
+            intakeSensor = null;
+
+            intakePower = 0.5;
+            ejectPower = -1.0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Claw build() {
+            return null;
+        }
+
+        /**
+         * Set the {@link Servo} used to control roll (see
+         * {@link #ROLL_SERVO}).
+         *
+         * @param rollServo The servo used to control roll.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setRollServo(Servo rollServo) {
+            this.rollServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control pitch (see
+         * {@link #PITCH_SERVO}).
+         *
+         * @param pitchServo The servo used to control pitch.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setPitchServo(Servo pitchServo) {
+            this.pitchServo = pitchServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
+         *
+         * @param yawServo The servo used to control yaw.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setYawServo(Servo yawServo) {
+            this.yawServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set the continuous rotation servo used to the left part of the intake
+         * (see {@link #LEFT_INTAKE_SERVO}).
+         *
+         * @param leftIntakeServo The servo used to intake objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setLeftIntakeServo(CRServo leftIntakeServo) {
+            this.leftIntakeServo = leftIntakeServo;
+            return this;
+        }
+
+        /**
+         * Set the continuous rotation servo used to the left part of the intake
+         * (see {@link #LEFT_INTAKE_SERVO}).
+         *
+         * @param rightIntakeServo The servo used to intake objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setRightIntakeServo(CRServo rightIntakeServo) {
+            this.rightIntakeServo = rightIntakeServo;
+            return this;
+        }
+
+        /**
+         * Set the touch sensor used to detect whether an object has entered the
+         * claw (see {@link #ROLL_SERVO}).
+         *
+         * @param intakeSensor The touch sensor used to detect whether an object
+         *                     has entered the claw.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setIntakeSensor(DigitalChannel intakeSensor) {
+            this.intakeSensor = intakeSensor;
+            return this;
+        }
+
+        /**
+         * Set the power used by the intake servos to take in objects (see
+         * {@link #intakePower}).
+         *
+         * @param intakePower The power used by the intake servos to take in
+         *                    objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setIntakePower(double intakePower) {
+            this.intakePower = intakePower;
+            return this;
+        }
+
+        /**
+         * Set the power used by the intake servos to eject objects (see
+         * {@link #ejectPower}).
+         *
+         * @param ejectPower The power used by the intake servos to take in
+         *                   objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setEjectPower(double ejectPower) {
+            this.ejectPower = ejectPower;
+            return this;
+        }
+    }
+
     /**
-     * How much power the intake spines with when ejecting.
+     * How much power the intake spins with when taking in objects.
      */
-    private static final double EJECT_POWER = -1.0;
+    private final double INTAKE_POWER;
+    /**
+     * How much power the intake spins with when ejecting objects.
+     */
+    private final double EJECT_POWER;
     /**
      * The left servo that spins the intake.
      */
@@ -30,60 +181,28 @@ public class DoubleServoIntakeClaw extends Claw {
      * The right servo that spins the intake.
      */
     private final CRServo RIGHT_INTAKE_SERVO;
-
     /**
-     * The touch sensor that touches whether there is a piece in the intake.
+     * The touch sensor that detects whether there is an object in the intake.
      */
     private final DigitalChannel INTAKE_SENSOR;
 
-    public DoubleServoIntakeClaw(
-        CRServo leftIntakeServo,
-        CRServo rightIntakeServo
-    ) {
-        this(null, null, null, leftIntakeServo, rightIntakeServo, null);
-    }
+    /**
+     * Instantiate a new {@link SingleServoIntakeClaw} object based on the
+     * values set in a {@link Builder}. It is presumed that the {@link Builder}
+     * has already checked its own validity in {@link Builder#build()}.
+     *
+     * @param builder The builder that contains the parameters to instantiate a
+     *                new {@link SingleServoIntakeClaw} object.
+     */
+    protected DoubleServoIntakeClaw(Builder builder) {
+        super(builder.rollServo, builder.pitchServo, builder.yawServo);
 
-    public DoubleServoIntakeClaw(
-        CRServo leftIntakeServo,
-        CRServo rightIntakeServo,
-        DigitalChannel intakeSensor
-    ) {
-        this(null, null, null, leftIntakeServo, rightIntakeServo, intakeSensor);
-    }
+        LEFT_INTAKE_SERVO = builder.leftIntakeServo;
+        RIGHT_INTAKE_SERVO = builder.rightIntakeServo;
+        INTAKE_SENSOR = builder.intakeSensor;
 
-    public DoubleServoIntakeClaw(
-        Servo rollServo,
-        Servo pitchServo,
-        Servo yawServo,
-        CRServo leftIntakeServo,
-        CRServo rightIntakeServo
-    ) {
-        this(
-            rollServo,
-            pitchServo,
-            yawServo,
-            leftIntakeServo,
-            rightIntakeServo,
-            null
-        );
-    }
-
-    public DoubleServoIntakeClaw(
-        Servo rollServo,
-        Servo pitchServo,
-        Servo yawServo,
-        CRServo leftIntakeServo,
-        CRServo rightIntakeServo,
-        DigitalChannel intakeSensor
-    ) {
-        super(rollServo, pitchServo, yawServo);
-
-        super.ROLL_SERVO.setDirection(Servo.Direction.REVERSE);
-
-        LEFT_INTAKE_SERVO = leftIntakeServo;
-        RIGHT_INTAKE_SERVO = rightIntakeServo;
-        RIGHT_INTAKE_SERVO.setDirection(DcMotorSimple.Direction.REVERSE);
-        INTAKE_SENSOR = intakeSensor;
+        INTAKE_POWER = builder.intakePower;
+        EJECT_POWER = builder.ejectPower;
     }
 
     /**
