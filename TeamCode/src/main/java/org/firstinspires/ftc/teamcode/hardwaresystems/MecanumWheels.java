@@ -19,7 +19,7 @@ public class MecanumWheels extends Wheels {
      * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
      */
-    protected static class MecanumWheelMotors implements BuilderParameters {
+    protected static class MecanumWheelMotors extends BuilderParameters {
         /**
          * All the motors that are used by this {@link Wheels} system. Should
          * never contain {@code null}.
@@ -197,9 +197,8 @@ public class MecanumWheels extends Wheels {
          * {@link BuilderParameters} set to their default value.
          */
         public Builder() {
+            super();
             mecanumWheelMotors = new MecanumWheelMotors();
-            wheelDistances = new WheelDistances(-1.0, -1.0);
-            ticksPerInch = -1.0;
         }
 
         /**

@@ -13,7 +13,15 @@ public abstract class Arm {
      * A builder to simplify instantiation of {@link Arm} objects since arms are
      * complex, with possibly multiple motors and settings for each motor.
      */
-    public static abstract class Builder implements HardwareSystemBuilder {
+    public static abstract class Builder extends HardwareSystemBuilder {
+        /**
+         * See parent constructor
+         * {@link HardwareSystemBuilder#HardwareSystemBuilder()}.
+         */
+        public Builder() {
+            super();
+        }
+
         /**
          * Instantiate an {@link Arm} object using the given
          * {@link BuilderParameters}. If the {@link BuilderParameters} are not

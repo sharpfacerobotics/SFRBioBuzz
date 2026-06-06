@@ -13,7 +13,7 @@ public abstract class Claw {
     /**
      * Stores the state of the {@link Builder} during instantiation.
      */
-    protected static class ClawServos implements BuilderParameters {
+    protected static class ClawServos extends BuilderParameters {
         /**
          * The servo that controls the {@link Claw}'s roll (rotation about the
          * front-to-back axis).
@@ -30,16 +30,42 @@ public abstract class Claw {
          */
         private Servo yawServo;
 
+        public ClawServos() {
+            rollServo = null;
+            pitchServo = null;
+            yawServo = null;
+        }
+
         /**
-         * {@inheritDoc}
+         * Always return {@code true} because any {@code null} {@link Servo}s
+         * are simply to be ignored. If a given {@link Servo} is {@code null},
+         * it just means that the claw does not rotate along the given axis.
+         *
+         * @return {@code true} because any {@code null} {@link Servo}s are
+         * simply to be ignored. If a given {@link Servo} is {@code null}, it
+         * just means that the claw does not rotate along the given axis.
          */
         @Override
         public boolean isValid() {
-            return false;
+            return true;
         }
     }
 
-    public abstract static class Builder implements HardwareSystemBuilder {
+    public abstract static class Builder extends HardwareSystemBuilder {
+        /**
+         * The {@link Servo}s that control roll, yaw and pitch (rotation about
+         * the front-back, side-side, and top-bottom axes, respectively).
+         */
+        protected ClawServos clawServos;
+
+        /**
+         * Instantiate a new {@link Claw} object with no {@link Servo}s.
+         */
+        public Builder() {
+            super();
+            clawServos = new ClawServos();
+        }
+
         /**
          * Instantiate a new {@link Claw} object based on an instance of
          * {@link ClawServos} and other {@link BuilderParameters}.

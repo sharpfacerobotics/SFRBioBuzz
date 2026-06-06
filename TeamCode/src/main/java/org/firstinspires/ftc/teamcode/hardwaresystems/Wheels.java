@@ -12,7 +12,7 @@ public abstract class Wheels {
      * Contains the distances between wheels. Necessary for calculating
      * rotation.
      */
-    protected static class WheelDistances implements BuilderParameters {
+    protected static class WheelDistances extends BuilderParameters {
         /**
          * The distance between the left and right wheels, measured in inches
          * from their centers.
@@ -62,7 +62,7 @@ public abstract class Wheels {
      * subclasses. Subclasses that extend {@link Wheels} can also have an inner
      * class that extends {@link Builder}.
      */
-    public static abstract class Builder implements HardwareSystemBuilder {
+    public static abstract class Builder extends HardwareSystemBuilder {
         /**
          * The distances between the wheels of the {@link Wheels} object to be
          * created.
@@ -85,9 +85,9 @@ public abstract class Wheels {
          * {@link Builder#build()}.
          */
         public Builder() {
+            super();
             wheelDistances = new WheelDistances(-1.0, -1.0);
             ticksPerInch = -1.0;
-
             maxMotorPower = 1.0;
         }
 

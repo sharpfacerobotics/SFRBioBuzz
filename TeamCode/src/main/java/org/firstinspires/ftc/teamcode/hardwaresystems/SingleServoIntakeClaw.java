@@ -15,7 +15,41 @@ import java.util.Set;
  */
 public class SingleServoIntakeClaw extends Claw {
     public static class Builder extends Claw.Builder {
+        /**
+         * Used to set {@link #INTAKE_SERVO}.
+         */
+        protected CRServo intakeServo;
+        /**
+         * Used to set {@link #INTAKE_SENSOR}.
+         */
+        protected DigitalChannel intakeSensor;
 
+        /**
+         * See {@link #INTAKE_POWER}.
+         */
+        protected double intakePower;
+        /**
+         * See {@link #EJECT_POWER}.
+         */
+        protected double ejectPower;
+
+        /**
+         * Instantiate a {@link SingleServoIntakeClaw} with no movement servos,
+         * intake CR servo, or touch sensor; intake power set to 1.0; and eject
+         * power set to 0.5.
+         */
+        public Builder() {
+            super();
+            intakeServo = null;
+            intakeSensor = null;
+
+            intakePower = 1.0;
+            ejectPower = 0.5;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Claw build() {
             return null;

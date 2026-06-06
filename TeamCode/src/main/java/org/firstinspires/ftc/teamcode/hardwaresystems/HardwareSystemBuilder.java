@@ -18,7 +18,16 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
  * }
  * </pre>
  */
-public interface HardwareSystemBuilder {
+public abstract class HardwareSystemBuilder {
+    /**
+     * Instantiate any private attributes that may need to be instantiated. They
+     * should be instantiated to an invalid or default value, depending on the
+     * behavior desired. If the parameter is required, set it to an invalid
+     * value. Otherwise, set it to a reasonable default.
+     */
+    public HardwareSystemBuilder() {
+    }
+
     /**
      * Instantiate a <em>specific</em> type of hardware system (i.e., one of the
      * classes in {@code hardwaresystems}), rather than a general
@@ -31,5 +40,5 @@ public interface HardwareSystemBuilder {
      * If the {@link BuilderParameters} are invalid (as defined by
      * {@link BuilderParameters#isValid()}), fail and return {@code null}.
      */
-    Object build();
+    public abstract Object build();
 }
