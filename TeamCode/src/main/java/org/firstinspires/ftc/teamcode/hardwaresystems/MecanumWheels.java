@@ -204,6 +204,7 @@ public class MecanumWheels extends Wheels {
 
         /**
          * Set the motor that controls the front-left mecanum wheel.
+         *
          * @param frontLeftMotor The front-left mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
@@ -215,6 +216,7 @@ public class MecanumWheels extends Wheels {
 
         /**
          * Set the motor that controls the front-right mecanum wheel.
+         *
          * @param frontRightMotor The front-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
@@ -226,6 +228,7 @@ public class MecanumWheels extends Wheels {
 
         /**
          * Set the motor that controls the back-right mecanum wheel.
+         *
          * @param backLeftMotor The back-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
@@ -237,6 +240,7 @@ public class MecanumWheels extends Wheels {
 
         /**
          * Set the motor that controls the back-right mecanum wheel.
+         *
          * @param backRightMotor The back-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
