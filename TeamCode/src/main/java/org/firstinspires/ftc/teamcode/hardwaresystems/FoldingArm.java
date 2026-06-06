@@ -18,7 +18,7 @@ public class FoldingArm extends Arm {
      * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
      * FoldingParameters)} constructor. Contains the motors and motor types.
      */
-    protected static class FoldingArmMotors extends BuilderParameters {
+    protected static class FoldingArmMotors implements BuilderParameters {
         /**
          * All the motors to be used by this {@link FoldingArm}. Used to set
          * {@link Arm#motors}.
@@ -120,7 +120,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum rotation, maximum
      * rotation, and ticks per degree.
      */
-    protected static class RotationParameters extends BuilderParameters {
+    protected static class RotationParameters implements BuilderParameters {
         /**
          * The minimum rotation of the arm in ticks.
          */
@@ -248,7 +248,7 @@ public class FoldingArm extends Arm {
      * FoldingParameters)} constructor. Contains the minimum folding, maximum
      * folding, and ticks per degree.
      */
-    protected static class FoldingParameters extends BuilderParameters {
+    protected static class FoldingParameters implements BuilderParameters {
         /**
          * The minimum folding of the arm in ticks.
          */
