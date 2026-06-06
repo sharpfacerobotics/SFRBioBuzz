@@ -11,6 +11,40 @@ import java.util.Set;
  */
 public abstract class Claw {
     /**
+     * Stores the state of the {@link Builder} during instantiation.
+     */
+    protected static class ClawServos implements BuilderParameters {
+        /**
+         * The servo that controls the {@link Claw}'s roll (rotation about the
+         * front-to-back axis).
+         */
+        private Servo rollServo;
+        /**
+         * The servo that controls the {@link Claw}'s pitch (rotation about the
+         * side-to-side axis).
+         */
+        private Servo pitchServo;
+        /**
+         * The servo that controls the {@link Claw}'s roll (rotation about the
+         * top-to-bottom axis).
+         */
+        private Servo yawServo;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isValid() {
+            return false;
+        }
+    }
+
+    public abstract static class Builder implements HardwareSystemBuilder {
+        @Override
+        public abstract Claw build();
+    }
+
+    /**
      * The servo that rotates the claw about the x-axis (roll).
      */
     protected final Servo ROLL_SERVO;
@@ -22,7 +56,6 @@ public abstract class Claw {
      * The servo that rotates the claw about the z-axis (yaw).
      */
     protected final Servo YAW_SERVO;
-
     /**
      * A {@link Set} of all the {@link Servo}s that are in this claw.
      */
