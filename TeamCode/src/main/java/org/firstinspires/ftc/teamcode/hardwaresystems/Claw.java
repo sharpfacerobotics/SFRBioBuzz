@@ -10,71 +10,40 @@ import java.util.Set;
  * characteristics.
  */
 public abstract class Claw {
-    /**
-     * Stores the state of the {@link Builder} during instantiation.
-     */
-    protected static class ClawServos extends BuilderParameters {
-        /**
-         * The servo that controls the {@link Claw}'s roll (rotation about the
-         * front-to-back axis).
-         */
-        private Servo rollServo;
-        /**
-         * The servo that controls the {@link Claw}'s pitch (rotation about the
-         * side-to-side axis).
-         */
-        private Servo pitchServo;
-        /**
-         * The servo that controls the {@link Claw}'s roll (rotation about the
-         * top-to-bottom axis).
-         */
-        private Servo yawServo;
-
-        public ClawServos() {
-            rollServo = null;
-            pitchServo = null;
-            yawServo = null;
-        }
-
-        /**
-         * Always return {@code true} because any {@code null} {@link Servo}s
-         * are simply to be ignored. If a given {@link Servo} is {@code null},
-         * it just means that the claw does not rotate along the given axis.
-         *
-         * @return {@code true} because any {@code null} {@link Servo}s are
-         * simply to be ignored. If a given {@link Servo} is {@code null}, it
-         * just means that the claw does not rotate along the given axis.
-         */
-        @Override
-        public boolean isValid() {
-            return true;
-        }
-    }
-
     public abstract static class Builder extends HardwareSystemBuilder {
         /**
-         * The {@link Servo}s that control roll, yaw and pitch (rotation about
-         * the front-back, side-side, and top-bottom axes, respectively).
+         * The servo that controls the {@link Claw}'s roll (rotation about the
+         * front-to-back axis). Used to set {@link #ROLL_SERVO}.
          */
-        protected ClawServos clawServos;
+        protected Servo rollServo;
+        /**
+         * The servo that controls the {@link Claw}'s pitch (rotation about the
+         * side-to-side axis). Used to set {@link #PITCH_SERVO}.
+         */
+        protected Servo pitchServo;
+        /**
+         * The servo that controls the {@link Claw}'s roll (rotation about the
+         * top-to-bottom axis). Used to set {@link #YAW_SERVO}.
+         */
+        protected Servo yawServo;
 
         /**
          * Instantiate a new {@link Claw} object with no {@link Servo}s.
          */
         public Builder() {
             super();
-            clawServos = new ClawServos();
+            rollServo = null;
+            pitchServo = null;
+            yawServo = null;
         }
 
         /**
-         * Instantiate a new {@link Claw} object based on an instance of
-         * {@link ClawServos} and other {@link BuilderParameters}.
+         * Instantiate a new {@link Claw} object based on the given parameters
          * <p>
          * If the given {@link BuilderParameters} are invalid as defined by
          * {@link BuilderParameters#isValid()}, fail and return {@code null}.
          *
-         * @return A new {@link Claw} object based on an instance of
-         * {@link ClawServos} and other {@link BuilderParameters}.
+         * @return A new {@link Claw} object based the given parameters.
          */
         @Override
         public abstract Claw build();

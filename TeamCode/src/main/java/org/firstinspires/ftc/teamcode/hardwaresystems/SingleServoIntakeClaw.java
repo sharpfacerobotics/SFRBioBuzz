@@ -16,20 +16,24 @@ import java.util.Set;
 public class SingleServoIntakeClaw extends Claw {
     public static class Builder extends Claw.Builder {
         /**
-         * Used to set {@link #INTAKE_SERVO}.
+         * The continuous rotation servo that takes in objects. Used to set
+         * {@link #INTAKE_SERVO}.
          */
         protected CRServo intakeServo;
         /**
-         * Used to set {@link #INTAKE_SENSOR}.
+         * The sensor that detects whether an object has been taken in. Used to
+         * set {@link #INTAKE_SENSOR}.
          */
         protected DigitalChannel intakeSensor;
 
         /**
-         * See {@link #INTAKE_POWER}.
+         * The power used by the {@link #intakeServo} to take in objects. Used
+         * to set {@link #INTAKE_POWER}.
          */
         protected double intakePower;
         /**
-         * See {@link #EJECT_POWER}.
+         * The power used by the {@link #intakeServo} to eject objects. Used to
+         * set {@link #EJECT_POWER}.
          */
         protected double ejectPower;
 
@@ -54,81 +58,128 @@ public class SingleServoIntakeClaw extends Claw {
         public Claw build() {
             return null;
         }
+
+        /**
+         * Set the {@link Servo} used to control roll (see
+         * {@link #ROLL_SERVO}).
+         *
+         * @param rollServo The servo used to control roll.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setRollServo(Servo rollServo) {
+            this.rollServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control pitch (see
+         * {@link #PITCH_SERVO}).
+         *
+         * @param pitchServo The servo used to control pitch.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setPitchServo(Servo pitchServo) {
+            this.pitchServo = pitchServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
+         *
+         * @param yawServo The servo used to control yaw.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setYawServo(Servo yawServo) {
+            this.yawServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set the continuous rotation servo used to control roll (see
+         * {@link #ROLL_SERVO}).
+         *
+         * @param intakeServo The servo used to intake objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setIntakeServo(CRServo intakeServo) {
+            this.intakeServo = intakeServo;
+            return this;
+        }
+
+        /**
+         * Set the touch sensor used to detect whether an object has entered the
+         * claw (see {@link #ROLL_SERVO}).
+         *
+         * @param intakeSensor The touch sensor used to detect whether an object
+         *                     has entered the claw.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setIntakeSensor(DigitalChannel intakeSensor) {
+            this.intakeSensor = intakeSensor;
+            return this;
+        }
+
+        /**
+         * Set the power used by {@link #intakeServo} to take in objects (see
+         * {@link #intakePower}).
+         *
+         * @param intakePower The power used by {@link #intakeServo} to take in
+         *                    objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setIntakePower(double intakePower) {
+            this.intakePower = intakePower;
+            return this;
+        }
+
+        /**
+         * Set the power used by {@link #intakeServo} to eject objects (see
+         * {@link #ejectPower}).
+         *
+         * @param ejectPower The power used by {@link #intakeServo} to take in
+         *                   objects.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setEjectPower(double ejectPower) {
+            this.ejectPower = ejectPower;
+            return this;
+        }
     }
 
     /**
-     * How much power the intake spins with when intaking.
-     */
-    private static final double INTAKE_POWER = 0.5;
-    /**
-     * How much power the intake spines with when ejecting.
-     */
-    private static final double EJECT_POWER = -1.0;
-
-    /**
-     * The servo that spins the intake.
+     * The continuous rotation servo that spins the intake.
      */
     private final CRServo INTAKE_SERVO;
     /**
-     * The touch sensor that touches whether there is a piece in the intake.
+     * The touch sensor that detects whether there is an object in the intake.
      */
     private final DigitalChannel INTAKE_SENSOR;
+    /**
+     * How much power the {@link #INTAKE_SERVO} spins with when taking in
+     * objects.
+     */
+    private final double INTAKE_POWER;
+    /**
+     * How much power the intake spins with when ejecting objects.
+     */
+    private final double EJECT_POWER;
 
     /**
-     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
-     * to control rotation in three degrees of freedom and a servo to control
-     * intake and output.
-     * <p>
-     * The servo arguments may be {@code null}. If so, any commands to a
-     * {@code null} servo are safe, but will do nothing.
+     * Instantiate a new {@link SingleServoIntakeClaw} object based on the
+     * values set in a {@link Builder}. It is presumed that the {@link Builder}
+     * has already checked its own validity in {@link Builder#build()}.
      *
-     * @param rollServo   The servo that controls roll, i.e., rotation along the
-     *                    x-axis.
-     * @param pitchServo  The servo that controls pitch, i.e., rotation along
-     *                    the y-axis.
-     * @param yawServo    The servo that controls yaw, i.e., rotation along the
-     *                    z-axis.
-     * @param intakeServo The servo that controls intake and output.
+     * @param builder The builder that contains the parameters to instantiate a
+     *                new {@link SingleServoIntakeClaw} object.
      */
-    public SingleServoIntakeClaw(
-        Servo rollServo,
-        Servo pitchServo,
-        Servo yawServo,
-        CRServo intakeServo
-    ) {
-        this(rollServo, pitchServo, yawServo, intakeServo, null);
-    }
+    protected SingleServoIntakeClaw(Builder builder) {
+        super(builder.rollServo, builder.pitchServo, builder.yawServo);
 
-    /**
-     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
-     * to control rotation in three degrees of freedom, a servo to control
-     * intake and output, and a touch sensor to detect whether an object has
-     * been picked up.
-     * <p>
-     * The servo arguments may be {@code null}. If so, any commands to a
-     * {@code null} servo are safe, but will do nothing.
-     *
-     * @param rollServo    The servo that controls roll, i.e., rotation along
-     *                     the x-axis.
-     * @param pitchServo   The servo that controls pitch, i.e., rotation along
-     *                     the y-axis.
-     * @param yawServo     The servo that controls yaw, i.e., rotation along the
-     *                     z-axis.
-     * @param intakeServo  The servo that controls intake and output.
-     * @param intakeSensor The touch sensor that detects whether an object has
-     *                     been picked up.
-     */
-    public SingleServoIntakeClaw(
-        Servo rollServo,
-        Servo pitchServo,
-        Servo yawServo,
-        CRServo intakeServo,
-        DigitalChannel intakeSensor
-    ) {
-        super(rollServo, pitchServo, yawServo);
+        INTAKE_SERVO = builder.intakeServo;
+        INTAKE_SENSOR = builder.intakeSensor;
 
-        INTAKE_SERVO = intakeServo;
-        INTAKE_SENSOR = intakeSensor;
+        INTAKE_POWER = builder.intakePower;
+        EJECT_POWER = builder.ejectPower;
     }
 
     /**
