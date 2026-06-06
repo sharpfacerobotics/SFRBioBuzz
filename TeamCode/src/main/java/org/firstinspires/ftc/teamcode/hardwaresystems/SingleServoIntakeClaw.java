@@ -14,6 +14,14 @@ import java.util.Set;
  * See {@link DoubleServoIntakeClaw} for the double servo version.
  */
 public class SingleServoIntakeClaw extends Claw {
+    public static class Builder extends Claw.Builder {
+
+        @Override
+        public Claw build() {
+            return null;
+        }
+    }
+
     /**
      * How much power the intake spins with when intaking.
      */

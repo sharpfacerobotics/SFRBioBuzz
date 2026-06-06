@@ -405,7 +405,7 @@ public class FoldingArm extends Arm {
         public Builder() {
             foldingArmMotors = new FoldingArmMotors();
             rotationParameters = new RotationParameters(0, 0, 0);
-            foldingParameters = new FoldingParameters(0, 0, 0);
+            foldingParameters = new FoldingParameters(0, 0, 0, 0.0, 0.75);
 
             degreesMode = false;
         }

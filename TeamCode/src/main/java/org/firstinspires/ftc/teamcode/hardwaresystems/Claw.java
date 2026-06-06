@@ -40,6 +40,16 @@ public abstract class Claw {
     }
 
     public abstract static class Builder implements HardwareSystemBuilder {
+        /**
+         * Instantiate a new {@link Claw} object based on an instance of
+         * {@link ClawServos} and other {@link BuilderParameters}.
+         * <p>
+         * If the given {@link BuilderParameters} are invalid as defined by
+         * {@link BuilderParameters#isValid()}, fail and return {@code null}.
+         *
+         * @return A new {@link Claw} object based on an instance of
+         * {@link ClawServos} and other {@link BuilderParameters}.
+         */
         @Override
         public abstract Claw build();
     }
