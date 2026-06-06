@@ -19,7 +19,7 @@ public class MecanumWheels extends Wheels {
      * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
      * double)} constructor. Contains all four motors.
      */
-    protected static class MecanumWheelMotors extends BuilderParameters {
+    protected static class MecanumWheelMotors implements BuilderParameters {
         /**
          * All the motors that are used by this {@link Wheels} system. Should
          * never contain {@code null}.
