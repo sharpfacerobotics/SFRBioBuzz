@@ -33,26 +33,26 @@ public class CustomLinearOp extends LinearOpMode {
     /**
      * Use for our own system.
      * TODO: By default, the class is set to {@link Wheels}. Replace as
-     * necessary.
+     *  necessary.
      */
     protected Wheels WHEELS;
     /**
      * Use for RoadRunner.
      * TODO: By default, the class is set to {@link MecanumDrive}. Replace as
-     * necessary.
+     *  necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
     /**
      * The arm used by the robot.
      * TODO: By default, the type is set to {@link Arm}. Replace or delete as
-     * necessary.
+     *  necessary.
      */
     protected Arm ARM;
 
     /**
      * The claw used by the robot.
      * TODO: By default, the type is set to {@link Claw}. Replace or delete
-     * as necessary.
+     *  as necessary.
      */
     protected Claw CLAW;
 
@@ -210,64 +210,65 @@ public class CustomLinearOp extends LinearOpMode {
              * Update the candidate lists if your team uses different
              * names (for example, "frontLeft", "lf", "leftFront", etc.).
              */
-            DcMotor frontLeft = pickMotor(
+            DcMotor frontLeftMotor = pickMotor(
                 "frontLeftWheel",
+                "frontLeftMotor",
                 "frontLeft",
                 "lf",
                 "leftFront"
             );
-            DcMotor frontRight = pickMotor(
+            DcMotor frontRightMotor = pickMotor(
                 "frontRightWheel",
+                "frontRightMotor",
                 "frontRight",
                 "rf",
                 "rightFront"
             );
-            DcMotor backLeft = pickMotor(
+            DcMotor backLeftMotor = pickMotor(
                 "backLeftWheel",
+                "backLeftMotor",
                 "backLeft",
                 "lb",
                 "leftBack"
             );
-            DcMotor backRight = pickMotor(
+            DcMotor backRightMotor = pickMotor(
                 "backRightWheel",
+                "backRightMotor",
                 "backRight",
                 "rb",
                 "rightBack"
             );
 
-            // Group the motors into a MecanumWheels.MotorSet. MotorSet is a
-            // convenient container for passing all four motors into the
-            // MecanumWheels constructor.
-            MecanumWheels.MotorSet motorSet =
-                new org.firstinspires.ftc.teamcode.hardwaresystems.MecanumWheels.MotorSet(
-                    frontLeft, frontRight, backLeft, backRight
-                );
-
             // Approximate measurements from the CAD model (in inches).
             // The wheel circumference is 4 inches in diameter multiplied by π.
             double wheelCircumference = 4.0 * Math.PI;
             double gearRatio = 1.0;
-            double ticksPerInch = frontLeft.getMotorType().getTicksPerRev()
+            // TODO: Change the motor type as necessary.
+            double ticksPerInch = frontLeftMotor.getMotorType().getTicksPerRev()
                                   * gearRatio / wheelCircumference;
-            // TODO: Approximate distances between wheels. Adjust as
-            //  necessary if your robot's chassis dimensions differ.
-            Wheels.WheelDistances wheelDistances =
-                new org.firstinspires.ftc.teamcode.hardwaresystems.Wheels.WheelDistances(
-                    8.5,  // lateral distance (left‑to‑right)
-                    14.5  // longitudinal distance (front‑to‑back)
-                );
 
-            // Create a MecanumWheels instance.
-            // This will automatically configure motor directions and reset
-            // encoders.
-            WHEELS = new MecanumWheels(motorSet, wheelDistances, ticksPerInch);
+
+            // TODO: Replace with the necessary constructor.
+            WHEELS = new MecanumWheels.Builder()
+                // TODO: Approximate distances between wheels. Adjust as
+                //  necessary if your robot's chassis dimensions differ.
+                .setLateralDistance(8.5)
+                .setLongitudinalDistance(14.5)
+                .setTicksPerInch(ticksPerInch)
+                // TODO: Change as necessary in accordance with your type of
+                //  wheel system.
+                .setFrontLeftMotor(frontLeftMotor)
+                .setFrontRightMotor(frontRightMotor)
+                .setBackLeftMotor(backLeftMotor)
+                .setBackRightMotor(backRightMotor)
+                .build();
 
         } catch (Exception e) {
             /*
-             * If any motor could not be found, report the error.
-             * This keeps the telemetry output informative and avoids a null
-             * pointer exception later on.
-             * Leave WHEELS as null to signal an initialization failure.
+             * If any motor could not be found, report the error. This keeps
+             * the telemetry output informative and
+             * avoids a null pointer exception later on. Leave WHEELS as null
+             *  to signal an initialization failure.
              */
             telemetry.addLine("ERROR: Failed to initialize wheels: \n"
                               + e.getMessage());

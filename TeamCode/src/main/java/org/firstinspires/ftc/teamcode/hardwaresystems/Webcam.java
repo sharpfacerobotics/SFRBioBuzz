@@ -13,6 +13,9 @@ import org.opencv.core.Scalar;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The webcam that process visual input such as colors and AprilTags.
+ */
 public class Webcam {
     /**
      * Enum that holds HSV ranges for different colors used by the robot.
@@ -35,7 +38,8 @@ public class Webcam {
          */
         BLUE(new Scalar(90, 128, 64), new Scalar(125, 255, 255)),
         /**
-         * Magenta to red hues (used for purple-style elements). The hue range conceptually wraps around zero in HSV.
+         * Magenta to red hues (used for purple-style elements). The hue range
+         * conceptually wraps around zero in HSV.
          */
         MAGENTA(new Scalar(-170, 128, 64), new Scalar(180, 255, 255));
         /**
@@ -46,7 +50,6 @@ public class Webcam {
          * Upper HSV bound for this color.
          */
         private final Scalar upperBound;
-
 
         /**
          * Constructor for each color with its lower and upper HSV bounds.
@@ -93,7 +96,8 @@ public class Webcam {
     private final int[] RESOLUTION;
 
     /**
-     * VisionPortal used to communicate with the webcam and run vision processors.
+     * VisionPortal used to communicate with the webcam and run vision
+     * processors.
      */
     private final VisionPortal VISION_PORTAL;
     /**
@@ -106,18 +110,20 @@ public class Webcam {
     private final PredominantColorProcessor COLOR_PROCESSOR;
 
     /**
-     * Alliance or team color you want to remember for this webcam (used by your code).
+     * Alliance or team color you want to remember for this webcam (used by your
+     * code).
      */
     private Color targetColor;
     /**
-     * Offset of the camera relative to the robot center [x, y, z] in inches. Used by localization or pose-estimation
-     * code outside this class.
+     * Offset of the camera relative to the robot center [x, y, z] in inches.
+     * Used by localization or pose-estimation code outside this class.
      */
     private double[] poseAdjust;
 
     /**
-     * Construct a webcam wrapper with default pose offset (0,0,0). This version does not use a custom preview
-     * container. VisionPortal will handle the normal RC/DS preview.
+     * Construct a webcam wrapper with default pose offset (0,0,0). This version
+     * does not use a custom preview container. VisionPortal will handle the
+     * normal RC/DS preview.
      *
      * @param webcamName The name used by the webcam.
      * @param resolution The resolution that the camera uses.
@@ -127,26 +133,40 @@ public class Webcam {
     }
 
     /**
-     * Construct a webcam wrapper with a specified pose offset and default preview.
+     * Construct a webcam wrapper with a specified pose offset and default
+     * preview.
      *
      * @param webcamName The name used by the webcam.
      * @param resolution The resolution that the camera uses.
-     * @param poseAdjust The adjustment for positioning of the camera relative to the robot.
+     * @param poseAdjust The adjustment for positioning of the camera relative
+     *                   to the robot.
      */
-    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust) {
+    public Webcam(
+        WebcamName webcamName,
+        int[] resolution,
+        double[] poseAdjust
+    ) {
         this(webcamName, resolution, poseAdjust, -1);
     }
 
     /**
-     * Construct a webcam wrapper with an optional preview container D. If{@code cameraMonitorViewId} is -1,
-     * VisionPortal uses the default preview. If `cameraMonitorViewId` is not -1, a custom preview container is used.
+     * Construct a webcam wrapper with an optional preview container D.
+     * If{@code cameraMonitorViewId} is -1, VisionPortal uses the default
+     * preview. If `cameraMonitorViewId` is not -1, a custom preview container
+     * is used.
      *
      * @param webcamName          The name used by the webcam.
      * @param resolution          The resolution that the camera uses.
-     * @param poseAdjust          The adjustment for positioning of the camera relative to the robot.
+     * @param poseAdjust          The adjustment for positioning of the camera
+     *                            relative to the robot.
      * @param cameraMonitorViewId The ID for the preview container.
      */
-    public Webcam(WebcamName webcamName, int[] resolution, double[] poseAdjust, int cameraMonitorViewId) {
+    public Webcam(
+        WebcamName webcamName,
+        int[] resolution,
+        double[] poseAdjust,
+        int cameraMonitorViewId
+    ) {
         // Save pose adjustment values (reference is stored directly).
         this.poseAdjust = poseAdjust;
 
@@ -159,7 +179,8 @@ public class Webcam {
         // Create an AprilTag processor with default settings.
         APRIL_TAG = new AprilTagProcessor.Builder().build();
 
-        // Create a predominant color processor with a center ROI and a set of swatches.
+        // Create a predominant color processor with a center ROI and a set
+        // of swatches.
         COLOR_PROCESSOR = new PredominantColorProcessor.Builder()
             .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))
             .setSwatches(
@@ -173,7 +194,8 @@ public class Webcam {
 
         // Build the VisionPortal using the Builder pattern.
         // It owns the USB camera and runs the color and AprilTag processors.
-        // autoStopLiveView means the RC preview pauses when no processors are enabled.
+        // autoStopLiveView means the RC preview pauses when no processors
+        // are enabled.
         VisionPortal.Builder builder = new VisionPortal.Builder()
             .addProcessor(COLOR_PROCESSOR)
             .addProcessor(APRIL_TAG)
@@ -186,8 +208,8 @@ public class Webcam {
     }
 
     /**
-     * Return the VisionPortal managing this webcam. You can use this to enable/disable processors or pause/resume the
-     * preview.
+     * Return the VisionPortal managing this webcam. You can use this to
+     * enable/disable processors or pause/resume the preview.
      *
      * @return The VisionPortal managing this webcam.
      */
@@ -205,9 +227,11 @@ public class Webcam {
     }
 
     /**
-     * Return a copy of the current AprilTag detections. The list may be empty if no tags are seen.
+     * Return a copy of the current AprilTag detections. The list may be empty
+     * if no tags are seen.
      *
-     * @return A copy of the current AprilTag detections. The list may be empty if no tags are seen.
+     * @return A copy of the current AprilTag detections. The list may be empty
+     * if no tags are seen.
      */
     public List<AprilTagDetection> getAprilTagDetections() {
         // Copy into a new list so callers cannot modify the internal list.
@@ -215,7 +239,8 @@ public class Webcam {
     }
 
     /**
-     * Return the predominant color processor. You can use this directly if you want to read more detailed color info.
+     * Return the predominant color processor. You can use this directly if you
+     * want to read more detailed color info.
      *
      * @return The predominant color processor.
      */
@@ -249,19 +274,24 @@ public class Webcam {
     }
 
     /**
-     * Pick "best" detection out of the given alliance IDs. Favors detections closer to the center of the camera and
-     * detections with a shorter distance. If that fails, judge the best detection based on pixel error.
+     * Pick "best" detection out of the given alliance IDs. Favors detections
+     * closer to the center of the camera and detections with a shorter
+     * distance. If that fails, judge the best detection based on pixel error.
      *
      * @param detections  The AprilTags that have been detected.
      * @param aprilTagIds The AprilTag IDs to detect.
      * @return The AprilTag that best fits matches.
      */
-    private AprilTagDetection pickBestDetection(List<AprilTagDetection> detections, int[] aprilTagIds) {
+    private AprilTagDetection pickBestDetection(
+        List<AprilTagDetection> detections,
+        int[] aprilTagIds
+    ) {
         if (detections == null || detections.isEmpty()) {
             return null;
         }
 
-        // Need frame width for pixel scoring; fall back safely if webcam is null.
+        // Need frame width for pixel scoring; fall back safely if webcam is
+        // null.
         double frameWidth = RESOLUTION[0];
         double halfWidth = frameWidth / 2.0;
 
@@ -270,7 +300,9 @@ public class Webcam {
 
         //
         for (AprilTagDetection detection : detections) {
-            if (detection == null || detection.ftcPose == null || detection.center == null) {
+            if (detection == null
+                || detection.ftcPose == null
+                || detection.center == null) {
                 continue;
             }
 
@@ -326,7 +358,8 @@ public class Webcam {
     }
 
     /**
-     * Set a new pose adjustment [x, y, z] for the camera. This stores the array reference directly.
+     * Set a new pose adjustment [x, y, z] for the camera. This stores the array
+     * reference directly.
      *
      * @param poseAdjust The new pose adjustment [x, y, z].
      */
@@ -353,11 +386,11 @@ public class Webcam {
     }
 
     /**
-     * Return the latest color analysis from the predominant color processor. May be null if no frame has been processed
-     * yet.
+     * Return the latest color analysis from the predominant color processor.
+     * May be null if no frame has been processed yet.
      *
-     * @return The latest color analysis from the predominant color processor. May be {@code null} if no frame has been
-     * processed yet.
+     * @return The latest color analysis from the predominant color processor.
+     * May be {@code null} if no frame has been processed yet.
      */
     public PredominantColorProcessor.Result getColorResult() {
         return COLOR_PROCESSOR.getAnalysis();

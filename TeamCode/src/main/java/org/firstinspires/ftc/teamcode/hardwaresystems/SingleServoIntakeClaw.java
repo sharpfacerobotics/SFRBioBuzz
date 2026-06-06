@@ -22,6 +22,7 @@ public class SingleServoIntakeClaw extends Claw {
      * How much power the intake spines with when ejecting.
      */
     private static final double EJECT_POWER = -1.0;
+
     /**
      * The servo that spins the intake.
      */
@@ -31,70 +32,152 @@ public class SingleServoIntakeClaw extends Claw {
      */
     private final DigitalChannel INTAKE_SENSOR;
 
-    public SingleServoIntakeClaw(Servo xAxisServo, Servo yAxisServo, Servo zAxisServo, CRServo intakeServo) {
-        this(xAxisServo, yAxisServo, zAxisServo, intakeServo, null);
+    /**
+     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
+     * to control rotation in three degrees of freedom and a servo to control
+     * intake and output.
+     * <p>
+     * The servo arguments may be {@code null}. If so, any commands to a
+     * {@code null} servo are safe, but will do nothing.
+     *
+     * @param rollServo   The servo that controls roll, i.e., rotation along the
+     *                    x-axis.
+     * @param pitchServo  The servo that controls pitch, i.e., rotation along
+     *                    the y-axis.
+     * @param yawServo    The servo that controls yaw, i.e., rotation along the
+     *                    z-axis.
+     * @param intakeServo The servo that controls intake and output.
+     */
+    public SingleServoIntakeClaw(
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
+        CRServo intakeServo
+    ) {
+        this(rollServo, pitchServo, yawServo, intakeServo, null);
     }
 
+    /**
+     * Instantiate a new {@link SingleServoIntakeClaw} object with three servos
+     * to control rotation in three degrees of freedom, a servo to control
+     * intake and output, and a touch sensor to detect whether an object has
+     * been picked up.
+     * <p>
+     * The servo arguments may be {@code null}. If so, any commands to a
+     * {@code null} servo are safe, but will do nothing.
+     *
+     * @param rollServo    The servo that controls roll, i.e., rotation along
+     *                     the x-axis.
+     * @param pitchServo   The servo that controls pitch, i.e., rotation along
+     *                     the y-axis.
+     * @param yawServo     The servo that controls yaw, i.e., rotation along the
+     *                     z-axis.
+     * @param intakeServo  The servo that controls intake and output.
+     * @param intakeSensor The touch sensor that detects whether an object has
+     *                     been picked up.
+     */
     public SingleServoIntakeClaw(
-        Servo xAxisServo,
-        Servo yAxisServo,
-        Servo zAxisServo,
+        Servo rollServo,
+        Servo pitchServo,
+        Servo yawServo,
         CRServo intakeServo,
         DigitalChannel intakeSensor
     ) {
-        super(xAxisServo, yAxisServo, zAxisServo);
+        super(rollServo, pitchServo, yawServo);
 
         INTAKE_SERVO = intakeServo;
         INTAKE_SENSOR = intakeSensor;
     }
 
+    /**
+     * Get the power that the {@link #INTAKE_SERVO} intakes with.
+     *
+     * @return The power that the {@link #INTAKE_SERVO} intakes with.
+     */
     public double getIntakePower() {
         return INTAKE_POWER;
     }
 
+    /**
+     * Get the power that the {@link #INTAKE_SERVO} ejects with.
+     *
+     * @return The power that the {@link #INTAKE_SERVO} ejects with.
+     */
     public double getEjectPower() {
         return EJECT_POWER;
     }
 
+    /**
+     * Get all the {@link CRServo}s used by this claw, which should just be the
+     * {@link #INTAKE_SERVO}.
+     *
+     * @return all the {@link CRServo}s used by this claw, which should just be
+     * the {@link #INTAKE_SERVO}.
+     */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Collections.singletonList(INTAKE_SERVO));
     }
 
+    /**
+     * Get the intake servo, which draws objects into the claw.
+     *
+     * @return The intake servo, which draws objects into the claw.
+     */
     public CRServo getIntakeServo() {
         return INTAKE_SERVO;
     }
 
+    /**
+     * Set the {@link #INTAKE_SERVO} to draw in any objects that come into
+     * contact with it.
+     */
     public void startIntake() {
-        INTAKE_SERVO.setPower(INTAKE_POWER);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(INTAKE_POWER);
+        }
     }
 
     /**
-     * Get whether the intake servo is currently running.
+     * Get whether the intake servo is currently running. If the servo is
+     * {@code null}, trivially return {@code false}.
      *
-     * @return true if the intake servo's power is non-zero, false otherwise.
+     * @return {@code true} if the intake servo's power is non-zero.
+     * <p>
+     * {@code false} otherwise, including if the servo is {@code null}.
      */
     public boolean isIntakeActive() {
-        return INTAKE_SERVO.getPower() != 0;
+        return INTAKE_SERVO != null && INTAKE_SERVO.getPower() != 0;
     }
 
+    /**
+     * Stop the {@link #INTAKE_SERVO} from running. Do nothing if the servo is
+     * {@code null}.
+     */
     public void stopIntake() {
-        INTAKE_SERVO.setPower(0);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(0);
+        }
     }
 
     /**
      * Make the intake spin in reverse and eject the object.
      */
     public void ejectIntake() {
-        INTAKE_SERVO.setPower(EJECT_POWER);
+        if (INTAKE_SERVO != null) {
+            INTAKE_SERVO.setPower(EJECT_POWER);
+        }
     }
 
     /**
-     * Get whether the sensor on the claw is pressed or not.
+     * Get whether the sensor on the claw is pressed or not. If the sensor is
+     * {@code null}, trivially return {@code false}.
      *
-     * @return true when the sensor is pressed, false otherwise.
+     * @return {@code true} when the sensor is pressed.
+     * <p>
+     * {@code false} otherwise, including if the sensor is {@code null}.
      */
     public boolean isSensorPressed() {
-        //  returns true when the sensor is not pressed.
-        return !INTAKE_SENSOR.getState();
+        // Returns true when the sensor is not pressed.
+        return INTAKE_SENSOR != null && !INTAKE_SENSOR.getState();
     }
 }

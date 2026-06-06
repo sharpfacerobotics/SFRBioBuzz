@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.hardwaresystems.MecanumWheels;
 import org.firstinspires.ftc.teamcode.hardwaresystems.Webcam;
-import org.firstinspires.ftc.teamcode.hardwaresystems.Wheels;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
@@ -88,25 +87,30 @@ public class AprilTagTest extends LinearOpMode {
          * naming conventions. If none of the candidate names are found,
          * an IllegalArgumentException will be thrown and caught below.
          */
-        DcMotor frontLeft;
-        DcMotor frontRight;
-        DcMotor backLeft;
-        DcMotor backRight;
+        DcMotor frontLeftMotor;
+        DcMotor frontRightMotor;
+        DcMotor backLeftMotor;
+        DcMotor backRightMotor;
         try {
-            frontLeft = pickMotor(
+            frontLeftMotor = pickMotor(
                 "frontLeftWheel",
                 "frontLeft",
                 "lf",
                 "leftFront"
             );
-            frontRight = pickMotor(
+            frontRightMotor = pickMotor(
                 "frontRightWheel",
                 "frontRight",
                 "rf",
                 "rightFront"
             );
-            backLeft = pickMotor("backLeftWheel", "backLeft", "lb", "leftBack");
-            backRight = pickMotor(
+            backLeftMotor = pickMotor(
+                "backLeftWheel",
+                "backLeft",
+                "lb",
+                "leftBack"
+            );
+            backRightMotor = pickMotor(
                 "backRightWheel",
                 "backRight",
                 "rb",
@@ -124,25 +128,21 @@ public class AprilTagTest extends LinearOpMode {
             return;
         }
 
-        MecanumWheels.MotorSet motorSet = new MecanumWheels.MotorSet(
-            frontLeft,
-            frontRight,
-            backLeft,
-            backRight
-        );
-
         // Approximately measured from the CAD model in inches
         double wheelCircumference = 4.0 * Math.PI;
         double gearRatio = 1.0;
-        double ticksPerInch = frontLeft.getMotorType().getTicksPerRev()
+        double ticksPerInch = frontLeftMotor.getMotorType().getTicksPerRev()
                               * gearRatio / wheelCircumference;
-        // Approximately measured from CAD
-        Wheels.WheelDistances wheelDistances = new Wheels.WheelDistances(
-            8.5,
-            14.5
-        );
 
-        WHEELS = new MecanumWheels(motorSet, wheelDistances, ticksPerInch);
+        WHEELS = new MecanumWheels.Builder().setFrontLeftMotor(frontLeftMotor)
+                                            .setFrontRightMotor(frontRightMotor)
+                                            .setBackLeftMotor(backLeftMotor)
+                                            .setBackRightMotor(backRightMotor)
+                                            // Approximately measured from CAD
+                                            .setLateralDistance(8.5)
+                                            .setLongitudinalDistance(14.5)
+                                            .setTicksPerInch(ticksPerInch)
+                                            .build();
     }
 
     /**
