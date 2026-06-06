@@ -35,16 +35,16 @@ public class SingleServoIntakeClaw extends Claw {
 
         /**
          * Instantiate a {@link SingleServoIntakeClaw} with no movement servos,
-         * intake CR servo, or touch sensor; intake power set to 1.0; and eject
-         * power set to 0.5.
+         * intake CR servo, or touch sensor; intake power set to 0.5; and eject
+         * power set to -1.0.
          */
         public Builder() {
             super();
             intakeServo = null;
             intakeSensor = null;
 
-            intakePower = 1.0;
-            ejectPower = 0.5;
+            intakePower = 0.5;
+            ejectPower = -1.0;
         }
 
         /**
