@@ -48,9 +48,15 @@ public abstract class Claw {
         double servoIncrement
     ) {
         servos = new HashSet<>();
-        servos.add(rollServo);
-        servos.add(pitchServo);
-        servos.add(yawServo);
+        if (rollServo != null) {
+            servos.add(rollServo);
+        }
+        if (pitchServo != null) {
+            servos.add(pitchServo);
+        }
+        if (yawServo != null) {
+            servos.add(yawServo);
+        }
 
         ROLL_SERVO = rollServo;
         PITCH_SERVO = pitchServo;
@@ -113,9 +119,11 @@ public abstract class Claw {
      *                  clockwise.
      */
     public void rotateRollServo(double direction) {
-        double targetPosition = ROLL_SERVO.getPosition()
-                                + Math.signum(direction) * servoIncrement;
-        ROLL_SERVO.setPosition(targetPosition);
+        if (ROLL_SERVO != null) {
+            double targetPosition = ROLL_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
+            ROLL_SERVO.setPosition(targetPosition);
+        }
     }
 
     /**
@@ -124,7 +132,9 @@ public abstract class Claw {
      * @param degrees The target angle of the {@link #ROLL_SERVO} in degrees.
      */
     public void rotateRollServoToAngle(double degrees) {
-        ROLL_SERVO.setPosition(degrees / 360.0);
+        if (ROLL_SERVO != null) {
+            ROLL_SERVO.setPosition(degrees / 360.0);
+        }
     }
 
     /**
@@ -137,9 +147,11 @@ public abstract class Claw {
      *                  clockwise.
      */
     public void rotatePitchAxisServo(double direction) {
-        double targetPosition = PITCH_SERVO.getPosition()
-                                + Math.signum(direction) * servoIncrement;
-        PITCH_SERVO.setPosition(targetPosition);
+        if (PITCH_SERVO != null) {
+            double targetPosition = PITCH_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
+            PITCH_SERVO.setPosition(targetPosition);
+        }
     }
 
     /**
@@ -148,7 +160,9 @@ public abstract class Claw {
      * @param degrees The target angle of the {@link #PITCH_SERVO} in degrees.
      */
     public void rotatePitchServoToAngle(double degrees) {
-        PITCH_SERVO.setPosition(degrees / 360.0);
+        if (PITCH_SERVO != null) {
+            PITCH_SERVO.setPosition(degrees / 360.0);
+        }
     }
 
     /**
@@ -161,9 +175,11 @@ public abstract class Claw {
      *                  clockwise.
      */
     public void rotateYawServo(double direction) {
-        double targetPosition = YAW_SERVO.getPosition()
-                                + Math.signum(direction) * servoIncrement;
-        YAW_SERVO.setPosition(targetPosition);
+        if (YAW_SERVO != null) {
+            double targetPosition = YAW_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
+            YAW_SERVO.setPosition(targetPosition);
+        }
     }
 
     /**
@@ -172,6 +188,8 @@ public abstract class Claw {
      * @param degrees The target angle of the {@link #YAW_SERVO} in degrees.
      */
     public void rotateYawServoToAngle(double degrees) {
-        YAW_SERVO.setPosition(degrees / 360.0);
+        if (YAW_SERVO != null) {
+            YAW_SERVO.setPosition(degrees / 360.0);
+        }
     }
 }
