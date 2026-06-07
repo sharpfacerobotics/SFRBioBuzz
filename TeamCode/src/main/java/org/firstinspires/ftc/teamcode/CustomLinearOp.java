@@ -252,8 +252,8 @@ public class CustomLinearOp extends LinearOpMode {
             WHEELS = new MecanumWheels.Builder()
                 // TODO: Approximate distances between wheels. Adjust as
                 //  necessary if your robot's chassis dimensions differ.
-                .setLateralDistance(8.5)
-                .setLongitudinalDistance(14.5)
+                .setLateralWheelDistance(8.5)
+                .setLongitudinalWheelDistance(14.5)
                 .setTicksPerInch(ticksPerInch)
                 // TODO: Change as necessary in accordance with your type of
                 //  wheel system.

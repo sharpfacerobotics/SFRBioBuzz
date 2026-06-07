@@ -23,18 +23,26 @@ public abstract class Arm {
         }
 
         /**
-         * Instantiate an {@link Arm} object using the given
-         * {@link BuilderParameters}. If the {@link BuilderParameters} are not
-         * valid (as defined by {@link BuilderParameters#isValid()}), fail and
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isValid() {
+            return true;
+        }
+
+        /**
+         * Instantiate an {@link Arm} object using the given parameters. If the
+         * parameters are not valid (as defined by {@link #isValid()}), fail and
          * return {@code null}.
          *
-         * @return If the {@link BuilderParameters} are valid (as defined by
-         * {@link BuilderParameters#isValid()}), a new {@link Arm} instance
-         * based on the values set in instances of {@link BuilderParameters}.
+         * @return If the parameters are valid (as defined by
+         * {@link #isValid()}), a new {@link Arm} instance based on the values
+         * set in instances of parameters.
          * <p>
-         * If the {@link BuilderParameters} are invalid (as defined by
-         * {@link BuilderParameters#isValid()}), fail and return {@code null}.
+         * If the parameters are invalid (as defined by {@link #isValid()}),
+         * fail and return {@code null}.
          */
+        @Override
         public abstract Arm build();
     }
 

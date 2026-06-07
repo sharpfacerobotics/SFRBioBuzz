@@ -9,65 +9,22 @@ import java.util.Set;
  */
 public abstract class Wheels {
     /**
-     * Contains the distances between wheels. Necessary for calculating
-     * rotation.
-     */
-    protected static class WheelDistances extends BuilderParameters {
-        /**
-         * The distance between the left and right wheels, measured in inches
-         * from their centers.
-         */
-        protected double lateralDistance;
-        /**
-         * The distance between the front and back wheels, measured in inches
-         * from their centers.
-         */
-        protected double longitudinalDistance;
-
-        /**
-         * Define the wheel's distances.
-         *
-         * @param lateralDistance      The distance between the left and right
-         *                             wheels, measured in inches from their
-         *                             centers.
-         * @param longitudinalDistance The distance between the front and back
-         *                             wheels, measured in inches from their
-         *                             centers.
-         */
-        public WheelDistances(
-            double lateralDistance,
-            double longitudinalDistance
-        ) {
-            this.longitudinalDistance = longitudinalDistance;
-            this.lateralDistance = lateralDistance;
-        }
-
-        /**
-         * Check if the distances({@link #longitudinalDistance} and
-         * {@link #lateralDistance}) are physically possible (i.e., they must be
-         * positive values).
-         *
-         * @return {@code true} if both {@link #longitudinalDistance} and
-         * {@link #lateralDistance} are positive.
-         * <p>
-         * {@code false} otherwise.
-         */
-        public boolean isValid() {
-            return longitudinalDistance > 0 && lateralDistance > 0;
-        }
-    }
-
-    /**
      * Builder class to simplify the process of creating {@link Wheels}
      * subclasses. Subclasses that extend {@link Wheels} can also have an inner
      * class that extends {@link Builder}.
      */
     public static abstract class Builder extends HardwareSystemBuilder {
         /**
-         * The distances between the wheels of the {@link Wheels} object to be
-         * created.
+         * The distance between the left and right wheels, measured in inches
+         * from their centers.
          */
-        protected WheelDistances wheelDistances;
+        protected double lateralWheelDistance;
+        /**
+         * The distance between the front and back wheels, measured in inches
+         * from their centers.
+         */
+        protected double longitudinalWheelDistance;
+
         /**
          * The number of ticks it takes for the motors of the new {@link Wheels}
          * object to travel one (1) inch.
@@ -86,31 +43,17 @@ public abstract class Wheels {
          */
         public Builder() {
             super();
-            wheelDistances = new WheelDistances(-1.0, -1.0);
+
+            lateralWheelDistance = -1.0;
+            longitudinalWheelDistance = -1.0;
             ticksPerInch = -1.0;
             maxMotorPower = 1.0;
         }
 
         /**
-         * Set the {@link WheelDistances#lateralDistance} property of
-         * {@link #wheelDistances}.
+         * Set the {@link #lateralWheelDistance}
          *
-         * @param lateralDistance The distance between the left and right wheels
-         *                        in inches.
-         * @return Any builder class that extends {@link Builder} should
-         * implement the abstract setter methods with a <em>subclass</em> of
-         * {@link Wheels.Builder} as the return type. This allows for chaining
-         * of {@link Builder} methods without the need to cast the type.
-         * <p>
-         * See {@link MecanumWheels.Builder} for an example.
-         */
-        public abstract Builder setLateralDistance(double lateralDistance);
-
-        /**
-         * Set the {@link WheelDistances#lateralDistance} property of
-         * {@link #wheelDistances}.
-         *
-         * @param longitudinalDistance The distance between the left and right
+         * @param lateralWheelDistance The distance between the left and right
          *                             wheels in inches.
          * @return Any builder class that extends {@link Builder} should
          * implement the abstract setter methods with a <em>subclass</em> of
@@ -119,14 +62,28 @@ public abstract class Wheels {
          * <p>
          * See {@link MecanumWheels.Builder} for an example.
          */
-        public abstract Builder setLongitudinalDistance(double longitudinalDistance);
+        public abstract Builder setLateralWheelDistance(double lateralWheelDistance);
 
         /**
-         * Set the {@link WheelDistances#lateralDistance} property of
-         * {@link #wheelDistances}.
+         * Set the {@link #longitudinalWheelDistance} property.
          *
-         * @param ticksPerInch The distance between the left and right wheels in
-         *                     inches.
+         * @param longitudinalWheelDistance The distance between the left and
+         *                                  right wheels in inches.
+         * @return Any builder class that extends {@link Builder} should
+         * implement the abstract setter methods with a <em>subclass</em> of
+         * {@link Wheels.Builder} as the return type. This allows for chaining
+         * of {@link Builder} methods without the need to cast the type.
+         * <p>
+         * See {@link MecanumWheels.Builder} for an example.
+         */
+        public abstract Builder setLongitudinalWheelDistance(double longitudinalWheelDistance);
+
+        /**
+         * Set the number of motor ticks per inches of distance
+         * ({@link #ticksPerInch}).
+         *
+         * @param ticksPerInch The number of motor ticks per inches of
+         *                     distance.
          * @return Any builder class that extends {@link Builder} should
          * implement the abstract setter methods with a <em>subclass</em> of
          * {@link Wheels.Builder} as the return type. This allows for chaining
@@ -153,9 +110,17 @@ public abstract class Wheels {
             return this;
         }
 
+        @Override
+        public boolean isValid() {
+            return lateralWheelDistance > 0.0
+                   && longitudinalWheelDistance > 0.0
+                   && ticksPerInch > 0.0
+                   && 0.0 < maxMotorPower && maxMotorPower < 1.0;
+        }
+
         /**
-         * Using the given {@link WheelDistances}, and {@link #ticksPerInch},
-         * construct a new instance of {@link Wheels}.
+         * Construct a new instance of {@link Wheels}, using the given wheel
+         * distances and {@link #ticksPerInch}.
          *
          * @return If the state of the {@link Builder} is valid, return a
          * <em>subclass</em> of {@link Wheels}. Any class that extends
@@ -164,6 +129,7 @@ public abstract class Wheels {
          * <p>
          * See {@link MecanumWheels.Builder#build()} for an example.
          */
+        @Override
         public abstract Wheels build();
     }
 
@@ -192,55 +158,19 @@ public abstract class Wheels {
      */
     protected final double TICKS_PER_INCH;
 
-    /**
-     * Instantiate a {@link Wheels} object with only motors, wheel distances,
-     * and ticks per inch. Assume the maximum power to be 1.0.
-     *
-     * @param motors         All the motors used by the robot.
-     * @param wheelDistances The distances between the wheels, which is used for
-     *                       determining turning angles.
-     * @param ticksPerInch   The number of ticks needed to move the robot by one
-     *                       inch.
-     */
-    protected Wheels(
-        Set<DcMotor> motors,
-        WheelDistances wheelDistances,
-        double ticksPerInch
-    ) {
-        this(motors, wheelDistances, ticksPerInch, 1.0);
-    }
-
-    /**
-     * Instantiate a {@link Wheels} object with motors, wheel distances, ticks
-     * per inch, and motor powers all set up.
-     *
-     * @param motors         All the motors used by the robot.
-     * @param wheelDistances The distances between the wheels, which is used for
-     *                       determining turning angles.
-     * @param ticksPerInch   The number of ticks needed to move the robot by one
-     *                       inch.
-     * @param maxMotorPower  The maximum power that the wheel motors drive with.
-     *                       Should be between 0.0 (exclusive) and 1.0
-     *                       (inclusive).
-     */
-    protected Wheels(
-        Set<DcMotor> motors,
-        WheelDistances wheelDistances,
-        double ticksPerInch,
-        double maxMotorPower
-    ) {
-        this.motors = motors;
+    protected Wheels(Builder builder) {
+        this.motors = builder.build().getMotors();
         // Allow wheels to roll freely.
         for (DcMotor motor : this.motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        LATERAL_DISTANCE = wheelDistances.lateralDistance;
-        LONGITUDINAL_DISTANCE = wheelDistances.longitudinalDistance;
+        LATERAL_DISTANCE = builder.lateralWheelDistance;
+        LONGITUDINAL_DISTANCE = builder.longitudinalWheelDistance;
 
-        TICKS_PER_INCH = ticksPerInch;
+        TICKS_PER_INCH = builder.ticksPerInch;
 
-        MAX_MOTOR_POWER = maxMotorPower;
+        MAX_MOTOR_POWER = builder.maxMotorPower;
     }
 
     /**
