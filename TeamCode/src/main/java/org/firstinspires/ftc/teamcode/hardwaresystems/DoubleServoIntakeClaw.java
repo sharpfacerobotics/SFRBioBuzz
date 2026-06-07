@@ -18,10 +18,16 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     public static class Builder extends Claw.Builder {
         /**
-         * The sensor that detects whether an object has been taken in. Used to
-         * set {@link #INTAKE_SENSOR}.
+         * The continuous rotation servo that spins the left part of the
+         * intake.
          */
-        protected DigitalChannel intakeSensor;
+        protected CRServo leftIntakeServo;
+        /**
+         * The continuous rotation servo that spins the right part of the
+         * intake.
+         */
+        protected CRServo rightIntakeServo;
+
         /**
          * The power used by the intake servos to take in objects. Used to set
          * {@link #INTAKE_POWER}.
@@ -32,16 +38,12 @@ public class DoubleServoIntakeClaw extends Claw {
          * {@link #EJECT_POWER}.
          */
         protected double ejectPower;
+
         /**
-         * The continuous rotation servo that spins the left part of the
-         * intake.
+         * The sensor that detects whether an object has been taken in. Used to
+         * set {@link #INTAKE_SENSOR}. May be {@code null}.
          */
-        private CRServo leftIntakeServo;
-        /**
-         * The continuous rotation servo that spins the right part of the
-         * intake.
-         */
-        private CRServo rightIntakeServo;
+        protected DigitalChannel intakeSensor;
 
         /**
          * Instantiate a {@link SingleServoIntakeClaw} with no movement servos,
@@ -59,23 +61,15 @@ public class DoubleServoIntakeClaw extends Claw {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Claw build() {
-            return null;
-        }
-
-        /**
          * Set the {@link Servo} used to control roll (see
          * {@link #ROLL_SERVO}).
          *
          * @param rollServo The servo used to control roll.
          * @return This {@link Builder} to allow for chaining setters.
          */
+        @Override
         public Builder setRollServo(Servo rollServo) {
-            this.rollServo = rollServo;
-            return this;
+            return (Builder) super.setRollServo(rollServo);
         }
 
         /**
@@ -85,9 +79,9 @@ public class DoubleServoIntakeClaw extends Claw {
          * @param pitchServo The servo used to control pitch.
          * @return This {@link Builder} to allow for chaining setters.
          */
+        @Override
         public Builder setPitchServo(Servo pitchServo) {
-            this.pitchServo = pitchServo;
-            return this;
+            return (Builder) super.setPitchServo(pitchServo);
         }
 
         /**
@@ -96,9 +90,41 @@ public class DoubleServoIntakeClaw extends Claw {
          * @param yawServo The servo used to control yaw.
          * @return This {@link Builder} to allow for chaining setters.
          */
+        @Override
         public Builder setYawServo(Servo yawServo) {
-            this.yawServo = rollServo;
-            return this;
+            return (Builder) super.setYawServo(yawServo);
+        }
+
+        /**
+         * Return whether the current attributes are valid, which is
+         * {@code true} if and only if {@link #servoIncrement} is positive, both
+         * powers are positive, and both intake servos are non-{@code null}.
+         * <p>
+         * {@code null} values for {@link #rollServo}, {@link #pitchServo},
+         * {@link #yawServo}, {@link #intakeSensor} are acceptable, indicating
+         * that they are not needed. However, because of this, all methods
+         * <em><strong>must</strong></em> check for {@code null} {@link Servo}
+         * or {@link DigitalChannel} values.
+         *
+         * @return Whether the current attributes are valid, which is
+         * {@code true} if and only if {@link #servoIncrement} is positive, both
+         * powers are positive, and both intake servos are non-{@code null}.
+         */
+        @Override
+        public boolean isValid() {
+            return super.isValid()
+                   && leftIntakeServo != null
+                   && rightIntakeServo != null
+                   && intakePower > 0
+                   && ejectPower > 0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DoubleServoIntakeClaw build() {
+            return isValid() ? new DoubleServoIntakeClaw(this) : null;
         }
 
         /**
@@ -193,9 +219,19 @@ public class DoubleServoIntakeClaw extends Claw {
      *
      * @param builder The builder that contains the parameters to instantiate a
      *                new {@link SingleServoIntakeClaw} object.
+     * @throws IllegalArgumentException If either intake servo
+     *                                  ({@link Builder#leftIntakeServo} or
+     *                                  {@link Builder#rightIntakeServo}) is
+     *                                  {@code null}.
      */
-    protected DoubleServoIntakeClaw(Builder builder) {
+
+    protected DoubleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
         super(builder.rollServo, builder.pitchServo, builder.yawServo);
+
+        if (builder.leftIntakeServo == null
+            || builder.rightIntakeServo == null) {
+            throw new IllegalArgumentException("Intake servos cannot be null.");
+        }
 
         LEFT_INTAKE_SERVO = builder.leftIntakeServo;
         RIGHT_INTAKE_SERVO = builder.rightIntakeServo;

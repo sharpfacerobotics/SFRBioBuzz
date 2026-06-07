@@ -55,46 +55,34 @@ public class SingleServoIntakeClaw extends Claw {
         }
 
         /**
+         * Return whether the current attributes are valid, which is
+         * {@code true} if and only if {@link #servoIncrement} is positive, both
+         * powers are positive, and the intake servo is non-{@code null}.
+         * <p>
+         * {@code null} values for {@link #rollServo}, {@link #pitchServo},
+         * {@link #yawServo}, {@link #intakeSensor} are acceptable, indicating
+         * that they are not needed. However, because of this, all methods
+         * <em><strong>must</strong></em> check for {@code null} {@link Servo}
+         * or {@link DigitalChannel} values.
+         *
+         * @return Whether the current attributes are valid, which is
+         * {@code true} if and only if {@link #servoIncrement} is positive, both
+         * powers are positive, and the intake servo is non-{@code null}.
+         */
+        @Override
+        public boolean isValid() {
+            return super.isValid()
+                   && intakeServo != null
+                   && intakePower > 0
+                   && ejectPower > 0;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         public Claw build() {
-            return null;
-        }
-
-        /**
-         * Set the {@link Servo} used to control roll (see
-         * {@link #ROLL_SERVO}).
-         *
-         * @param rollServo The servo used to control roll.
-         * @return This {@link Builder} to allow for chaining setters.
-         */
-        public Builder setRollServo(Servo rollServo) {
-            this.rollServo = rollServo;
-            return this;
-        }
-
-        /**
-         * Set the {@link Servo} used to control pitch (see
-         * {@link #PITCH_SERVO}).
-         *
-         * @param pitchServo The servo used to control pitch.
-         * @return This {@link Builder} to allow for chaining setters.
-         */
-        public Builder setPitchServo(Servo pitchServo) {
-            this.pitchServo = pitchServo;
-            return this;
-        }
-
-        /**
-         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
-         *
-         * @param yawServo The servo used to control yaw.
-         * @return This {@link Builder} to allow for chaining setters.
-         */
-        public Builder setYawServo(Servo yawServo) {
-            this.yawServo = rollServo;
-            return this;
+            return isValid() ? new SingleServoIntakeClaw(this) : null;
         }
 
         /**
@@ -174,9 +162,15 @@ public class SingleServoIntakeClaw extends Claw {
      *
      * @param builder The builder that contains the parameters to instantiate a
      *                new {@link SingleServoIntakeClaw} object.
+     * @throws IllegalArgumentException If the {@link Builder#intakeServo} is
+     *                                  {@code null}.
      */
-    protected SingleServoIntakeClaw(Builder builder) {
+    protected SingleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
         super(builder.rollServo, builder.pitchServo, builder.yawServo);
+
+        if (builder.intakeServo == null) {
+            throw new IllegalArgumentException("Intake servo cannot be null.");
+        }
 
         INTAKE_SERVO = builder.intakeServo;
         INTAKE_SENSOR = builder.intakeSensor;
