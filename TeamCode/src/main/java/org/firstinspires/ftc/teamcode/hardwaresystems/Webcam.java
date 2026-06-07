@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * The webcam that process visual input such as colors and AprilTags.
  */
+@SuppressWarnings("unused")
 public class Webcam {
     /**
      * Enum that holds HSV ranges for different colors used by the robot.

@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  * Mecanum wheels are capable of moving in any direction, whether horizontally,
  * vertically, or diagonally.
  */
+@SuppressWarnings("unused")
 public class MecanumWheels extends Wheels {
     /**
      * Builder to simplify the construction of {@link MecanumWheels} objects.

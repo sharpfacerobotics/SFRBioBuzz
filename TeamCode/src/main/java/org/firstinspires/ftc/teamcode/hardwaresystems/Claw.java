@@ -9,6 +9,7 @@ import java.util.Set;
  * Abstract class to represent all possible robot claws and their common
  * characteristics.
  */
+@SuppressWarnings("unused")
 public abstract class Claw {
     /**
      * Builder for {@link Claw} to control the setting of {@link #ROLL_SERVO},

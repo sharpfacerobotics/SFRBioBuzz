@@ -11,6 +11,7 @@ import java.util.Set;
  * elbow) and rotating the entire arm (like a shoulder, but with only one degree
  * of freedom).
  */
+@SuppressWarnings("unused")
 public class FoldingArm extends Arm {
     /**
      * A builder for creating instances of {@link FoldingArm}.

@@ -8,6 +8,7 @@ import java.util.Set;
  * Abstract class to represent all possible arms that a robot could have and
  * their common characteristics.
  */
+@SuppressWarnings("unused")
 public abstract class Arm {
     /**
      * A builder to simplify instantiation of {@link Arm} objects since arms are

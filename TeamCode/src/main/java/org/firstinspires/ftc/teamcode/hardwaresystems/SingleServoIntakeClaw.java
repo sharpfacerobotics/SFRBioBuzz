@@ -13,6 +13,7 @@ import java.util.Set;
  * <p>
  * See {@link DoubleServoIntakeClaw} for the double servo version.
  */
+@SuppressWarnings("unused")
 public class SingleServoIntakeClaw extends Claw {
     /**
      * Simplifies the instantiation of {@link SingleServoIntakeClaw} objects.

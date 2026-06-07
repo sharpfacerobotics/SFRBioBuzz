@@ -7,6 +7,7 @@ import java.util.Set;
 /**
  * Represent any possible system of wheels on the robot.
  */
+@SuppressWarnings("unused")
 public abstract class Wheels {
     /**
      * Builder class to simplify the process of creating {@link Wheels}
