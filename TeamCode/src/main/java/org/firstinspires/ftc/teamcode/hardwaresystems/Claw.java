@@ -47,6 +47,8 @@ public abstract class Claw {
             rollServo = null;
             pitchServo = null;
             yawServo = null;
+
+            servoIncrement = 0.1;
         }
 
         /**
