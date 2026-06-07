@@ -40,7 +40,10 @@ public class AutoConfigurator extends OpMode {
         private final AllianceColor ALLIANCE_COLOR;
         private final AllianceSide ALLIANCE_SIDE;
 
-        public AutoConfig(AllianceColor allianceColor, AllianceSide allianceSide) {
+        public AutoConfig(
+            AllianceColor allianceColor,
+            AllianceSide allianceSide
+        ) {
             this.ALLIANCE_COLOR = allianceColor;
             this.ALLIANCE_SIDE = allianceSide;
         }
@@ -67,9 +70,14 @@ public class AutoConfigurator extends OpMode {
     /**
      * The directory that all the files are saved to.
      */
-    private static final String DIRECTORY = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ftc/";
+    private static final String DIRECTORY =
+        Environment.getExternalStorageDirectory()
+                   .getAbsolutePath()
+        + "/ftc/";
+
     /**
-     * Name of the config file, which is inside the directory specified by {@link #DIRECTORY}.
+     * Name of the config file, which is inside the directory specified by
+     * {@link #DIRECTORY}.
      */
     private static final String CONFIG_FILE = DIRECTORY + "config.csv";
     /**
@@ -87,17 +95,23 @@ public class AutoConfigurator extends OpMode {
     }
 
     /**
-     * Read the contents of {@link #CONFIG_FILE} as a {@link String} and return it. Print an error message if it fails.
+     * Read the contents of {@link #CONFIG_FILE} as a {@link String} and return
+     * it. Print an error message if it fails.
      *
-     * @return The contents of {@link #CONFIG_FILE} as a {@link String}. If an exception occurs, return {@code null}.
+     * @return The contents of {@link #CONFIG_FILE} as a {@link String}. If an
+     * exception occurs, return {@code null}.
      */
     public static String readConfigFile() {
         /*
          * If the file is unreadable for some reason, return null.
          */
-        try (BufferedReader buffer = new BufferedReader(new FileReader(CONFIG_FILE))) {
+        try (BufferedReader buffer = new BufferedReader(new FileReader(
+            CONFIG_FILE))) {
             // Read all the lines joined by newlines.
-            String fileString = String.join("\n", buffer.lines().collect(Collectors.joining())).strip();
+            String fileString = String.join(
+                "\n",
+                buffer.lines().collect(Collectors.joining())
+            ).trim();
 
             // If the file is invalid, treat it as invalid.
             if (fileString.isEmpty()) {
@@ -112,10 +126,11 @@ public class AutoConfigurator extends OpMode {
     }
 
     /**
-     * Read the data stored in {@link #CONFIG_FILE} and instantiate an {@link AutoConfig} object to store the
-     * information.
+     * Read the data stored in {@link #CONFIG_FILE} and instantiate an
+     * {@link AutoConfig} object to store the information.
      *
-     * @return An {@link AutoConfig} instance representing the data in {@link #CONFIG_FILE}.
+     * @return An {@link AutoConfig} instance representing the data in
+     * {@link #CONFIG_FILE}.
      */
     public static AutoConfig parseConfigFile() {
         String fileString = readConfigFile();
@@ -127,11 +142,15 @@ public class AutoConfigurator extends OpMode {
         /*
          * Try to split the file to extract the values.
          *
-         * If the file has been corrupted or improperly formatted, default to red near.
+         * If the file has been corrupted or improperly formatted, default to
+         *  red near.
          */
         String[] values = fileString.split(SEPARATOR);
         try {
-            return new AutoConfig(AllianceColor.valueOf(values[0]), AllianceSide.valueOf(values[1]));
+            return new AutoConfig(
+                AllianceColor.valueOf(values[0]),
+                AllianceSide.valueOf(values[1])
+            );
 
         } catch (IndexOutOfBoundsException exception) {
             return new AutoConfig(AllianceColor.RED, AllianceSide.NEAR);
@@ -139,25 +158,34 @@ public class AutoConfigurator extends OpMode {
     }
 
     /**
-     * Listen to user input and write the appropriate enum names to {@link #CONFIG_FILE}.
+     * Listen to user input and write the appropriate enum names to
+     * {@link #CONFIG_FILE}.
      */
     public void writeConfigFile() {
         String positionString = null;
         if (gamepad1.y || gamepad2.y) {
             // Orange button
-            positionString = AllianceColor.RED.name() + SEPARATOR + AllianceSide.NEAR.name();
+            positionString = AllianceColor.RED.name()
+                             + SEPARATOR
+                             + AllianceSide.NEAR.name();
 
         } else if (gamepad1.b || gamepad2.b) {
             // Red button
-            positionString = AllianceColor.RED.name() + SEPARATOR + AllianceSide.FAR.name();
+            positionString = AllianceColor.RED.name()
+                             + SEPARATOR
+                             + AllianceSide.FAR.name();
 
         } else if (gamepad1.a || gamepad2.a) {
             // Green button
-            positionString = AllianceColor.BLUE.name() + SEPARATOR + AllianceSide.NEAR.name();
+            positionString = AllianceColor.BLUE.name()
+                             + SEPARATOR
+                             + AllianceSide.NEAR.name();
 
         } else if (gamepad1.x || gamepad2.x) {
             // Blue button
-            positionString = AllianceColor.BLUE.name() + SEPARATOR + AllianceSide.FAR.name();
+            positionString = AllianceColor.BLUE.name()
+                             + SEPARATOR
+                             + AllianceSide.FAR.name();
         }
 
         // Do nothing if the driver didn't press any buttons.
@@ -170,7 +198,8 @@ public class AutoConfigurator extends OpMode {
             writer.write(positionString);
 
         } catch (IOException e) {
-            telemetry.addLine("ERROR: FAILED TO WRITE AUTO CONFIG TO " + CONFIG_FILE);
+            telemetry.addLine("ERROR: FAILED TO WRITE AUTO CONFIG TO "
+                              + CONFIG_FILE);
             telemetry.addLine(e.toString());
         }
     }
@@ -186,8 +215,8 @@ public class AutoConfigurator extends OpMode {
         String fileData = readConfigFile();
         telemetry.addLine(
             (fileData != null) ?
-                "Current config: " + fileData :
-                "ERROR: FAILED TO READ AUTO CONFIG FROM " + CONFIG_FILE
+            "Current config: " + fileData :
+            "ERROR: FAILED TO READ AUTO CONFIG FROM " + CONFIG_FILE
         );
 
         // If the directory and file do not exist, create them.

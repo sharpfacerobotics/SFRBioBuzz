@@ -8,25 +8,49 @@ import java.util.Set;
  * Abstract class to represent all possible arms that a robot could have and
  * their common characteristics.
  */
+@SuppressWarnings("unused")
 public abstract class Arm {
     /**
      * A builder to simplify instantiation of {@link Arm} objects since arms are
      * complex, with possibly multiple motors and settings for each motor.
      */
-    public static abstract class Builder implements HardwareSystemBuilder {
+    public static abstract class Builder extends HardwareSystemBuilder {
         /**
-         * Instantiate an {@link Arm} object using the given
-         * {@link BuilderParameters}. If the {@link BuilderParameters} are not
-         * valid (as defined by {@link BuilderParameters#isValid()}), fail and
+         * See parent constructor
+         * {@link HardwareSystemBuilder#HardwareSystemBuilder()}.
+         */
+        public Builder() {
+            super();
+        }
+
+        /**
+         * Trivially return {@code true} because {@link Arm} has no fields to
+         * check.
+         * <p>
+         * For subclasses, they should check that their field values make
+         * logical sense (e.g., power should be positive, motors should be
+         * non-null, etc.).
+         *
+         * @return {@code true} because {@link Arm} has no fields to check.
+         */
+        @Override
+        public boolean isValid() {
+            return true;
+        }
+
+        /**
+         * Instantiate an {@link Arm} object using the given fields. If the
+         * fields are not valid (as defined by {@link #isValid()}), fail and
          * return {@code null}.
          *
-         * @return If the {@link BuilderParameters} are valid (as defined by
-         * {@link BuilderParameters#isValid()}), a new {@link Arm} instance
-         * based on the values set in instances of {@link BuilderParameters}.
+         * @return If the fields are valid (as defined by {@link #isValid()}), a
+         * new {@link Arm} instance based on the values set in instances of
+         * fields.
          * <p>
-         * If the {@link BuilderParameters} are invalid (as defined by
-         * {@link BuilderParameters#isValid()}), fail and return {@code null}.
+         * If the fields are invalid (as defined by {@link #isValid()}), fail
+         * and return {@code null}.
          */
+        @Override
         public abstract Arm build();
     }
 

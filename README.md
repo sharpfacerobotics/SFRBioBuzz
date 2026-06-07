@@ -34,7 +34,7 @@ See [`wifi.md`](wifi.md).
 > Before creating a repo under ftc6406, consider if it is necessary.
 > If not, create it under your own account.
 
-1. On the GitHut website, create a new repo.
+1. On the GitHub website, create a new repo.
 2. Under "Repository template", select "ftc6406/TemplateRobotController".
 3. Under "Owner", select "ftc6406".
 4. Name the repository.

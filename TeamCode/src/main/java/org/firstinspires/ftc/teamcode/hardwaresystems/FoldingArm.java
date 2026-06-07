@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -12,19 +11,13 @@ import java.util.Set;
  * elbow) and rotating the entire arm (like a shoulder, but with only one degree
  * of freedom).
  */
+@SuppressWarnings("unused")
 public class FoldingArm extends Arm {
     /**
-     * Passed into the
-     * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
-     * FoldingParameters)} constructor. Contains the motors and motor types.
+     * A builder for creating instances of {@link FoldingArm}.
      */
-    protected static class FoldingArmMotors extends BuilderParameters {
-        /**
-         * All the motors to be used by this {@link FoldingArm}. Used to set
-         * {@link Arm#motors}.
-         */
-        protected final Set<DcMotor> motors;
-
+    @SuppressWarnings("UnusedReturnValue")
+    public static class Builder extends Arm.Builder {
         /**
          * The motor that rotates the entire arm. Used to set
          * {@link #ROTATION_MOTOR}.
@@ -37,377 +30,87 @@ public class FoldingArm extends Arm {
         protected DcMotor foldingMotor;
 
         /**
-         * Create a new instance of {@link FoldingArmMotors}. If the parameters
-         * are {@code null}, they will not be added to {@link #motors}.
-         *
-         * @param rotationMotor The motor that rotates the entire arm around.
-         * @param foldingMotor  The motor that folds the arm in the middle.
-         */
-        public FoldingArmMotors(DcMotor rotationMotor, DcMotor foldingMotor) {
-            motors = new HashSet<>();
-
-            if (rotationMotor != null) {
-                motors.add(rotationMotor);
-            }
-            if (foldingMotor != null) {
-                motors.add(foldingMotor);
-            }
-
-            this.rotationMotor = rotationMotor;
-            this.foldingMotor = foldingMotor;
-        }
-
-        /**
-         * Override {@link FoldingArmMotors#FoldingArmMotors(DcMotor, DcMotor)}
-         * with two {@code null} {@link DcMotor}s, essentially serving as a
-         * blank constructor.
-         * <p>
-         * Note that in this state, it will fail {@link Builder#build()}.
-         */
-        public FoldingArmMotors() {
-            this(null, null);
-        }
-
-        /**
-         * Check if either motor ({@link #rotationMotor} or
-         * {@link #foldingMotor}) is {@code null}.
-         *
-         * @return {@code true} if either motor ({@link #rotationMotor} or
-         * {@link #foldingMotor}) is {@code null}.
-         * <p>
-         * {@code false} otherwise.
-         */
-        public boolean isValid() {
-            return rotationMotor != null && foldingMotor != null;
-        }
-
-        /**
-         * Set the motor that controls folding, i.e., moving the entire arm in a
-         * circular manner.
-         *
-         * @param rotationMotor The new motor to control rotation, i.e., moving
-         *                      the entire arm in a circular manner.
-         */
-        protected void setRotationMotor(DcMotor rotationMotor) {
-            motors.remove(this.rotationMotor);
-
-            this.rotationMotor = rotationMotor;
-            if (rotationMotor != null) {
-                motors.add(rotationMotor);
-            }
-        }
-
-        /**
-         * Set the motor that controls folding, i.e., bending the arm in the
-         * middle.
-         *
-         * @param foldingMotor The new motor to control folding, i.e., bending
-         *                     the arm in the middle.
-         */
-        protected void setFoldingMotor(DcMotor foldingMotor) {
-            motors.remove(this.foldingMotor);
-
-            this.foldingMotor = foldingMotor;
-            if (foldingMotor != null) {
-                motors.add(foldingMotor);
-            }
-        }
-    }
-
-    /**
-     * Passed into the
-     * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
-     * FoldingParameters)} constructor. Contains the minimum rotation, maximum
-     * rotation, and ticks per degree.
-     */
-    protected static class RotationParameters extends BuilderParameters {
-        /**
          * The minimum rotation of the arm in ticks.
          */
-        private int minTicks;
+        private int minRotationTicks;
         /**
          * The maximum rotation of the arm in ticks.
          */
-        private int maxTicks;
+        private int maxRotationTicks;
         /**
          * Whether the minimum and maximum was set using ticks or degrees. If
          * they were set using degrees, then they must be adjusted if the
          * initial angle or ticks per degree are changed.
          */
-        private boolean degreesMode;
-
+        private boolean rotationDegreesMode;
         /**
          * The angle that the arm rotation starts from. 0 ticks will be
          * considered to be equal to this angle.
          */
-        private double initialAngle;
-
+        private double initialRotationAngle;
         /**
          * How many ticks it takes to rotate the arm by one degree.
          */
-        private double ticksPerDegree;
+        private double ticksPerRotationDegree;
         /**
          * The maximum power that the {@link #ROTATION_MOTOR} moves with. Used
          * to set {@link #MAX_ROTATION_POWER}.
          */
-        private double maxPower;
+        private double maxRotationPower;
 
         /**
-         * Instantiate an instance of {@link RotationParameters} using only the
-         * minimum number of ticks, maximum number of ticks, and ticks per
-         * degree. The initial angle defaults to 0.0 and the power defaults to
-         * 1.0.
-         * <p>
-         * See {@link #RotationParameters(int, int, double, double, double)} for
-         * the full parameter version.
-         *
-         * @param minTicks       The minimum number of ticks that the rotation
-         *                       motor can reach.
-         * @param maxTicks       The maximum number of ticks that the rotation
-         *                       motor can reach.
-         * @param ticksPerDegree The number of motor ticks per degree of
-         *                       rotation. <strong>Includes gearing</strong>, so
-         *                       it might <em>not</em> be the same as 360° /
-         *                       {@link
-         *                       MotorConfigurationType#getTicksPerRev()}.
+         * The minimum rotation of the arm in ticks.
          */
-        public RotationParameters(
-            int minTicks,
-            int maxTicks,
-            double ticksPerDegree
-        ) {
-            this(minTicks, maxTicks, 0.0, ticksPerDegree, 1.0);
-        }
-
+        private int minFoldingTicks;
         /**
-         * Instantiate an instance of {@link RotationParameters} with the
-         * minimum number of ticks, maximum number of ticks, initial angle,
-         * ticks per degree, and maximum power.
-         * <p> See
-         * {@link #RotationParameters(int, int, double)}  RotationParameters}
-         * for the abbreviated version.
-         *
-         * @param minTicks       The minimum number of ticks that the rotation
-         *                       motor can reach.
-         * @param maxTicks       The maximum number of ticks that the rotation
-         *                       motor can reach.
-         * @param initialAngle   The angle that the arm rotation starts from. 0
-         *                       ticks will be considered equivalent to this
-         *                       angle.
-         * @param ticksPerDegree The number of motor ticks per degree of
-         *                       rotation. <strong>Includes gearing</strong>, so
-         *                       it might <em>not</em> be the same as 360° /
-         *                       {@link
-         *                       MotorConfigurationType#getTicksPerRev()}.
-         * @param maxPower       The maximum power that the
-         *                       {@link #ROTATION_MOTOR} moves with.
+         * The maximum rotation of the arm in ticks.
          */
-        public RotationParameters(
-            int minTicks,
-            int maxTicks,
-            double initialAngle,
-            double ticksPerDegree,
-            double maxPower
-        ) {
-            this.minTicks = minTicks;
-            this.maxTicks = maxTicks;
-            degreesMode = false;
-
-            this.initialAngle = initialAngle;
-            this.ticksPerDegree = ticksPerDegree;
-
-            this.maxPower = maxPower;
-        }
-
-
-        /**
-         * Return whether the current {@link RotationParameters} are valid,
-         * i.e., {@link #minTicks} is less than {@link #maxTicks},
-         * {@link #ticksPerDegree} is positive, and {@link #maxPower} is between
-         * 0.0 and 1.0 (inclusive).
-         *
-         * @return {@code true} current {@link RotationParameters} are valid,
-         * i.e., {@link #minTicks} is less than {@link #maxTicks},
-         * {@link #ticksPerDegree} is positive, and {@link #maxPower} is between
-         * 0.0 and 1.0 (inclusive).
-         * <p>
-         * {@code false} otherise.
-         */
-        @Override
-        public boolean isValid() {
-            return minTicks < maxTicks
-                   && ticksPerDegree > 0.0
-                   && 0.0 < maxPower
-                   && maxPower < 1.0;
-        }
-    }
-
-    /**
-     * Passed into the
-     * {@link FoldingArm#FoldingArm(FoldingArmMotors, RotationParameters,
-     * FoldingParameters)} constructor. Contains the minimum folding, maximum
-     * folding, and ticks per degree.
-     */
-    protected static class FoldingParameters extends BuilderParameters {
-        /**
-         * The minimum folding of the arm in ticks.
-         */
-        private int minTicks;
-        /**
-         * The maximum folding of the arm in ticks.
-         */
-        private int maxTicks;
+        private int maxFoldingTicks;
         /**
          * Whether the minimum and maximum was set using ticks or degrees. If
          * they were set using degrees, then they must be adjusted if the
          * initial angle or ticks per degree are changed.
          */
-        private boolean degreesMode;
+        private boolean foldingDegreesMode;
+        /**
+         * The angle that the arm rotation starts from. 0 ticks will be
+         * considered to be equal to this angle.
+         */
+        private double initialFoldingAngle;
+        /**
+         * How many ticks it takes to rotate the arm by one degree.
+         */
+        private double ticksPerFoldingDegree;
+        /**
+         * The maximum power that the {@link #ROTATION_MOTOR} moves with. Used
+         * to set {@link #MAX_ROTATION_POWER}.
+         */
+        private double maxFoldingPower;
 
         /**
-         * How many ticks are in a degree.
-         */
-        private double ticksPerDegree;
-        /**
-         * The angle that the arm folding starts from. 0 ticks will be
-         * considered to be equal to this angle. Used to set
-         * {@link #INITIAL_FOLDING_ANGLE}
-         */
-        private double initialAngle;
-
-        /**
-         * The maximum power that the {@link #FOLDING_MOTOR} moves with. Used to
-         * set {@link #MAX_FOLDING_POWER}.
-         */
-        private double maxPower;
-
-        /**
-         * Instantiate an instance of {@link FoldingParameters} using only the
-         * minimum number of ticks, maximum number of ticks, and ticks per
-         * degree. The initial angle defaults to 0.0 and the power defaults to
-         * 1.0.
-         * <p>
-         * See {@link #FoldingParameters(int, int, double, double, double)} for
-         * the full parameter version.
-         *
-         * @param minTicks       The minimum number of ticks that the folding
-         *                       motor can reach.
-         * @param maxTicks       The maximum number of ticks that the folding
-         *                       motor can reach.
-         * @param ticksPerDegree The number of motor ticks per degree of
-         *                       folding. <strong>Includes gearing</strong>, so
-         *                       it might <em>not</em> be the same as 360° /
-         *                       {@link
-         *                       MotorConfigurationType#getTicksPerRev()}.
-         */
-        public FoldingParameters(
-            int minTicks,
-            int maxTicks,
-            double ticksPerDegree
-        ) {
-            this(minTicks, maxTicks, 0, ticksPerDegree, 1);
-        }
-
-        /**
-         * Instantiate an instance of {@link RotationParameters} with the
-         * minimum number of ticks, maximum number of ticks, initial angle,
-         * ticks per degree, and maximum power.
-         * <p>
-         * See {@link #FoldingParameters(int, int, double)} for the abbreviated
-         * version.
-         *
-         * @param minTicks       The minimum number of ticks that the folding
-         *                       motor can reach.
-         * @param maxTicks       The maximum number of ticks that the folding
-         *                       motor can reach.
-         * @param initialAngle   The angle that the arm folding starts from. 0
-         *                       ticks will be considered equivalent to this
-         *                       angle.
-         * @param ticksPerDegree The number of motor ticks per degree of
-         *                       folding. <strong>Includes gearing</strong>, so
-         *                       it might <em>not</em> be the same as 360° /
-         *                       {@link
-         *                       MotorConfigurationType#getTicksPerRev()}.
-         * @param maxPower       The maximum power that the
-         *                       {@link #FOLDING_MOTOR} moves with.
-         */
-        public FoldingParameters(
-            int minTicks,
-            int maxTicks,
-            double initialAngle,
-            double ticksPerDegree,
-            double maxPower
-        ) {
-            this.minTicks = minTicks;
-            this.maxTicks = maxTicks;
-            degreesMode = false;
-
-            this.initialAngle = initialAngle;
-            this.ticksPerDegree = ticksPerDegree;
-
-            this.maxPower = maxPower;
-        }
-
-        /**
-         * Return whether the current {@link FoldingParameters} are valid, i.e.,
-         * {@link #minTicks} is less than {@link #maxTicks},
-         * {@link #ticksPerDegree} is positive, and {@link #maxPower} is between
-         * 0.0 and 1.0 (inclusive).
-         *
-         * @return {@code true} current {@link FoldingParameters} are valid,
-         * i.e., {@link #minTicks} is less than {@link #maxTicks},
-         * {@link #ticksPerDegree} is positive, and {@link #maxPower} is between
-         * 0.0 and 1.0 (inclusive).
-         * <p>
-         * {@code false} otherise.
-         */
-        @Override
-        public boolean isValid() {
-            return minTicks < maxTicks
-                   && ticksPerDegree > 0.0
-                   && 0.0 < maxPower
-                   && maxPower < 1.0;
-        }
-    }
-
-    /**
-     * A builder for creating instances of {@link FoldingArm}.
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    public static class Builder extends Arm.Builder {
-        /**
-         * The current configuration of the {@link Builder}'s motors.
-         */
-        protected final FoldingArmMotors foldingArmMotors;
-        /**
-         * The current configuration of the {@link Builder}'s
-         * {@link RotationParameters}.
-         */
-        protected final RotationParameters rotationParameters;
-        /**
-         * The current configuration of the {@link Builder}'s
-         * {@link FoldingParameters}.
-         *
-         */
-        protected final FoldingParameters foldingParameters;
-
-        /**
-         * Whether the minimum and maximum was set using ticks or degrees. If
-         * they were set using degrees, then they must be adjusted if the
-         * initial angle or ticks per degree are changed.
-         */
-        protected boolean degreesMode;
-
-        /**
-         * Instantiate a new {@link Builder} with all {@link BuilderParameters}
-         * set to their default value.
+         * Instantiate a new {@link Builder} with all parameters set to their
+         * default value.
          */
         public Builder() {
-            foldingArmMotors = new FoldingArmMotors();
-            rotationParameters = new RotationParameters(0, 0, 0);
-            foldingParameters = new FoldingParameters(0, 0, 0);
+            super();
 
-            degreesMode = false;
+            rotationMotor = null;
+            foldingMotor = null;
+
+            minRotationTicks = -1;
+            maxRotationTicks = -1;
+            initialRotationAngle = 0.0;
+            ticksPerRotationDegree = -1.0;
+            rotationDegreesMode = false;
+            maxRotationPower = 1.0;
+
+            minRotationTicks = 0;
+            maxRotationTicks = 0;
+            initialRotationAngle = 0.0;
+            ticksPerRotationDegree = 0.0;
+            rotationDegreesMode = false;
+            maxFoldingPower = 0.75;
+
         }
 
         /**
@@ -418,7 +121,7 @@ public class FoldingArm extends Arm {
          * @return This {@link Builder} so that methods can be chained.
          */
         public Builder setRotationMotor(DcMotor rotationMotor) {
-            foldingArmMotors.setRotationMotor(rotationMotor);
+            this.rotationMotor = rotationMotor;
             return this;
         }
 
@@ -429,7 +132,7 @@ public class FoldingArm extends Arm {
          * @return This {@link Builder} so that methods can be chained.
          */
         public Builder setFoldingMotor(DcMotor foldingMotor) {
-            foldingArmMotors.setFoldingMotor(foldingMotor);
+            this.foldingMotor = foldingMotor;
             return this;
         }
 
@@ -443,20 +146,19 @@ public class FoldingArm extends Arm {
          * @return This {@link Builder} so that the methods can be chained.
          */
         public Builder setRotationRangeTicks(int minTicks, int maxTicks) {
-            rotationParameters.minTicks = minTicks;
-            rotationParameters.maxTicks = maxTicks;
+            minRotationTicks = minTicks;
+            maxRotationTicks = maxTicks;
 
-            rotationParameters.degreesMode = false;
+            rotationDegreesMode = false;
             return this;
         }
 
         /**
          * Set the minimum and maximum rotation in degrees. Internally, it
-         * converts the degrees to ticks using the
-         * {@link RotationParameters#initialAngle} and
-         * {@link RotationParameters#ticksPerDegree} properties, so everytime
-         * those two properties are updated, the ticks will also be
-         * automatically updated.
+         * converts the degrees to ticks using the {@link #initialRotationAngle}
+         * and {@link #ticksPerRotationDegree} properties, so everytime those
+         * two properties are updated, the ticks will also be automatically
+         * updated.
          *
          * @param minDegrees The minimum range of the {@link #ROTATION_MOTOR} in
          *                   degrees.
@@ -468,15 +170,15 @@ public class FoldingArm extends Arm {
             double minDegrees,
             double maxDegrees
         ) {
-            rotationParameters.degreesMode = true;
+            rotationDegreesMode = true;
             return setRotationRangeTicks(
                 (int) Math.round(
-                    (minDegrees - rotationParameters.initialAngle)
-                    * rotationParameters.ticksPerDegree
+                    (minDegrees - initialRotationAngle)
+                    * ticksPerRotationDegree
                 ),
                 (int) Math.round(
-                    (maxDegrees - rotationParameters.initialAngle)
-                    * rotationParameters.ticksPerDegree
+                    (maxDegrees - initialRotationAngle)
+                    * ticksPerRotationDegree
                 )
             );
         }
@@ -495,20 +197,20 @@ public class FoldingArm extends Arm {
         public Builder setRotationTicksPerDegree(double ticksPerDegree) {
             // setRotationRangeDegrees() relies on ticksPerDegree, so we also
             // need to correct the range.
-            if (rotationParameters.degreesMode) {
+            if (rotationDegreesMode) {
                 setRotationRangeTicks(
                     (int) Math.round(
-                        rotationParameters.minTicks * ticksPerDegree
-                        / rotationParameters.ticksPerDegree
+                        minRotationTicks * ticksPerDegree
+                        / ticksPerRotationDegree
                     ),
                     (int) Math.round(
-                        rotationParameters.maxTicks * ticksPerDegree
-                        / rotationParameters.ticksPerDegree
+                        maxRotationTicks * ticksPerDegree
+                        / ticksPerRotationDegree
                     )
                 );
             }
 
-            rotationParameters.ticksPerDegree = ticksPerDegree;
+            ticksPerRotationDegree = ticksPerDegree;
             return this;
         }
 
@@ -528,22 +230,22 @@ public class FoldingArm extends Arm {
         public Builder setRotationInitialAngle(double initialAngle) {
             // If the range was set using degrees, correct for the new
             // initial angle.
-            if (rotationParameters.degreesMode) {
+            if (rotationDegreesMode) {
                 setRotationRangeTicks(
                     (int) Math.round(
-                        rotationParameters.minTicks
-                        + (rotationParameters.initialAngle - initialAngle)
-                          * rotationParameters.ticksPerDegree
+                        minRotationTicks
+                        + (initialRotationAngle - initialAngle)
+                          * ticksPerRotationDegree
                     ),
                     (int) Math.round(
-                        rotationParameters.maxTicks
-                        + (rotationParameters.initialAngle - initialAngle)
-                          * rotationParameters.ticksPerDegree
+                        maxRotationTicks
+                        + (initialRotationAngle - initialAngle)
+                          * ticksPerRotationDegree
                     )
                 );
             }
 
-            rotationParameters.initialAngle = initialAngle;
+            initialRotationAngle = initialAngle;
             return this;
         }
 
@@ -557,7 +259,7 @@ public class FoldingArm extends Arm {
          * @return The {@link Builder} instance to allow for method chaining.
          */
         public Builder setRotationPower(double power) {
-            rotationParameters.maxPower = Math.min(Math.max(power, 0.0), 1.0);
+            maxRotationPower = Math.min(Math.max(power, 0.0), 1.0);
             return this;
         }
 
@@ -571,20 +273,19 @@ public class FoldingArm extends Arm {
          * @return This {@link Builder} so that the methods can be chained.
          */
         public Builder setFoldingRangeTicks(int minTicks, int maxTicks) {
-            foldingParameters.minTicks = minTicks;
-            foldingParameters.maxTicks = maxTicks;
+            minFoldingTicks = minTicks;
+            maxFoldingTicks = maxTicks;
 
-            foldingParameters.degreesMode = false;
+            foldingDegreesMode = false;
             return this;
         }
 
         /**
          * Set the minimum and maximum folding in degrees. Internally, it
-         * converts the degrees to ticks using the
-         * {@link FoldingParameters#initialAngle} and
-         * {@link FoldingParameters#ticksPerDegree} properties, so everytime
-         * those two properties are updated, the ticks will also be
-         * automatically updated.
+         * converts the degrees to ticks using the {@link #initialFoldingAngle}
+         * and {@link #ticksPerFoldingDegree} properties, so everytime those two
+         * properties are updated, the ticks will also be automatically
+         * updated.
          *
          * @param minDegrees The minimum range of the {@link #FOLDING_MOTOR} in
          *                   degrees.
@@ -596,15 +297,15 @@ public class FoldingArm extends Arm {
             double minDegrees,
             double maxDegrees
         ) {
-            foldingParameters.degreesMode = true;
+            foldingDegreesMode = true;
             return setFoldingRangeTicks(
                 (int) Math.round(
-                    (minDegrees - foldingParameters.initialAngle)
-                    * foldingParameters.ticksPerDegree
+                    (minDegrees - initialFoldingAngle)
+                    * ticksPerFoldingDegree
                 ),
                 (int) Math.round(
-                    (maxDegrees - foldingParameters.initialAngle)
-                    * foldingParameters.ticksPerDegree
+                    (maxDegrees - initialFoldingAngle)
+                    * ticksPerFoldingDegree
                 )
             );
         }
@@ -623,20 +324,16 @@ public class FoldingArm extends Arm {
         public Builder setFoldingTicksPerDegree(int ticksPerDegree) {
             // setFoldingRangeDegrees() relies on ticksPerDegree, so we also
             // need to correct the range.
-            if (foldingParameters.degreesMode) {
+            if (foldingDegreesMode) {
                 setFoldingRangeTicks(
-                    (int) Math.round(
-                        foldingParameters.minTicks * ticksPerDegree
-                        / foldingParameters.ticksPerDegree
-                    ),
-                    (int) Math.round(
-                        foldingParameters.maxTicks * ticksPerDegree
-                        / foldingParameters.ticksPerDegree
-                    )
+                    (int) Math.round(minFoldingTicks * ticksPerDegree
+                                     / ticksPerFoldingDegree),
+                    (int) Math.round(maxFoldingPower * ticksPerDegree
+                                     / ticksPerFoldingDegree)
                 );
             }
 
-            foldingParameters.ticksPerDegree = ticksPerDegree;
+            ticksPerFoldingDegree = ticksPerDegree;
             return this;
         }
 
@@ -656,22 +353,22 @@ public class FoldingArm extends Arm {
         public Builder setFoldingInitialAngle(double initialAngle) {
             // If the range was set using degrees, correct for the new
             // initial angle.
-            if (foldingParameters.degreesMode) {
+            if (foldingDegreesMode) {
                 setRotationRangeTicks(
                     (int) Math.round(
-                        foldingParameters.minTicks
-                        + (foldingParameters.initialAngle - initialAngle)
-                          * foldingParameters.ticksPerDegree
+                        minFoldingTicks
+                        + (initialFoldingAngle - initialAngle)
+                          * ticksPerFoldingDegree
                     ),
                     (int) Math.round(
-                        foldingParameters.maxTicks
-                        + (foldingParameters.initialAngle - initialAngle)
-                          * foldingParameters.ticksPerDegree
+                        maxFoldingPower
+                        + (initialFoldingAngle - initialAngle)
+                          * ticksPerFoldingDegree
                     )
                 );
             }
 
-            foldingParameters.initialAngle = initialAngle;
+            initialFoldingAngle = initialAngle;
             return this;
         }
 
@@ -685,8 +382,23 @@ public class FoldingArm extends Arm {
          * @return The {@link Builder} instance to allow for method chaining.
          */
         public Builder setFoldingPower(double power) {
-            foldingParameters.maxPower = Math.min(Math.max(power, 0.0), 1.0);
+            maxFoldingPower = Math.min(Math.max(power, 0.0), 1.0);
             return this;
+        }
+
+        @Override
+        public boolean isValid() {
+            return super.isValid()
+                   && rotationMotor != null
+                   && foldingMotor != null
+                   && minRotationTicks < maxRotationPower
+                   && ticksPerRotationDegree > 0.0
+                   && 0.0 < maxRotationTicks
+                   && maxRotationPower < 1.0
+                   && minFoldingTicks < maxFoldingPower
+                   && ticksPerFoldingDegree > 0.0
+                   && 0.0 < maxFoldingPower
+                   && maxFoldingPower < 1.0;
         }
 
         /**
@@ -694,19 +406,7 @@ public class FoldingArm extends Arm {
          */
         @Override
         public FoldingArm build() {
-            if (
-                !foldingArmMotors.isValid()
-                || !rotationParameters.isValid()
-                || !foldingParameters.isValid()
-            ) {
-                return null;
-            }
-
-            return new FoldingArm(
-                foldingArmMotors,
-                rotationParameters,
-                foldingParameters
-            );
+            return isValid() ? new FoldingArm(this) : null;
         }
     }
 
@@ -769,34 +469,27 @@ public class FoldingArm extends Arm {
     /**
      * Instantiate a foldable arm.
      *
-     * @param foldingArmMotors   The motors and motor types.
-     * @param rotationParameters The minimum rotation, maximum rotation, and
-     *                           ticks per degree.
-     * @param foldingParameters  The minimum folding, maximum folding, and ticks
-     *                           per degree.
      */
     protected FoldingArm(
-        FoldingArmMotors foldingArmMotors,
-        RotationParameters rotationParameters,
-        FoldingParameters foldingParameters
+        Builder builder
     ) {
-        super(foldingArmMotors.motors);
+        super(Set.of(builder.rotationMotor, builder.foldingMotor));
 
-        ROTATION_MOTOR = foldingArmMotors.rotationMotor;
-        MIN_ROTATION_TICKS = rotationParameters.minTicks;
-        MAX_ROTATION_TICKS = rotationParameters.maxTicks;
-        INITIAL_ROTATION_ANGLE = rotationParameters.initialAngle;
-        TICKS_PER_ROTATION_DEGREE = rotationParameters.ticksPerDegree;
-        MAX_ROTATION_POWER = rotationParameters.maxPower;
+        ROTATION_MOTOR = builder.rotationMotor;
+        MIN_ROTATION_TICKS = builder.minRotationTicks;
+        MAX_ROTATION_TICKS = builder.maxRotationTicks;
+        INITIAL_ROTATION_ANGLE = builder.initialRotationAngle;
+        TICKS_PER_ROTATION_DEGREE = builder.ticksPerRotationDegree;
+        MAX_ROTATION_POWER = builder.maxRotationPower;
 
-        FOLDING_MOTOR = foldingArmMotors.foldingMotor;
+        FOLDING_MOTOR = builder.foldingMotor;
         // TODO: You may need to change the direction.
         FOLDING_MOTOR.setDirection(DcMotorSimple.Direction.REVERSE);
-        MIN_FOLDING_TICKS = foldingParameters.minTicks;
-        MAX_FOLDING_TICKS = foldingParameters.maxTicks;
-        INITIAL_FOLDING_ANGLE = foldingParameters.initialAngle;
-        TICKS_PER_FOLDING_DEGREE = foldingParameters.ticksPerDegree;
-        MAX_FOLDING_POWER = foldingParameters.maxPower;
+        MIN_FOLDING_TICKS = builder.minFoldingTicks;
+        MAX_FOLDING_TICKS = builder.maxFoldingTicks;
+        INITIAL_FOLDING_ANGLE = builder.initialFoldingAngle;
+        TICKS_PER_FOLDING_DEGREE = builder.ticksPerFoldingDegree;
+        MAX_FOLDING_POWER = builder.maxFoldingPower;
 
         // Reset position to 0.
         for (DcMotor motor : motors) {

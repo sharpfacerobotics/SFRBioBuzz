@@ -3,9 +3,6 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * A system of four mecanum wheels, each controlled separately by their own
  * motor.
@@ -13,161 +10,8 @@ import java.util.Set;
  * Mecanum wheels are capable of moving in any direction, whether horizontally,
  * vertically, or diagonally.
  */
+@SuppressWarnings("unused")
 public class MecanumWheels extends Wheels {
-    /**
-     * Passed into the
-     * {@link MecanumWheels#MecanumWheels(MecanumWheelMotors, WheelDistances,
-     * double)} constructor. Contains all four motors.
-     */
-    protected static class MecanumWheelMotors implements BuilderParameters {
-        /**
-         * All the motors that are used by this {@link Wheels} system. Should
-         * never contain {@code null}.
-         */
-        protected Set<DcMotor> motors = new HashSet<>();
-
-        /**
-         * The {@link DcMotor}s powering the front left wheel.
-         */
-        protected DcMotor frontLeftMotor;
-        /**
-         * The {@link DcMotor}s powering the front right wheel.
-         */
-        protected DcMotor frontRightMotor;
-        /**
-         * The {@link DcMotor}s powering the back left wheel.
-         */
-        protected DcMotor backLeftMotor;
-        /**
-         * The {@link DcMotor}s powering the back right wheel.
-         */
-        protected DcMotor backRightMotor;
-
-        /**
-         * Instantiate a set of four {@link MecanumWheels}.
-         *
-         * @param frontLeftMotor  The motor that controls the front left wheel.
-         * @param frontRightMotor The motor that controls the front right
-         *                        wheel.
-         * @param backLeftMotor   The motor that controls the back left wheel.
-         * @param backRightMotor  The motor that controls the back right wheel.
-         */
-        protected MecanumWheelMotors(
-            DcMotor frontLeftMotor,
-            DcMotor frontRightMotor,
-            DcMotor backLeftMotor,
-            DcMotor backRightMotor
-        ) {
-            if (frontLeftMotor != null) {
-                motors.add(frontLeftMotor);
-            }
-            if (frontRightMotor != null) {
-                motors.add(frontRightMotor);
-            }
-            if (backLeftMotor != null) {
-                motors.add(backLeftMotor);
-            }
-            if (backRightMotor != null) {
-                motors.add(backRightMotor);
-            }
-
-            this.frontLeftMotor = frontLeftMotor;
-            this.frontRightMotor = frontRightMotor;
-            this.backLeftMotor = backLeftMotor;
-            this.backRightMotor = backRightMotor;
-        }
-
-        /**
-         * Instantiate an empty motor set. Mostly used for dummy purposes.
-         */
-        public MecanumWheelMotors() {
-            this(null, null, null, null);
-        }
-
-        /**
-         * Check whether any of the given motors ({@link #frontLeftMotor},
-         * {@link #frontRightMotor}, {@link #backLeftMotor}, or
-         * {@link #backRightMotor}) are {@code null}.
-         *
-         * @return {@code true} if none of the given motors
-         * ({@link #frontLeftMotor}, {@link #frontRightMotor},
-         * {@link #backLeftMotor}, or {@link #backRightMotor}) are
-         * {@code null}.
-         * <p>
-         * {@code false} otherwise.
-         */
-        @Override
-        public boolean isValid() {
-            return !(
-                frontLeftMotor == null
-                || frontRightMotor == null
-                || backLeftMotor == null
-                || backRightMotor == null
-            );
-        }
-
-        /**
-         * Set the value of {@link #frontLeftMotor} while also updating
-         * {@link #motors} to remove the old motor and include the new motor.
-         *
-         * @param frontLeftMotor The new motor to set as the front left motor.
-         */
-        protected void setFrontLeftMotor(DcMotor frontLeftMotor) {
-            motors.remove(this.frontLeftMotor);
-
-            this.frontLeftMotor = frontLeftMotor;
-            if (frontLeftMotor != null) {
-                motors.add(frontLeftMotor);
-            }
-        }
-
-        /**
-         * Set the value of {@link #frontRightMotor} while also updating
-         * {@link #motors} to remove the old motor and include the new motor.
-         *
-         * @param frontRightMotor The new motor to set as the front right
-         *                        motor.
-         */
-        protected void setFrontRightMotor(DcMotor frontRightMotor) {
-            motors.remove(this.frontRightMotor);
-
-            this.frontRightMotor = frontRightMotor;
-            if (frontRightMotor != null) {
-                motors.add(frontRightMotor);
-            }
-        }
-
-        /**
-         * Set the value of {@link #backLeftMotor} while also updating
-         * {@link #motors} to remove the old motor and include the new motor.
-         *
-         * @param backLeftMotor The new motor to set as the back left motor.
-         */
-        protected void setBackLeftMotor(DcMotor backLeftMotor) {
-            motors.remove(this.backLeftMotor);
-
-            this.backLeftMotor = backLeftMotor;
-            if (backLeftMotor != null) {
-                motors.add(backLeftMotor);
-            }
-        }
-
-        /**
-         * Set the value of {@link #backRightMotor} while also updating
-         * {@link #motors} to remove the old motor and include the new motor.
-         *
-         * @param backRightMotor The new motor to set as the back right motor.
-         */
-        protected void setBackRightMotor(DcMotor backRightMotor) {
-            motors.remove(this.backRightMotor);
-
-            this.backRightMotor = backRightMotor;
-            if (backRightMotor != null) {
-                motors.add(backRightMotor);
-            }
-        }
-    }
-
     /**
      * Builder to simplify the construction of {@link MecanumWheels} objects.
      * <p>
@@ -188,61 +32,80 @@ public class MecanumWheels extends Wheels {
      */
     public static class Builder extends Wheels.Builder {
         /**
-         * The current state of the {@link Builder}.
+         * The {@link DcMotor}s powering the front left wheel.
          */
-        protected final MecanumWheelMotors mecanumWheelMotors;
+        protected DcMotor frontLeftMotor;
+        /**
+         * The {@link DcMotor}s powering the front right wheel.
+         */
+        protected DcMotor frontRightMotor;
+        /**
+         * The {@link DcMotor}s powering the back left wheel.
+         */
+        protected DcMotor backLeftMotor;
+        /**
+         * The {@link DcMotor}s powering the back right wheel.
+         */
+        protected DcMotor backRightMotor;
 
         /**
-         * Instantiate a new {@link FoldingArm.Builder} with all
-         * {@link BuilderParameters} set to their default value.
+         * Instantiate a new {@link FoldingArm.Builder} with all parameters set
+         * to their default value.
          */
         public Builder() {
-            mecanumWheelMotors = new MecanumWheelMotors();
-            wheelDistances = new WheelDistances(-1.0, -1.0);
-            ticksPerInch = -1.0;
+            super();
+
+            frontLeftMotor = null;
+            frontRightMotor = null;
+            backLeftMotor = null;
+            backRightMotor = null;
         }
 
         /**
          * Set the motor that controls the front-left mecanum wheel.
+         *
          * @param frontLeftMotor The front-left mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
         @SuppressWarnings("UnusedReturnValue")
         public Builder setFrontLeftMotor(DcMotor frontLeftMotor) {
-            mecanumWheelMotors.setFrontLeftMotor(frontLeftMotor);
+            this.frontLeftMotor = frontLeftMotor;
             return this;
         }
 
         /**
          * Set the motor that controls the front-right mecanum wheel.
+         *
          * @param frontRightMotor The front-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
         @SuppressWarnings("UnusedReturnValue")
         public Builder setFrontRightMotor(DcMotor frontRightMotor) {
-            mecanumWheelMotors.setFrontRightMotor(frontRightMotor);
+            this.frontRightMotor = frontRightMotor;
             return this;
         }
 
         /**
          * Set the motor that controls the back-right mecanum wheel.
+         *
          * @param backLeftMotor The back-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
         @SuppressWarnings("UnusedReturnValue")
         public Builder setBackLeftMotor(DcMotor backLeftMotor) {
-            mecanumWheelMotors.setBackLeftMotor(backLeftMotor);
+            this.backLeftMotor = backLeftMotor;
             return this;
         }
 
         /**
          * Set the motor that controls the back-right mecanum wheel.
+         *
          * @param backRightMotor The back-right mecanum wheel.
          * @return This {@link Builder} so that setters can be chained.
          */
         @SuppressWarnings("UnusedReturnValue")
         public Builder setBackRightMotor(DcMotor backRightMotor) {
-            mecanumWheelMotors.setBackRightMotor(backRightMotor);
+            this.backRightMotor = backRightMotor;
             return this;
         }
 
@@ -250,8 +113,8 @@ public class MecanumWheels extends Wheels {
          * {@inheritDoc}
          */
         @Override
-        public Builder setLateralDistance(double lateralDistance) {
-            wheelDistances.lateralDistance = lateralDistance;
+        public Builder setLateralWheelDistance(double lateralWheelDistance) {
+            this.lateralWheelDistance = lateralWheelDistance;
             return this;
         }
 
@@ -259,8 +122,8 @@ public class MecanumWheels extends Wheels {
          * {@inheritDoc}
          */
         @Override
-        public Builder setLongitudinalDistance(double longitudinalDistance) {
-            wheelDistances.longitudinalDistance = longitudinalDistance;
+        public Builder setLongitudinalWheelDistance(double longitudinalWheelDistance) {
+            this.longitudinalWheelDistance = longitudinalWheelDistance;
             return this;
         }
 
@@ -273,10 +136,17 @@ public class MecanumWheels extends Wheels {
             return this;
         }
 
+        @Override
+        public boolean isValid() {
+            return super.isValid() && lateralWheelDistance > 0
+                   && longitudinalWheelDistance > 0
+                   && ticksPerInch > 0
+                   && maxMotorPower > 0;
+        }
+
         /**
-         * Using the given {@link MecanumWheelMotors}, {@link WheelDistances},
-         * and {@link #ticksPerInch}, construct a new instance of
-         * {@link MecanumWheels}.
+         * Using the given motors, wheel distances, and {@link #ticksPerInch},
+         * construct a new instance of {@link MecanumWheels}.
          *
          * @return A new instance of {@link MecanumWheels} if the values are
          * valid.
@@ -285,20 +155,7 @@ public class MecanumWheels extends Wheels {
          */
         @Override
         public MecanumWheels build() {
-            if (
-                !mecanumWheelMotors.isValid()
-                || !wheelDistances.isValid()
-                || ticksPerInch <= 0
-                || maxMotorPower <= 0
-            ) {
-                return null;
-            }
-
-            return new MecanumWheels(
-                mecanumWheelMotors,
-                wheelDistances,
-                ticksPerInch
-            );
+            return isValid() ? new MecanumWheels(this) : null;
         }
     }
 
@@ -323,23 +180,17 @@ public class MecanumWheels extends Wheels {
      * Instantiate a new {@link MecanumWheels} object with the motors,
      * distances, and ticks per inch all set.
      *
-     * @param mecanumWheelMotors THe motors used to drive the mecanum wheels.
-     * @param wheelDistances     The distances between the mecanum wheels for
-     *                           calculations involving distances and turning.
-     * @param ticksPerInch       The number of ticks per inch, assuming that
-     *                           each wheel is identical.
+     * @param builder The {@link Builder} that contains the necessary values.
      */
     protected MecanumWheels(
-        MecanumWheelMotors mecanumWheelMotors,
-        WheelDistances wheelDistances,
-        double ticksPerInch
+        Builder builder
     ) {
-        super(mecanumWheelMotors.motors, wheelDistances, ticksPerInch);
+        super(builder);
 
-        FRONT_LEFT_MOTOR = mecanumWheelMotors.frontLeftMotor;
-        FRONT_RIGHT_MOTOR = mecanumWheelMotors.frontRightMotor;
-        BACK_LEFT_MOTOR = mecanumWheelMotors.backLeftMotor;
-        BACK_RIGHT_MOTOR = mecanumWheelMotors.backRightMotor;
+        FRONT_LEFT_MOTOR = builder.frontLeftMotor;
+        FRONT_RIGHT_MOTOR = builder.frontRightMotor;
+        BACK_LEFT_MOTOR = builder.backLeftMotor;
+        BACK_RIGHT_MOTOR = builder.backRightMotor;
 
         // Reset position to 0.
         for (DcMotor motor : motors) {

@@ -5,9 +5,6 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @TeleOp(name = "DriverMode")
 public class DriverMode extends CustomLinearOp {
     /**
@@ -28,7 +25,7 @@ public class DriverMode extends CustomLinearOp {
     /**
      * The sensitivity of the robot's driving joystick.
      * TODO: Replace the driving sensitivity with an appropriate level of
-     * sensitivity.
+     *  sensitivity.
      */
     private static final double DRIVING_SENSITIVITY = 1.0;
     /**
@@ -39,7 +36,6 @@ public class DriverMode extends CustomLinearOp {
      * drift.
      */
     private static final double JOY_STICK_DEADBAND = 0.07;
-    private static final Logger log = LoggerFactory.getLogger(DriverMode.class);
 
     /**
      * Measured resting offsets for the driver controls. These values are
@@ -79,8 +75,8 @@ public class DriverMode extends CustomLinearOp {
 
     /**
      * Clamp {@code value} between {@code min} and {@code max}. Do the exact
-     * same thing as {@link Math#clamp(float, float, float)} because
-     * {@link Math#clamp(float, float, float)} is restricted to SDK 35, while
+     * same thing as {@code  Math.clamp(float, float, float)} because
+     * {@code  Math.code(float, float, float)} is restricted to SDK 35, while
      * FTC uses a minimum of SDK 24.
      *
      * @return {@code min} if {@code value} is less than {@code min}.

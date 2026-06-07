@@ -9,41 +9,126 @@ import java.util.Set;
  * Abstract class to represent all possible robot claws and their common
  * characteristics.
  */
+@SuppressWarnings("unused")
 public abstract class Claw {
     /**
-     * Stores the state of the {@link Builder} during instantiation.
+     * Builder for {@link Claw} to control the setting of {@link #ROLL_SERVO},
+     * {@link #PITCH_SERVO}, and {@link #YAW_SERVO}.
      */
-    protected static class ClawServos implements BuilderParameters {
+    public abstract static class Builder extends HardwareSystemBuilder {
         /**
          * The servo that controls the {@link Claw}'s roll (rotation about the
-         * front-to-back axis).
+         * front-to-back axis). Used to set {@link #ROLL_SERVO}.
          */
-        private Servo rollServo;
+        protected Servo rollServo;
         /**
          * The servo that controls the {@link Claw}'s pitch (rotation about the
-         * side-to-side axis).
+         * side-to-side axis). Used to set {@link #PITCH_SERVO}.
          */
-        private Servo pitchServo;
+        protected Servo pitchServo;
         /**
          * The servo that controls the {@link Claw}'s roll (rotation about the
-         * top-to-bottom axis).
+         * top-to-bottom axis). Used to set {@link #YAW_SERVO}.
          */
-        private Servo yawServo;
+        protected Servo yawServo;
 
         /**
-         * {@inheritDoc}
+         * The number of motor ticks that the {@link Servo}s move with every
+         * loop. Essentially serves as the "speed" or "power"　of the servo. Used
+         * to set {@link Claw#servoIncrement}.
+         */
+        protected double servoIncrement;
+
+        /**
+         * Instantiate a new {@link Claw} object with no {@link Servo}s.
+         */
+        public Builder() {
+            super();
+            rollServo = null;
+            pitchServo = null;
+            yawServo = null;
+        }
+
+        /**
+         * Set the {@link Servo} used to control roll (see
+         * {@link #ROLL_SERVO}).
+         *
+         * @param rollServo The servo used to control roll.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setRollServo(Servo rollServo) {
+            this.rollServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control pitch (see
+         * {@link #PITCH_SERVO}).
+         *
+         * @param pitchServo The servo used to control pitch.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setPitchServo(Servo pitchServo) {
+            this.pitchServo = pitchServo;
+            return this;
+        }
+
+        /**
+         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
+         *
+         * @param yawServo The servo used to control yaw.
+         * @return This {@link Builder} to allow for chaining setters.
+         */
+        public Builder setYawServo(Servo yawServo) {
+            this.yawServo = rollServo;
+            return this;
+        }
+
+        /**
+         * Set he number of ticks the {@link Servo}s move with every loop.
+         * Essentially serves as the "speed" or "power"　of the servo.
+         */
+        public Builder setServoIncrement(double servoIncrement) {
+            this.servoIncrement = servoIncrement;
+            return this;
+        }
+
+        /**
+         * Return whether the current attributes are valid, which is
+         * {@code true} if and only if {@link #servoIncrement} is positive.
+         * <p>
+         * {@code null} values for {@link #rollServo}, {@link #pitchServo},
+         * {@link #yawServo} are acceptable, indicating that the given axis is
+         * not used. However, because of this, all methods
+         * <em><strong>must</strong></em> check for {@code null} {@link Servo}
+         * values.
+         *
+         * @return Whether the current parameters (i.e., {@link #rollServo},
+         * {@link #pitchServo} {@link #yawServo}, {@link #servoIncrement}) are
+         * valid, which is {@code true} if and only if {@link #servoIncrement}
+         * is positive.
          */
         @Override
         public boolean isValid() {
-            return false;
+            return servoIncrement > 0;
         }
-    }
 
-    public abstract static class Builder implements HardwareSystemBuilder {
+        /**
+         * Instantiate a new {@link Claw} object based on the given parameters
+         * <p>
+         * If the given attributes are invalid as defined by {@link #isValid()},
+         * fail and return {@code null}.
+         *
+         * @return A new {@link Claw} object based the given parameters.
+         */
         @Override
         public abstract Claw build();
     }
 
+    /**
+     * A {@link Set} of all the {@link Servo}s that are in this claw.
+     */
+    private final Set<Servo> servos;
     /**
      * The servo that rotates the claw about the x-axis (roll).
      */
@@ -56,12 +141,9 @@ public abstract class Claw {
      * The servo that rotates the claw about the z-axis (yaw).
      */
     protected final Servo YAW_SERVO;
+
     /**
-     * A {@link Set} of all the {@link Servo}s that are in this claw.
-     */
-    private final Set<Servo> servos;
-    /**
-     * The number of motor ticks that the {@link Servo}s move with every loop.
+     * The number of ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.
      */
     private double servoIncrement;

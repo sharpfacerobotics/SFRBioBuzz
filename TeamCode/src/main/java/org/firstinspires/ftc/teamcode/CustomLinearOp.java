@@ -252,8 +252,8 @@ public class CustomLinearOp extends LinearOpMode {
             WHEELS = new MecanumWheels.Builder()
                 // TODO: Approximate distances between wheels. Adjust as
                 //  necessary if your robot's chassis dimensions differ.
-                .setLateralDistance(8.5)
-                .setLongitudinalDistance(14.5)
+                .setLateralWheelDistance(8.5)
+                .setLongitudinalWheelDistance(14.5)
                 .setTicksPerInch(ticksPerInch)
                 // TODO: Change as necessary in accordance with your type of
                 //  wheel system.
@@ -299,12 +299,12 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * TODO: Replace Arm() with a constructor of the desired Arm subclass
-         *  (e.g., FoldingArm).
+         * TODO: Replace Arm.Builder() with a constructor of the desired
+         *  builder subclass (e.g., FoldingArm.Builder()).
          *  You might want to look at the class and code from previous years
          *  for reference.
          */
-        ARM = new Arm();
+        ARM = new Arm.Builder().build();
     }
 
     /**
@@ -320,22 +320,12 @@ public class CustomLinearOp extends LinearOpMode {
         }
 
         /*
-         * TODO: Replace Claw() with a constructor of the desired Claw
-         *  subclass(e.g., SingleServoIntakeClaw)
+         * TODO: Replace Claw.Builder() with a constructor of the desired
+         *  builder subclass (e.g., SingleServoIntakeClaw.Builder())
          *  You might want to look at the class and code from previous years
          *  for reference.
          */
-        CLAW = new Claw(
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null,
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null,
-            // TODO: Replace with the appropriate servo object, e.g.,
-            //  hardwareMap.get(Servo.class, "exampleServo");
-            null
-        );
+        CLAW = new Claw.Builder().build();
     }
 
     /**

@@ -9,15 +9,15 @@
 - [`AllianceColor`](#alliancecolor)
 - [`TeamSide`](#teamside)
 - [`hardwareSystems/`](#hardwaresystems)
-  - [`MotorType`](#motortype)
-  - [`Wheels`](#wheels)
-  - [`MecanumWheels`](#mecanumwheels)
-  - [`Arm`](#arm)
-  - [`FoldingArm`](#foldingarm)
-  - [`Claw`](#claw)
-  - [`SingleServoIntakeClaw`](#singleservointakeclaw)
-  - [`DoubleServoIntakeClaw`](#doubleservointakeclaw)
-  - [`Webcam`](#webcam)
+    - [`MotorType`](#motortype)
+    - [`Wheels`](#wheels)
+    - [`MecanumWheels`](#mecanumwheels)
+    - [`Arm`](#arm)
+    - [`FoldingArm`](#foldingarm)
+    - [`Claw`](#claw)
+    - [`SingleServoIntakeClaw`](#singleservointakeclaw)
+    - [`DoubleServoIntakeClaw`](#doubleservointakeclaw)
+    - [`Webcam`](#webcam)
 
 ## [`CustomLinearOp`](CustomLinearOp.java)
 
@@ -29,7 +29,8 @@ replace the abstract class return type with the the desired class(e.g. `MecanumW
 
 ## [`AutoConfig`](AutoConfig.java)
 
-A TeleOp that writes information such as the robot's [`AllianceColor`](#alliancecolor) and [`TeamSide`](#teamside)
+A TeleOp that writes information such as the robot's [`AllianceColor`](#alliancecolor) and [
+`TeamSide`](#teamside)
 into a config file on the Control Hub before running autonomous.
 It also stores the filepath of the config file.
 
