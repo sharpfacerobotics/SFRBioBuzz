@@ -224,7 +224,6 @@ public class DoubleServoIntakeClaw extends Claw {
      *                                  {@link Builder#rightIntakeServo}) is
      *                                  {@code null}.
      */
-
     protected DoubleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
         super(builder.rollServo, builder.pitchServo, builder.yawServo);
 

@@ -48,7 +48,6 @@ public abstract class Claw {
             yawServo = null;
         }
 
-
         /**
          * Set the {@link Servo} used to control roll (see
          * {@link #ROLL_SERVO}).
@@ -126,6 +125,10 @@ public abstract class Claw {
     }
 
     /**
+     * A {@link Set} of all the {@link Servo}s that are in this claw.
+     */
+    private final Set<Servo> servos;
+    /**
      * The servo that rotates the claw about the x-axis (roll).
      */
     protected final Servo ROLL_SERVO;
@@ -137,10 +140,7 @@ public abstract class Claw {
      * The servo that rotates the claw about the z-axis (yaw).
      */
     protected final Servo YAW_SERVO;
-    /**
-     * A {@link Set} of all the {@link Servo}s that are in this claw.
-     */
-    private final Set<Servo> servos;
+
     /**
      * The number of ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.

@@ -23,11 +23,6 @@ public class SingleServoIntakeClaw extends Claw {
          * {@link #INTAKE_SERVO}.
          */
         protected CRServo intakeServo;
-        /**
-         * The sensor that detects whether an object has been taken in. Used to
-         * set {@link #INTAKE_SENSOR}.
-         */
-        protected DigitalChannel intakeSensor;
 
         /**
          * The power used by the {@link #intakeServo} to take in objects. Used
@@ -41,6 +36,12 @@ public class SingleServoIntakeClaw extends Claw {
         protected double ejectPower;
 
         /**
+         * The sensor that detects whether an object has been taken in. Used to
+         * set {@link #INTAKE_SENSOR}.
+         */
+        protected DigitalChannel intakeSensor;
+
+        /**
          * Instantiate a {@link SingleServoIntakeClaw} with no movement servos,
          * intake CR servo, or touch sensor; intake power set to 0.5; and eject
          * power set to -1.0.
@@ -52,6 +53,45 @@ public class SingleServoIntakeClaw extends Claw {
 
             intakePower = 0.5;
             ejectPower = -1.0;
+        }
+
+
+        /**
+         * Set the {@link Servo} used to control roll (see
+         * {@link #ROLL_SERVO}).
+         *
+         * @param rollServo The servo used to control roll.
+         * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
+         * chaining setters.
+         */
+        @Override
+        public Builder setRollServo(Servo rollServo) {
+            return (Builder) super.setRollServo(rollServo);
+        }
+
+        /**
+         * Set the {@link Servo} used to control pitch (see
+         * {@link #PITCH_SERVO}).
+         *
+         * @param pitchServo The servo used to control pitch.
+         * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
+         * chaining setters.
+         */
+        @Override
+        public Builder setPitchServo(Servo pitchServo) {
+            return (Builder) super.setPitchServo(pitchServo);
+        }
+
+        /**
+         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
+         *
+         * @param yawServo The servo used to control yaw.
+         * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
+         * chaining setters.
+         */
+        @Override
+        public Builder setYawServo(Servo yawServo) {
+            return (Builder) super.setYawServo(yawServo);
         }
 
         /**
@@ -142,10 +182,6 @@ public class SingleServoIntakeClaw extends Claw {
      */
     private final CRServo INTAKE_SERVO;
     /**
-     * The touch sensor that detects whether there is an object in the intake.
-     */
-    private final DigitalChannel INTAKE_SENSOR;
-    /**
      * How much power the {@link #INTAKE_SERVO} spins with when taking in
      * objects.
      */
@@ -154,6 +190,11 @@ public class SingleServoIntakeClaw extends Claw {
      * How much power the intake spins with when ejecting objects.
      */
     private final double EJECT_POWER;
+
+    /**
+     * The touch sensor that detects whether there is an object in the intake.
+     */
+    private final DigitalChannel INTAKE_SENSOR;
 
     /**
      * Instantiate a new {@link SingleServoIntakeClaw} object based on the
