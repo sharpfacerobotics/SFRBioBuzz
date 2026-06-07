@@ -128,10 +128,6 @@ public abstract class Claw {
     }
 
     /**
-     * A {@link Set} of all the {@link Servo}s that are in this claw.
-     */
-    private final Set<Servo> servos;
-    /**
      * The servo that rotates the claw about the x-axis (roll).
      */
     protected final Servo ROLL_SERVO;
@@ -143,7 +139,10 @@ public abstract class Claw {
      * The servo that rotates the claw about the z-axis (yaw).
      */
     protected final Servo YAW_SERVO;
-
+    /**
+     * A {@link Set} of all the {@link Servo}s that are in this claw.
+     */
+    private final Set<Servo> servos;
     /**
      * The number of ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.
@@ -151,47 +150,35 @@ public abstract class Claw {
     private double servoIncrement;
 
     /**
-     * Instantiate a new {@link Claw} with three servos.
+     * Instantiate a new {@link Claw} with up to three servos and a given servo
+     * increment value.
      *
-     * @param rollServo      The servo that controls the claw's roll.
-     * @param pitchServo     The servo that controls the claw's pitch.
-     * @param yawServo       The servo that controls the claw's yaw.
-     * @param servoIncrement The increment that the servos use per robot loop.
+     * @param builder The {@link Builder} object that contains the values to use
+     *                in instantiation. May be invalid.
+     * @throws IllegalArgumentException If the {@code builder} is invalid.
      */
-    public Claw(
-        Servo rollServo,
-        Servo pitchServo,
-        Servo yawServo,
-        double servoIncrement
-    ) {
+    public Claw(Builder builder) {
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException("The given Claw builder is " + "invalid");
+        }
+
         servos = new HashSet<>();
-        if (rollServo != null) {
-            servos.add(rollServo);
+
+        if (builder.rollServo != null) {
+            servos.add(builder.rollServo);
         }
-        if (pitchServo != null) {
-            servos.add(pitchServo);
+        if (builder.pitchServo != null) {
+            servos.add(builder.pitchServo);
         }
-        if (yawServo != null) {
-            servos.add(yawServo);
+        if (builder.yawServo != null) {
+            servos.add(builder.yawServo);
         }
 
-        ROLL_SERVO = rollServo;
-        PITCH_SERVO = pitchServo;
-        YAW_SERVO = yawServo;
+        ROLL_SERVO = builder.rollServo;
+        PITCH_SERVO = builder.pitchServo;
+        YAW_SERVO = builder.yawServo;
 
-        this.servoIncrement = servoIncrement;
-    }
-
-    /**
-     * Overload {@link Claw#Claw(Servo, Servo, Servo, double)} with
-     * {@link #servoIncrement} defaulting to 0.1.
-     *
-     * @param rollServo  The servo that controls the claw's roll.
-     * @param pitchServo The servo that controls the claw's pitch.
-     * @param yawServo   The servo that controls the claw's yaw.
-     */
-    public Claw(Servo rollServo, Servo pitchServo, Servo yawServo) {
-        this(rollServo, pitchServo, yawServo, 0.1);
+        servoIncrement = builder.servoIncrement;
     }
 
     /**
@@ -237,8 +224,7 @@ public abstract class Claw {
      */
     public void rotateRollServo(double direction) {
         if (ROLL_SERVO != null) {
-            double targetPosition = ROLL_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
+            double targetPosition = ROLL_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
             ROLL_SERVO.setPosition(targetPosition);
         }
     }
@@ -265,8 +251,7 @@ public abstract class Claw {
      */
     public void rotatePitchAxisServo(double direction) {
         if (PITCH_SERVO != null) {
-            double targetPosition = PITCH_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
+            double targetPosition = PITCH_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
             PITCH_SERVO.setPosition(targetPosition);
         }
     }
@@ -293,8 +278,7 @@ public abstract class Claw {
      */
     public void rotateYawServo(double direction) {
         if (YAW_SERVO != null) {
-            double targetPosition = YAW_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
+            double targetPosition = YAW_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
             YAW_SERVO.setPosition(targetPosition);
         }
     }
