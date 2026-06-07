@@ -79,8 +79,8 @@ public class DriverMode extends CustomLinearOp {
 
     /**
      * Clamp {@code value} between {@code min} and {@code max}. Do the exact
-     * same thing as {@link Math#clamp(float, float, float)} because
-     * {@link Math#clamp(float, float, float)} is restricted to SDK 35, while
+     * same thing as {@code  Math.clamp(float, float, float)} because
+     * {@code  Math.code(float, float, float)} is restricted to SDK 35, while
      * FTC uses a minimum of SDK 24.
      *
      * @return {@code min} if {@code value} is less than {@code min}.

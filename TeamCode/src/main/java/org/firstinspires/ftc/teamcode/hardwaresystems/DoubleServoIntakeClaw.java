@@ -96,6 +96,14 @@ public class DoubleServoIntakeClaw extends Claw {
         }
 
         /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Builder setServoIncrement(double servoIncrement) {
+            return (Builder) super.setServoIncrement(servoIncrement);
+        }
+
+        /**
          * Return whether the current attributes are valid, which is
          * {@code true} if and only if {@link #servoIncrement} is positive, both
          * powers are positive, and both intake servos are non-{@code null}.
@@ -192,14 +200,6 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     /**
-     * How much power the intake spins with when taking in objects.
-     */
-    private final double INTAKE_POWER;
-    /**
-     * How much power the intake spins with when ejecting objects.
-     */
-    private final double EJECT_POWER;
-    /**
      * The left servo that spins the intake.
      */
     private final CRServo LEFT_INTAKE_SERVO;
@@ -207,6 +207,16 @@ public class DoubleServoIntakeClaw extends Claw {
      * The right servo that spins the intake.
      */
     private final CRServo RIGHT_INTAKE_SERVO;
+
+    /**
+     * How much power the intake spins with when taking in objects.
+     */
+    private final double INTAKE_POWER;
+    /**
+     * How much power the intake spins with when ejecting objects.
+     */
+    private final double EJECT_POWER;
+
     /**
      * The touch sensor that detects whether there is an object in the intake.
      */

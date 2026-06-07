@@ -95,6 +95,14 @@ public class SingleServoIntakeClaw extends Claw {
         }
 
         /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Builder setServoIncrement(double servoIncrement) {
+            return (Builder) super.setServoIncrement(servoIncrement);
+        }
+
+        /**
          * Return whether the current attributes are valid, which is
          * {@code true} if and only if {@link #servoIncrement} is positive, both
          * powers are positive, and the intake servo is non-{@code null}.

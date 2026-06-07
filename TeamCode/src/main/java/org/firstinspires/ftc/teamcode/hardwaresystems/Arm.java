@@ -23,7 +23,14 @@ public abstract class Arm {
         }
 
         /**
-         * {@inheritDoc}
+         * Trivially return {@code true} because {@link Arm} has no fields to
+         * check.
+         * <p>
+         * For subclasses, they should check that their field values make
+         * logical sense (e.g., power should be positive, motors should be
+         * non-null, etc.).
+         *
+         * @return {@code true} because {@link Arm} has no fields to check.
          */
         @Override
         public boolean isValid() {
@@ -31,16 +38,16 @@ public abstract class Arm {
         }
 
         /**
-         * Instantiate an {@link Arm} object using the given parameters. If the
-         * parameters are not valid (as defined by {@link #isValid()}), fail and
+         * Instantiate an {@link Arm} object using the given fields. If the
+         * fields are not valid (as defined by {@link #isValid()}), fail and
          * return {@code null}.
          *
-         * @return If the parameters are valid (as defined by
-         * {@link #isValid()}), a new {@link Arm} instance based on the values
-         * set in instances of parameters.
+         * @return If the fields are valid (as defined by {@link #isValid()}), a
+         * new {@link Arm} instance based on the values set in instances of
+         * fields.
          * <p>
-         * If the parameters are invalid (as defined by {@link #isValid()}),
-         * fail and return {@code null}.
+         * If the fields are invalid (as defined by {@link #isValid()}), fail
+         * and return {@code null}.
          */
         @Override
         public abstract Arm build();

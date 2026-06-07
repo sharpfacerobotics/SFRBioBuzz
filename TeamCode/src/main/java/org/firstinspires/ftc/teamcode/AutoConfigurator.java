@@ -74,6 +74,7 @@ public class AutoConfigurator extends OpMode {
         Environment.getExternalStorageDirectory()
                    .getAbsolutePath()
         + "/ftc/";
+
     /**
      * Name of the config file, which is inside the directory specified by
      * {@link #DIRECTORY}.
@@ -110,7 +111,7 @@ public class AutoConfigurator extends OpMode {
             String fileString = String.join(
                 "\n",
                 buffer.lines().collect(Collectors.joining())
-            ).strip();
+            ).trim();
 
             // If the file is invalid, treat it as invalid.
             if (fileString.isEmpty()) {
