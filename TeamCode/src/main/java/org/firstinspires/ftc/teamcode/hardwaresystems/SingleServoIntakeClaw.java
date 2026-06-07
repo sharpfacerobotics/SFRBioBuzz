@@ -216,7 +216,7 @@ public class SingleServoIntakeClaw extends Claw {
      *                                  {@code null}.
      */
     protected SingleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
-        super(builder.rollServo, builder.pitchServo, builder.yawServo);
+        super(builder);
 
         if (builder.intakeServo == null) {
             throw new IllegalArgumentException("Intake servo cannot be null.");

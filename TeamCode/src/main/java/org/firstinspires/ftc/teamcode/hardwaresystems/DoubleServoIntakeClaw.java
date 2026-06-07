@@ -122,10 +122,10 @@ public class DoubleServoIntakeClaw extends Claw {
         @Override
         public boolean isValid() {
             return super.isValid()
-                   && leftIntakeServo != null
-                   && rightIntakeServo != null
-                   && intakePower > 0
-                   && ejectPower > 0;
+                    && leftIntakeServo != null
+                    && rightIntakeServo != null
+                    && intakePower > 0
+                    && ejectPower > 0;
         }
 
         /**
@@ -236,10 +236,10 @@ public class DoubleServoIntakeClaw extends Claw {
      *                                  {@code null}.
      */
     protected DoubleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
-        super(builder.rollServo, builder.pitchServo, builder.yawServo);
+        super(builder);
 
         if (builder.leftIntakeServo == null
-            || builder.rightIntakeServo == null) {
+                || builder.rightIntakeServo == null) {
             throw new IllegalArgumentException("Intake servos cannot be null.");
         }
 
@@ -279,8 +279,8 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Set.of(
-            LEFT_INTAKE_SERVO,
-            RIGHT_INTAKE_SERVO
+                LEFT_INTAKE_SERVO,
+                RIGHT_INTAKE_SERVO
         ));
     }
 
@@ -330,9 +330,9 @@ public class DoubleServoIntakeClaw extends Claw {
      */
     public boolean isIntakeActive() {
         return LEFT_INTAKE_SERVO != null
-               && LEFT_INTAKE_SERVO.getPower() != 0
-               && RIGHT_INTAKE_SERVO != null
-               && RIGHT_INTAKE_SERVO.getPower() != 0;
+                && LEFT_INTAKE_SERVO.getPower() != 0
+                && RIGHT_INTAKE_SERVO != null
+                && RIGHT_INTAKE_SERVO.getPower() != 0;
     }
 
     /**
