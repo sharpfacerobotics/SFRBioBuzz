@@ -16,6 +16,10 @@ public abstract class Wheels {
      */
     public static abstract class Builder extends HardwareSystemBuilder {
         /**
+         * The motors used by
+         */
+
+        /**
          * The distance between the left and right wheels, measured in inches
          * from their centers.
          */
@@ -135,9 +139,9 @@ public abstract class Wheels {
     }
 
     /**
-     * A {@link Set} of all the motors included by the wheel system.
+     * A {@link Set} of all the motors included by this wheel system.
      */
-    protected final Set<DcMotor> motors;
+    protected final Set<DcMotor> MOTORS;
     /**
      * A multiplier for how much power the wheels run with. The value should be
      * between 0.0 (exclusive) and 1.0 (inclusive).
@@ -160,10 +164,14 @@ public abstract class Wheels {
     protected final double TICKS_PER_INCH;
 
     protected Wheels(Builder builder) {
-        this.motors = builder.build().getMotors();
-        // Allow wheels to roll freely.
-        for (DcMotor motor : this.motors) {
+        MOTORS = builder.build().getMotors();
+        for (DcMotor motor : MOTORS) {
+            // Allow wheels to roll freely.
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+            // Reset position to 0.
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
         LATERAL_DISTANCE = builder.lateralWheelDistance;
@@ -190,7 +198,7 @@ public abstract class Wheels {
      * this wheel system.
      */
     public Set<DcMotor> getMotors() {
-        return motors;
+        return MOTORS;
     }
 
     /**

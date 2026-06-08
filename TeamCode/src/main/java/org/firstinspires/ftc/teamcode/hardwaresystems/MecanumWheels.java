@@ -182,21 +182,13 @@ public class MecanumWheels extends Wheels {
      *
      * @param builder The {@link Builder} that contains the necessary values.
      */
-    protected MecanumWheels(
-        Builder builder
-    ) {
+    protected MecanumWheels(Builder builder) {
         super(builder);
 
         FRONT_LEFT_MOTOR = builder.frontLeftMotor;
         FRONT_RIGHT_MOTOR = builder.frontRightMotor;
         BACK_LEFT_MOTOR = builder.backLeftMotor;
         BACK_RIGHT_MOTOR = builder.backRightMotor;
-
-        // Reset position to 0.
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
 
         /*
          * Set the directions of the motors.
@@ -252,7 +244,7 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void drive(double xPower, double yPower, double thetaPower) {
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
@@ -363,7 +355,7 @@ public class MecanumWheels extends Wheels {
         BACK_LEFT_MOTOR.setTargetPosition(backLeftTickPosition);
         BACK_RIGHT_MOTOR.setTargetPosition(backRightTickPosition);
 
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
@@ -405,7 +397,7 @@ public class MecanumWheels extends Wheels {
         );
         BACK_RIGHT_MOTOR.setPower(MAX_MOTOR_POWER);
 
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }

@@ -470,9 +470,7 @@ public class FoldingArm extends Arm {
      * Instantiate a foldable arm.
      *
      */
-    protected FoldingArm(
-        Builder builder
-    ) {
+    protected FoldingArm(Builder builder) {
         super(Set.of(builder.rotationMotor, builder.foldingMotor));
 
         ROTATION_MOTOR = builder.rotationMotor;
@@ -492,7 +490,7 @@ public class FoldingArm extends Arm {
         MAX_FOLDING_POWER = builder.maxFoldingPower;
 
         // Reset position to 0.
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
