@@ -156,15 +156,6 @@ public class MecanumWheels extends Wheels {
          */
         @Override
         public MecanumWheels build() {
-            // The super constructor is incapable of seeing these motors, so
-            // we need to add them ourselves. The set is only populated at
-            // the end so that we do not have to update the set if we ever
-            // change the motors during instantiation.
-            motors.add(frontLeftMotor);
-            motors.add(frontRightMotor);
-            motors.add(backLeftMotor);
-            motors.add(backRightMotor);
-
             return isValid() ? new MecanumWheels(this) : null;
         }
     }

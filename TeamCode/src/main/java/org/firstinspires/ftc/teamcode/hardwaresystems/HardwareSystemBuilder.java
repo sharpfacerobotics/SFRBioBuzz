@@ -2,13 +2,12 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 /**
  * Builder for complex hardware systems. The states of the builder should be
- * stored in classes that implement parameters. Ideally, multiple
- * parameters should be used to group together related
- * attributes/settings.
+ * stored in classes that implement parameters. Ideally, multiple parameters
+ * should be used to group together related attributes/settings.
  * <p>
  * The builder should have setter methods for each attribute in each of the
- * parameters subclasses, and each of the setters should return
- * {@code this} so that they can be chained, e.g,
+ * parameters subclasses, and each of the setters should return {@code this} so
+ * that they can be chained, e.g,
  * <pre>
  * {@code
  * Example example = new Builder().setA()
@@ -48,8 +47,8 @@ public abstract class HardwareSystemBuilder {
      * classes in {@code hardwaresystems}), rather than a general
      * {@link Object}.
      * <p>
-     * If the parameters are invalid (as defined by
-     * {@link #isValid()}), fail and return {@code null}.
+     * If the parameters are invalid (as defined by {@link #isValid()}), fail
+     * and return {@code null}.
      */
     public abstract Object build();
 }
