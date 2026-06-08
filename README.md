@@ -155,12 +155,12 @@ which may be blocked by school Wi-Fi.
 6. Connect to the robot Wi-Fi.
 7. Open [FTC Dashboard](http://192.168.43.1:8080/dash).
 8. Now begin the tuning process.
-
-   > [!Important]
-   > The params on the Dashboard ***ARE NOT SAVED***.
-   > To save them,
-   > go to [MecanumDrive](./TeamCode/src/main/java/org/firstinspires/ftc/teamcode/MecanumDrive.java)
-   > and edit the appropriate variables.
+     
+> [!IMPORTANT]
+> The parameters on the Dashboard ***ARE NOT SAVED***.
+> To save them,
+> go to [MecanumDrive](./TeamCode/src/main/java/org/firstinspires/ftc/teamcode/MecanumDrive.java)
+> and edit the appropriate variables.
 
 9. Use `ForwardPushTest` to determine `inPerTick`. The program should print the current number of 
    ticks. Push the robot forward by a certain number of inches. Set 
