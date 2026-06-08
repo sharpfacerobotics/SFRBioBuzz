@@ -106,27 +106,24 @@ public class DoubleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Return whether the current attributes are valid, which is
-         * {@code true} if and only if {@link #servoIncrement} is positive, both
-         * powers are positive, and both intake servos are non-{@code null}.
+         * {@return whether the current attributes are valid, which is {@code
+         * true} if and only if {@link #servoIncrement} is positive, both powers
+         * are between 0.0 and 1.0 (inclusive), and both intake servos are
+         * non-{@code null}}
          * <p>
          * {@code null} values for {@link #rollServo}, {@link #pitchServo},
          * {@link #yawServo}, {@link #intakeSensor} are acceptable, indicating
          * that they are not needed. However, because of this, all methods
          * <em><strong>must</strong></em> check for {@code null} {@link Servo}
          * or {@link DigitalChannel} values.
-         *
-         * @return Whether the current attributes are valid, which is
-         * {@code true} if and only if {@link #servoIncrement} is positive, both
-         * powers are positive, and both intake servos are non-{@code null}.
          */
         @Override
         public boolean isValid() {
             return super.isValid()
                    && leftIntakeServo != null
                    && rightIntakeServo != null
-                   && intakePower > 0
-                   && ejectPower > 0;
+                   && 0.0 < intakePower && intakePower <= 1.0
+                   && 0.0 < ejectPower && ejectPower <= 1.0;
         }
 
         /**
