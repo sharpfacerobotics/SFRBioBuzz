@@ -138,10 +138,11 @@ public class MecanumWheels extends Wheels {
 
         @Override
         public boolean isValid() {
-            return super.isValid() && lateralWheelDistance > 0
-                   && longitudinalWheelDistance > 0
-                   && ticksPerInch > 0
-                   && maxMotorPower > 0;
+            return super.isValid()
+                   && frontLeftMotor != null
+                   && frontRightMotor != null
+                   && backLeftMotor != null
+                   && backRightMotor != null;
         }
 
         /**
@@ -155,6 +156,15 @@ public class MecanumWheels extends Wheels {
          */
         @Override
         public MecanumWheels build() {
+            // The super constructor is incapable of seeing these motors, so
+            // we need to add them ourselves. The set is only populated at
+            // the end so that we do not have to update the set if we ever
+            // change the motors during instantiation.
+            motors.add(frontLeftMotor);
+            motors.add(frontRightMotor);
+            motors.add(backLeftMotor);
+            motors.add(backRightMotor);
+
             return isValid() ? new MecanumWheels(this) : null;
         }
     }
@@ -181,9 +191,16 @@ public class MecanumWheels extends Wheels {
      * distances, and ticks per inch all set.
      *
      * @param builder The {@link Builder} that contains the necessary values.
+     * @throws IllegalArgumentException If {@code builder} is not valid as
+     *                                  defined by {@link Builder#isValid()}.
      */
-    protected MecanumWheels(Builder builder) {
+    protected MecanumWheels(Builder builder) throws IllegalArgumentException {
         super(builder);
+
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException(
+                "MecanumWheels builder is invalid");
+        }
 
         FRONT_LEFT_MOTOR = builder.frontLeftMotor;
         FRONT_RIGHT_MOTOR = builder.frontRightMotor;

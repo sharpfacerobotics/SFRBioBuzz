@@ -239,9 +239,9 @@ public class DoubleServoIntakeClaw extends Claw {
     protected DoubleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
         super(builder);
 
-        if (builder.leftIntakeServo == null
-            || builder.rightIntakeServo == null) {
-            throw new IllegalArgumentException("Intake servos cannot be null.");
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException(
+                "DoubleServoIntakeClaw builder is invalid.");
         }
 
         LEFT_INTAKE_SERVO = builder.leftIntakeServo;

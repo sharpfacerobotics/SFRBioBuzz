@@ -157,12 +157,13 @@ public abstract class Claw {
      *
      * @param builder The {@link Builder} object that contains the values to use
      *                in instantiation. May be invalid.
-     * @throws IllegalArgumentException If the {@code builder} is invalid.
+     * @throws IllegalArgumentException If the {@link Builder} object is invalid
+     *                                  as defined by
+     *                                  {@link Builder#isValid()}.
      */
     protected Claw(Builder builder) {
         if (!builder.isValid()) {
-            throw new IllegalArgumentException("The given Claw builder is "
-                                               + "invalid");
+            throw new IllegalArgumentException("Claw builder is invalid.");
         }
 
         SERVOS = new HashSet<>();

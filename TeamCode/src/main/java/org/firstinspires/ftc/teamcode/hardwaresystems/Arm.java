@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -63,13 +64,18 @@ public abstract class Arm {
     /**
      * Instantiate a new {@link Arm} with a {@link Set} of {@link DcMotor}s.
      *
-     * @param motors The {@link DcMotor}s contained within this {@link Arm}.
+     * @param motors The {@link DcMotor}s contained within this {@link Arm}. May
+     *               be empty.
+     *               <p>
+     *               A {@code null} value is treated the same as an empty
+     *               {@link HashSet}.
      */
     public Arm(Set<DcMotor> motors) {
-        this.MOTORS = motors;
+        MOTORS = motors == null ? new HashSet<>() : motors;
+
         // The arm motors will attempt to resist external forces　(e.g.,
         // gravity).
-        for (DcMotor motor : this.MOTORS) {
+        for (DcMotor motor : MOTORS) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }

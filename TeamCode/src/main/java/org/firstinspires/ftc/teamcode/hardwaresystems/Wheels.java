@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardwaresystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -16,8 +17,14 @@ public abstract class Wheels {
      */
     public static abstract class Builder extends HardwareSystemBuilder {
         /**
-         * The motors used by
+         * A {@link Set} of all the motors included by this wheel system.
+         * <p>
+         * It is certainly possible for {@link #MOTORS} to be instantiated in
+         * the constructors of subclasses, but keeping a {@link Set} of
+         * {@link DcMotor}s in the {@link Builder} helps keep instantiating
+         * {@link #MOTORS} within {@link Wheels}.
          */
+        protected final Set<DcMotor> motors;
 
         /**
          * The distance between the left and right wheels, measured in inches
@@ -48,6 +55,8 @@ public abstract class Wheels {
          */
         public Builder() {
             super();
+
+            motors = new HashSet<>();
 
             lateralWheelDistance = -1.0;
             longitudinalWheelDistance = -1.0;
@@ -120,17 +129,23 @@ public abstract class Wheels {
             return lateralWheelDistance > 0.0
                    && longitudinalWheelDistance > 0.0
                    && ticksPerInch > 0.0
-                   && 0.0 < maxMotorPower && maxMotorPower < 1.0;
+                   && maxMotorPower > 0.0
+                   && maxMotorPower < 1.0;
         }
 
         /**
          * Construct a new instance of {@link Wheels}, using the given wheel
          * distances and {@link #ticksPerInch}.
+         * <p>
+         * Subclasses should populate {@link #motors} with the motors in their
+         * overridden implementation of this method before instantiating a new
+         * object. It prevents the need to update the {@link #motors} set if the
+         * user for some reason sets the same motor multiple times.
          *
          * @return If the state of the {@link Builder} is valid, return a
-         * <em>subclass</em> of {@link Wheels}. Any class that extends
-         * {@link Builder} should replace the return type with a more specific
-         * one (i.e., the corresponding subclass of {@link Wheels}).
+         * <em>subclass</em> of {@link Wheels}. Subclasses should replace the
+         * {@link Wheels} return type with a more specific one (i.e., the
+         * corresponding subclass of {@link Wheels}).
          * <p>
          * See {@link MecanumWheels.Builder#build()} for an example.
          */
@@ -139,7 +154,8 @@ public abstract class Wheels {
     }
 
     /**
-     * A {@link Set} of all the motors included by this wheel system.
+     * A {@link Set} of all the motors included by this wheel system. Motors
+     * should be added in subclass constructors.
      */
     protected final Set<DcMotor> MOTORS;
     /**
@@ -163,8 +179,22 @@ public abstract class Wheels {
      */
     protected final double TICKS_PER_INCH;
 
-    protected Wheels(Builder builder) {
-        MOTORS = builder.build().getMotors();
+    /**
+     * Instantiate a set of wheels given the motors, lateral and longitudinal
+     * distances, ticks per inch, and maximum motor power.
+     *
+     * @param builder The builder that specifies the parameters of the
+     *                {@link Wheels} system.
+     * @throws IllegalArgumentException If the builder is invalid as defined by
+     *                                  {@link Builder#isValid()}.
+     */
+    protected Wheels(Builder builder) throws IllegalArgumentException {
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException("Wheels builder is invalid.");
+        }
+
+        MOTORS = builder.motors;
+
         for (DcMotor motor : MOTORS) {
             // Allow wheels to roll freely.
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
