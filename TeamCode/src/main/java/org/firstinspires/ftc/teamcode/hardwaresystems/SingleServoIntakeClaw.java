@@ -56,10 +56,9 @@ public class SingleServoIntakeClaw extends Claw {
             ejectPower = -1.0;
         }
 
-
         /**
          * Set the {@link Servo} used to control roll (see
-         * {@link #ROLL_SERVO}).
+         * {@link Claw.Builder#setRollServo(Servo)}).
          *
          * @param rollServo The servo used to control roll.
          * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
@@ -72,7 +71,7 @@ public class SingleServoIntakeClaw extends Claw {
 
         /**
          * Set the {@link Servo} used to control pitch (see
-         * {@link #PITCH_SERVO}).
+         * {@link Claw.Builder#setPitchServo(Servo)}).
          *
          * @param pitchServo The servo used to control pitch.
          * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
@@ -84,7 +83,8 @@ public class SingleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Set the {@link Servo} used to control yaw (see {@link #YAW_SERVO}).
+         * Set the {@link Servo} used to control yaw (see
+         * {@link Claw.Builder#setYawServo(Servo)}).
          *
          * @param yawServo The servo used to control yaw.
          * @return This {@link DoubleServoIntakeClaw.Builder} to allow for
@@ -148,7 +148,7 @@ public class SingleServoIntakeClaw extends Claw {
 
         /**
          * Set the touch sensor used to detect whether an object has entered the
-         * claw (see {@link #ROLL_SERVO}).
+         * claw (see {@link #intakeSensor}).
          *
          * @param intakeSensor The touch sensor used to detect whether an object
          *                     has entered the claw.
