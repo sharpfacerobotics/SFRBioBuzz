@@ -157,7 +157,7 @@ which may be blocked by school Wi-Fi.
 8. Now begin the tuning process.
      
 > [!IMPORTANT]
-> The params on the Dashboard ***ARE NOT SAVED***.
+> The parameters on the Dashboard ***ARE NOT SAVED***.
 > To save them,
 > go to [MecanumDrive](./TeamCode/src/main/java/org/firstinspires/ftc/teamcode/MecanumDrive.java)
 > and edit the appropriate variables.
