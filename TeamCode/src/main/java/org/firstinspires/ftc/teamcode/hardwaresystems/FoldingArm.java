@@ -467,13 +467,19 @@ public class FoldingArm extends Arm {
     private final double MAX_FOLDING_POWER;
 
     /**
-     * Instantiate a foldable arm.
+     * Instantiate a foldable arm with a given {@link Builder} containing the
+     * necessary parameters.
      *
+     * @throws IllegalArgumentException If the builder is invalid as defined by
+     *                                  {@link Builder#isValid()}.
      */
-    protected FoldingArm(
-        Builder builder
-    ) {
+    protected FoldingArm(Builder builder) throws IllegalArgumentException {
         super(Set.of(builder.rotationMotor, builder.foldingMotor));
+
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException("FoldingArm builder is invalid"
+                                               + ".");
+        }
 
         ROTATION_MOTOR = builder.rotationMotor;
         MIN_ROTATION_TICKS = builder.minRotationTicks;
@@ -492,7 +498,7 @@ public class FoldingArm extends Arm {
         MAX_FOLDING_POWER = builder.maxFoldingPower;
 
         // Reset position to 0.
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }

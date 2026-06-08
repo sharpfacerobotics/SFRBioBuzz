@@ -138,10 +138,11 @@ public class MecanumWheels extends Wheels {
 
         @Override
         public boolean isValid() {
-            return super.isValid() && lateralWheelDistance > 0
-                   && longitudinalWheelDistance > 0
-                   && ticksPerInch > 0
-                   && maxMotorPower > 0;
+            return super.isValid()
+                   && frontLeftMotor != null
+                   && frontRightMotor != null
+                   && backLeftMotor != null
+                   && backRightMotor != null;
         }
 
         /**
@@ -181,22 +182,21 @@ public class MecanumWheels extends Wheels {
      * distances, and ticks per inch all set.
      *
      * @param builder The {@link Builder} that contains the necessary values.
+     * @throws IllegalArgumentException If {@code builder} is not valid as
+     *                                  defined by {@link Builder#isValid()}.
      */
-    protected MecanumWheels(
-        Builder builder
-    ) {
+    protected MecanumWheels(Builder builder) throws IllegalArgumentException {
         super(builder);
+
+        if (!builder.isValid()) {
+            throw new IllegalArgumentException(
+                "MecanumWheels builder is invalid");
+        }
 
         FRONT_LEFT_MOTOR = builder.frontLeftMotor;
         FRONT_RIGHT_MOTOR = builder.frontRightMotor;
         BACK_LEFT_MOTOR = builder.backLeftMotor;
         BACK_RIGHT_MOTOR = builder.backRightMotor;
-
-        // Reset position to 0.
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
 
         /*
          * Set the directions of the motors.
@@ -252,7 +252,7 @@ public class MecanumWheels extends Wheels {
      */
     @Override
     public void drive(double xPower, double yPower, double thetaPower) {
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
@@ -363,7 +363,7 @@ public class MecanumWheels extends Wheels {
         BACK_LEFT_MOTOR.setTargetPosition(backLeftTickPosition);
         BACK_RIGHT_MOTOR.setTargetPosition(backRightTickPosition);
 
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
@@ -405,7 +405,7 @@ public class MecanumWheels extends Wheels {
         );
         BACK_RIGHT_MOTOR.setPower(MAX_MOTOR_POWER);
 
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : MOTORS) {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }

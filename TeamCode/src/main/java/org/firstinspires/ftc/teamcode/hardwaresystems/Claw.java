@@ -128,21 +128,23 @@ public abstract class Claw {
     }
 
     /**
+     * A {@link Set} of all the {@link Servo}s that are in this claw.
+     */
+    private final Set<Servo> SERVOS;
+
+    /**
      * The servo that rotates the claw about the x-axis (roll).
      */
-    protected final Servo ROLL_SERVO;
+    private final Servo ROLL_SERVO;
     /**
      * The servo that rotates the claw about the y-axis (pitch).
      */
-    protected final Servo PITCH_SERVO;
+    private final Servo PITCH_SERVO;
     /**
      * The servo that rotates the claw about the z-axis (yaw).
      */
-    protected final Servo YAW_SERVO;
-    /**
-     * A {@link Set} of all the {@link Servo}s that are in this claw.
-     */
-    private final Set<Servo> servos;
+    private final Servo YAW_SERVO;
+
     /**
      * The number of ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.
@@ -155,23 +157,25 @@ public abstract class Claw {
      *
      * @param builder The {@link Builder} object that contains the values to use
      *                in instantiation. May be invalid.
-     * @throws IllegalArgumentException If the {@code builder} is invalid.
+     * @throws IllegalArgumentException If the {@link Builder} object is invalid
+     *                                  as defined by
+     *                                  {@link Builder#isValid()}.
      */
-    public Claw(Builder builder) {
+    protected Claw(Builder builder) {
         if (!builder.isValid()) {
-            throw new IllegalArgumentException("The given Claw builder is " + "invalid");
+            throw new IllegalArgumentException("Claw builder is invalid.");
         }
 
-        servos = new HashSet<>();
+        SERVOS = new HashSet<>();
 
         if (builder.rollServo != null) {
-            servos.add(builder.rollServo);
+            SERVOS.add(builder.rollServo);
         }
         if (builder.pitchServo != null) {
-            servos.add(builder.pitchServo);
+            SERVOS.add(builder.pitchServo);
         }
         if (builder.yawServo != null) {
-            servos.add(builder.yawServo);
+            SERVOS.add(builder.yawServo);
         }
 
         ROLL_SERVO = builder.rollServo;
@@ -188,7 +192,7 @@ public abstract class Claw {
      * claw system.
      */
     public Set<Servo> getServos() {
-        return servos;
+        return SERVOS;
     }
 
     /**
@@ -224,7 +228,8 @@ public abstract class Claw {
      */
     public void rotateRollServo(double direction) {
         if (ROLL_SERVO != null) {
-            double targetPosition = ROLL_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+            double targetPosition = ROLL_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
             ROLL_SERVO.setPosition(targetPosition);
         }
     }
@@ -251,7 +256,8 @@ public abstract class Claw {
      */
     public void rotatePitchAxisServo(double direction) {
         if (PITCH_SERVO != null) {
-            double targetPosition = PITCH_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+            double targetPosition = PITCH_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
             PITCH_SERVO.setPosition(targetPosition);
         }
     }
@@ -278,7 +284,8 @@ public abstract class Claw {
      */
     public void rotateYawServo(double direction) {
         if (YAW_SERVO != null) {
-            double targetPosition = YAW_SERVO.getPosition() + Math.signum(direction) * servoIncrement;
+            double targetPosition = YAW_SERVO.getPosition()
+                                    + Math.signum(direction) * servoIncrement;
             YAW_SERVO.setPosition(targetPosition);
         }
     }
