@@ -186,7 +186,8 @@ public abstract class Claw {
     }
 
     /**
-     * Get all the {@link Servo}s that are included in this claw system.
+     * Get all the {@link Servo}s that are included in this {@link Claw}
+     * system.
      *
      * @return A {@link Set} that contains every {@code Claw} included in this
      * claw system.
@@ -201,17 +202,14 @@ public abstract class Claw {
      *
      * @return The number of motor ticks that the {@link Servo}s move with every
      * loop.
-     * @see #servoIncrement
      */
     public double getServoIncrement() {
         return servoIncrement;
     }
 
     /**
-     * Get the number of motor ticks that the {@link Servo}s move with every
+     * Set the number of motor ticks that the {@link Servo}s move with every
      * loop.
-     *
-     * @see #servoIncrement
      */
     public void setServoIncrement(double servoIncrement) {
         this.servoIncrement = servoIncrement;
@@ -221,10 +219,14 @@ public abstract class Claw {
      * Rotate the {@link #ROLL_SERVO} in a certain direction by
      * {@link Claw#servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in, as seen from the
-     *                  <em>front</em> of the servo. Positive values rotate it
-     *                  counterclockwise, and negative values rotate it
-     *                  clockwise.
+     * @param direction The direction to rotate the servo in relative to
+     *                  {@link Servo#getDirection()}. As seen from the front of
+     *                  the {@link Servo}, positive values make the servo rotate
+     *                  in the direction of {@link Servo#getDirection()}, and
+     *                  negative values make the servo rotate in the opposite
+     *                  direction.
+     *                  <p>
+     *                  The magnitude has no effect.
      */
     public void rotateRollServo(double direction) {
         if (ROLL_SERVO != null) {
@@ -249,10 +251,14 @@ public abstract class Claw {
      * Rotate the {@link #PITCH_SERVO} in a certain direction by
      * {@link #servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in, as seen from the
-     *                  <em>front</em> of the servo. Positive values rotate it
-     *                  counterclockwise, and negative values rotate it
-     *                  clockwise.
+     * @param direction The direction to rotate the servo in relative to
+     *                  {@link Servo#getDirection()}. As seen from the front of
+     *                  the {@link Servo}, positive values make the servo rotate
+     *                  in the direction of {@link Servo#getDirection()}, and
+     *                  negative values make the servo rotate in the opposite
+     *                  direction.
+     *                  <p>
+     *                  The magnitude has no effect.
      */
     public void rotatePitchAxisServo(double direction) {
         if (PITCH_SERVO != null) {
@@ -277,10 +283,14 @@ public abstract class Claw {
      * Rotate the {@link  #YAW_SERVO} in a certain direction by
      * {@link #servoIncrement}.
      *
-     * @param direction The direction to rotate the servo in, as seen from the
-     *                  <em>front</em> of the servo. Positive values rotate it
-     *                  counterclockwise, and negative values rotate it
-     *                  clockwise.
+     * @param direction The direction to rotate the servo in relative to
+     *                  {@link Servo#getDirection()}. As seen from the front of
+     *                  the {@link Servo}, positive values make the servo rotate
+     *                  in the direction of {@link Servo#getDirection()}, and
+     *                  negative values make the servo rotate in the opposite
+     *                  direction.
+     *                  <p>
+     *                  The magnitude has no effect.
      */
     public void rotateYawServo(double direction) {
         if (YAW_SERVO != null) {

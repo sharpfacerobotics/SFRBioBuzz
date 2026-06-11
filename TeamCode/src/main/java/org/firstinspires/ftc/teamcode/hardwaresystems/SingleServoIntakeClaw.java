@@ -227,38 +227,29 @@ public class SingleServoIntakeClaw extends Claw {
     }
 
     /**
-     * Get the power that the {@link #INTAKE_SERVO} intakes with.
-     *
-     * @return The power that the {@link #INTAKE_SERVO} intakes with.
+     * {@return the power that the {@link #INTAKE_SERVO} takes in objects with}
      */
     public double getIntakePower() {
         return INTAKE_POWER;
     }
 
     /**
-     * Get the power that the {@link #INTAKE_SERVO} ejects with.
-     *
-     * @return The power that the {@link #INTAKE_SERVO} ejects with.
+     * {@return the power that the {@link #INTAKE_SERVO} ejects with}
      */
     public double getEjectPower() {
         return EJECT_POWER;
     }
 
     /**
-     * Get all the {@link CRServo}s used by this claw, which should just be the
-     * {@link #INTAKE_SERVO}.
-     *
-     * @return all the {@link CRServo}s used by this claw, which should just be
-     * the {@link #INTAKE_SERVO}.
+     * {@return all the {@link CRServo}s used by this claw, which should just be
+     * the {@link #INTAKE_SERVO}}
      */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Collections.singletonList(INTAKE_SERVO));
     }
 
     /**
-     * Get the intake servo, which draws objects into the claw.
-     *
-     * @return The intake servo, which draws objects into the claw.
+     * {@return the intake servo, which draws objects into the claw}
      */
     public CRServo getIntakeServo() {
         return INTAKE_SERVO;

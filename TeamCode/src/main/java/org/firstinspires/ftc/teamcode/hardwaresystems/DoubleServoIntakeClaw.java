@@ -135,8 +135,8 @@ public class DoubleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Set the continuous rotation servo used to the left part of the intake
-         * (see {@link #LEFT_INTAKE_SERVO}).
+         * Set the continuous rotation servo that rotates the left part of the
+         * intake (see {@link #LEFT_INTAKE_SERVO}).
          *
          * @param leftIntakeServo The servo used to intake objects.
          * @return This {@link Builder} to allow for chaining setters.
@@ -147,8 +147,8 @@ public class DoubleServoIntakeClaw extends Claw {
         }
 
         /**
-         * Set the continuous rotation servo used to the left part of the intake
-         * (see {@link #LEFT_INTAKE_SERVO}).
+         * Set the continuous rotation servo that rotates the right part of the
+         * intake (see {@link #RIGHT_INTAKE_SERVO}).
          *
          * @param rightIntakeServo The servo used to intake objects.
          * @return This {@link Builder} to allow for chaining setters.
@@ -228,10 +228,9 @@ public class DoubleServoIntakeClaw extends Claw {
      *
      * @param builder The builder that contains the parameters to instantiate a
      *                new {@link SingleServoIntakeClaw} object.
-     * @throws IllegalArgumentException If either intake servo
-     *                                  ({@link Builder#leftIntakeServo} or
-     *                                  {@link Builder#rightIntakeServo}) is
-     *                                  {@code null}.
+     * @throws IllegalArgumentException If the given {@link Builder} object is
+     *                                  invalid as defined in
+     *                                  {@link Builder#isValid()}.
      */
     protected DoubleServoIntakeClaw(Builder builder) throws IllegalArgumentException {
         super(builder);
@@ -250,30 +249,24 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     /**
-     * Get the power used to intake an object, i.e., pull it into the claw.
-     *
-     * @return The power used to intake an object, i.e., pull it into the claw.
+     * {@return the power used to intake an object, i.e., pull it into the
+     * claw}
      */
     public double getIntakePower() {
         return INTAKE_POWER;
     }
 
     /**
-     * Get the power used to eject an object, i.e., push it out of the claw.
-     *
-     * @return The power used to intake an object, i.e., push it out of the
-     * claw.
+     * {@return the power used to intake an object, i.e., push it out of the
+     * claw}
      */
     public double getEjectPower() {
         return EJECT_POWER;
     }
 
     /**
-     * Get all the continuous rotation servos ({@link CRServo}s) used by this
-     * {@link Claw}, i.e., the left and right intake servos.
-     *
-     * @return All the continuous rotation servos ({@link CRServo}s) used by
-     * this {@link Claw}, i.e., the left and right intake servos.
+     * {@return all the continuous rotation servos ({@link CRServo}s) used by
+     * this {@link Claw}, i.e., the left and right intake servos}
      */
     public Set<CRServo> getCrServos() {
         return new HashSet<>(Set.of(
@@ -283,29 +276,23 @@ public class DoubleServoIntakeClaw extends Claw {
     }
 
     /**
-     * Get the continuous rotation servo ({@link CRServo}) used to run the left
-     * intake.
-     *
-     * @return The continuous rotation servo ({@link CRServo}) used to run the
-     * left intake.
+     * {@return the continuous rotation servo ({@link CRServo}) used to rotate
+     * the left intake}
      */
     public CRServo getLeftIntakeServo() {
         return LEFT_INTAKE_SERVO;
     }
 
     /**
-     * Get the continuous rotation servo ({@link CRServo}) used to run the right
-     * intake.
-     *
-     * @return The continuous rotation servo ({@link CRServo}) used to run the
-     * right intake.
+     * {@return the continuous rotation servo ({@link CRServo}) used to rotate
+     * the right intake}.
      */
     public CRServo getRightIntakeServo() {
         return RIGHT_INTAKE_SERVO;
     }
 
     /**
-     * Spin both intake servos to pull in an object.
+     * Spin both continuous rotation servos to take in an object.
      */
     public void startIntake() {
         if (LEFT_INTAKE_SERVO != null) {

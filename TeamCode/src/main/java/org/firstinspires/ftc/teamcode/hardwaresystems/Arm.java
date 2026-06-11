@@ -81,10 +81,8 @@ public abstract class Arm {
     }
 
     /**
-     * Get all the {@link DcMotor}s that are included in this arm system.
-     *
-     * @return A {@link Set} that contains every {@link DcMotor} included in
-     * this arm system.
+     * {@return a {@link Set} that contains every {@link DcMotor} included in
+     * this arm system}
      */
     public Set<DcMotor> getMotors() {
         return MOTORS;

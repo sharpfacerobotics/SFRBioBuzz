@@ -104,7 +104,7 @@ public class Webcam {
     /**
      * Processor that detects AprilTags in the camera image.
      */
-    private final AprilTagProcessor APRIL_TAG;
+    private final AprilTagProcessor APRIL_TAG_PROCESSOR;
     /**
      * Processor that finds the predominant color in a region of interest.
      */
@@ -178,7 +178,7 @@ public class Webcam {
         this.targetColor = null;
 
         // Create an AprilTag processor with default settings.
-        APRIL_TAG = new AprilTagProcessor.Builder().build();
+        APRIL_TAG_PROCESSOR = new AprilTagProcessor.Builder().build();
 
         // Create a predominant color processor with a center ROI and a set
         // of swatches.
@@ -199,7 +199,7 @@ public class Webcam {
         // are enabled.
         VisionPortal.Builder builder = new VisionPortal.Builder()
             .addProcessor(COLOR_PROCESSOR)
-            .addProcessor(APRIL_TAG)
+            .addProcessor(APRIL_TAG_PROCESSOR)
             .setCamera(webcamName)
             .setCameraResolution(new Size(resolution[0], resolution[1]))
             .setAutoStopLiveView(true);
@@ -209,69 +209,64 @@ public class Webcam {
     }
 
     /**
-     * Return the VisionPortal managing this webcam. You can use this to
-     * enable/disable processors or pause/resume the preview.
-     *
-     * @return The VisionPortal managing this webcam.
+     * {@return the {@link VisionPortal} managing this {@link Webcam}. You can
+     * use this to enable/disable processors or pause/resume the preview}
      */
     public VisionPortal getVisionPortal() {
         return VISION_PORTAL;
     }
 
     /**
-     * Return the AprilTag processor for this webcam.
-     *
-     * @return The AprilTag processor for this webcam.
+     * {@return the AprilTag processor for this webcam}
      */
     public AprilTagProcessor getAprilTag() {
-        return APRIL_TAG;
+        return APRIL_TAG_PROCESSOR;
     }
 
     /**
-     * Return a copy of the current AprilTag detections. The list may be empty
-     * if no tags are seen.
-     *
-     * @return A copy of the current AprilTag detections. The list may be empty
-     * if no tags are seen.
+     * {@return a copy of the current AprilTag detections. The list may be empty
+     * if no tags are seen}
      */
     public List<AprilTagDetection> getAprilTagDetections() {
         // Copy into a new list so callers cannot modify the internal list.
-        return new ArrayList<>(APRIL_TAG.getDetections());
+        return new ArrayList<>(APRIL_TAG_PROCESSOR.getDetections());
     }
 
     /**
-     * Return the predominant color processor. You can use this directly if you
-     * want to read more detailed color info.
-     *
-     * @return The predominant color processor.
+     * {@return the predominant color processor. You can use this directly if
+     * you want to read more detailed color info}
      */
     public PredominantColorProcessor getColorProcessor() {
         return COLOR_PROCESSOR;
     }
 
     /**
-     * Return the camera resolution.
-     *
-     * @return Return the camera resolution.
+     * {@return the camera resolution in the format [x, y]}
      */
     public int[] getResolution() {
         return RESOLUTION;
     }
 
     /**
-     * Tuning helper for AprilTags.
+     * Overload {@link #setAprilTagDecimation(float)}, with the decimation set
+     * to a default of {@code 2.0f}
      */
     public void setAprilTagDecimation() {
         setAprilTagDecimation(2.0f);
     }
 
     /**
-     * Tuning helper for AprilTags.
+     * Set the decimation parameter of the {@link #APRIL_TAG_PROCESSOR}, which
+     * controls how much the resolution should be downgraded. A lower value
+     * decreases the resolution, affecting the {@link #APRIL_TAG_PROCESSOR}'s
+     * ability to detect far away AprilTags but also increasing its frame rate.
      *
-     * @param decimation The frame rate to use.
+     * @param decimation The decimation parameter of the
+     *                   {@link #APRIL_TAG_PROCESSOR}, which controls how much
+     *                   the resolution should be downgraded.
      */
     public void setAprilTagDecimation(float decimation) {
-        APRIL_TAG.setDecimation(decimation);
+        APRIL_TAG_PROCESSOR.setDecimation(decimation);
     }
 
     /**
@@ -350,9 +345,8 @@ public class Webcam {
     }
 
     /**
-     * Return the current pose adjustment [x, y, z] for the camera.
-     *
-     * @return The current pose adjustment [x, y, z] for the camera.
+     * {@return the current pose adjustment for the camera in the format [x, y,
+     * z]}
      */
     public double[] getPoseAdjust() {
         return poseAdjust;
@@ -369,9 +363,8 @@ public class Webcam {
     }
 
     /**
-     * Return the currently selected target color (maybe {@code null}).
-     *
-     * @return The currently selected target color (maybe {@code null}).
+     * {@return the currently selected target color, which is possibly {@code
+     * null}}
      */
     public Color getTargetColor() {
         return targetColor;
@@ -387,11 +380,8 @@ public class Webcam {
     }
 
     /**
-     * Return the latest color analysis from the predominant color processor.
-     * May be null if no frame has been processed yet.
-     *
-     * @return The latest color analysis from the predominant color processor.
-     * May be {@code null} if no frame has been processed yet.
+     * {@return the latest color analysis from the predominant color processor.
+     * May be {@code null} if no frame has been processed yet}
      */
     public PredominantColorProcessor.Result getColorResult() {
         return COLOR_PROCESSOR.getAnalysis();

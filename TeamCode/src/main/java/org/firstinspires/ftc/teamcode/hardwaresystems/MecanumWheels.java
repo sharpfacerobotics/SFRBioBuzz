@@ -212,36 +212,28 @@ public class MecanumWheels extends Wheels {
     }
 
     /**
-     * Get the motor that drives the front-left mecanum wheel.
-     *
-     * @return The motor that drives the front-left mecanum wheel.
+     * {@return the motor that drives the front-left mecanum wheel}
      */
     public DcMotor getFrontLeftMotor() {
         return FRONT_LEFT_MOTOR;
     }
 
     /**
-     * Get the motor that drives the front-right mecanum wheel.
-     *
-     * @return The motor that drives the front-right mecanum wheel.
+     * {@return the motor that drives the front-right mecanum wheel}
      */
     public DcMotor getFrontRightMotor() {
         return FRONT_RIGHT_MOTOR;
     }
 
     /**
-     * Get the motor that drives the back-left mecanum wheel.
-     *
-     * @return The motor that drives the back-left mecanum wheel.
+     * {@return the motor that drives the back-left mecanum wheel}
      */
     public DcMotor getBackLeftMotor() {
         return BACK_LEFT_MOTOR;
     }
 
     /**
-     * Get the motor that drives the back-right mecanum wheel.
-     *
-     * @return The motor that drives the back-right mecanum wheel.
+     * {@return the motor that drives the back-right mecanum wheel}
      */
     public DcMotor getBackRightMotor() {
         return BACK_RIGHT_MOTOR;
