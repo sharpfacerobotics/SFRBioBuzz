@@ -35,7 +35,7 @@ public abstract class Claw {
         /**
          * The number of motor ticks that the {@link Servo}s move with every
          * loop. Essentially serves as the "speed" or "power"　of the servo. Used
-         * to set {@link Claw#servoIncrement}.
+         * to set {@link #MAX_SERVO_INCREMENT}.
          */
         protected double servoIncrement;
 
@@ -149,7 +149,7 @@ public abstract class Claw {
      * The number of ticks that the {@link Servo}s move with every loop.
      * Essentially serves as the "speed" or "power"　of the servo.
      */
-    private double servoIncrement;
+    private final double MAX_SERVO_INCREMENT;
 
     /**
      * Instantiate a new {@link Claw} with up to three servos and a given servo
@@ -182,62 +182,68 @@ public abstract class Claw {
         PITCH_SERVO = builder.pitchServo;
         YAW_SERVO = builder.yawServo;
 
-        servoIncrement = builder.servoIncrement;
+        MAX_SERVO_INCREMENT = builder.servoIncrement;
     }
 
     /**
-     * Get all the {@link Servo}s that are included in this {@link Claw}
-     * system.
-     *
-     * @return A {@link Set} that contains every {@code Claw} included in this
-     * claw system.
+     * {@return a {@link Set} that contains every {@code Claw} included in this
+     * claw system}
      */
     public Set<Servo> getServos() {
         return SERVOS;
     }
 
     /**
-     * Get the number of motor ticks that the {@link Servo}s move with every
-     * loop.
-     *
-     * @return The number of motor ticks that the {@link Servo}s move with every
-     * loop.
+     * {@return the fraction of its range that the {@link Servo}s move with
+     * every loop}
      */
-    public double getServoIncrement() {
-        return servoIncrement;
+    public double getMaxServoIncrement() {
+        return MAX_SERVO_INCREMENT;
     }
 
     /**
-     * Set the number of motor ticks that the {@link Servo}s move with every
-     * loop.
-     */
-    public void setServoIncrement(double servoIncrement) {
-        this.servoIncrement = servoIncrement;
-    }
-
-    /**
-     * Rotate the {@link #ROLL_SERVO} in a certain direction by
-     * {@link Claw#servoIncrement}.
+     * Rotate the {@link #ROLL_SERVO} to a relative position specified by
+     * {@link #MAX_SERVO_INCREMENT} in a given direction.
      *
      * @param direction The direction to rotate the servo in relative to
      *                  {@link Servo#getDirection()}. As seen from the front of
-     *                  the {@link Servo}, positive values make the servo rotate
-     *                  in the direction of {@link Servo#getDirection()}, and
-     *                  negative values make the servo rotate in the opposite
-     *                  direction.
-     *                  <p>
-     *                  The magnitude has no effect.
+     *                  the {@link Servo}, {@link Servo.Direction#FORWARD} makes
+     *                  the {@link Servo} rotate in the direction of
+     *                  {@link Servo#getDirection()}, and
+     *                  {@link Servo.Direction#REVERSE} makes the {@link Servo}
+     *                  rotate in the opposite direction.
      */
-    public void rotateRollServo(double direction) {
+    public void rotateRollServo(Servo.Direction direction) {
+        int directionSign = direction == Servo.Direction.FORWARD ? 1 : -1;
+        rotateRollServo(directionSign * MAX_SERVO_INCREMENT);
+    }
+
+    /**
+     * Rotate the {@link #ROLL_SERVO} to a relative position specified by a
+     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     *
+     * @param power How far to rotate the {@link #ROLL_SERVO} by as a proportion
+     *              of {@link #MAX_SERVO_INCREMENT}. Negative values will make
+     *              the {@link #ROLL_SERVO} rotate backwards.
+     */
+    public void rotateRollServo(double power) {
+        // Clamp the absolute value of the power to be less than 
+        // MAX_SERVO_INCREMENT.
+        double clampedPower = Math.min(
+            Math.max(power, -MAX_SERVO_INCREMENT),
+            MAX_SERVO_INCREMENT
+        );
+        // Rotate to the relative position.
         if (ROLL_SERVO != null) {
             double targetPosition = ROLL_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
+                                    + power * MAX_SERVO_INCREMENT;
             ROLL_SERVO.setPosition(targetPosition);
         }
     }
 
     /**
-     * Rotate the {@link #ROLL_SERVO} to a position specified in degrees.
+     * Rotate the {@link #ROLL_SERVO} to an absolute position specified in
+     * degrees.
      *
      * @param degrees The target angle of the {@link #ROLL_SERVO} in degrees.
      */
@@ -248,28 +254,48 @@ public abstract class Claw {
     }
 
     /**
-     * Rotate the {@link #PITCH_SERVO} in a certain direction by
-     * {@link #servoIncrement}.
+     * Rotate the {@link #PITCH_SERVO} to a relative position specified by
+     * {@link #MAX_SERVO_INCREMENT} in a given direction.
      *
      * @param direction The direction to rotate the servo in relative to
      *                  {@link Servo#getDirection()}. As seen from the front of
-     *                  the {@link Servo}, positive values make the servo rotate
-     *                  in the direction of {@link Servo#getDirection()}, and
-     *                  negative values make the servo rotate in the opposite
-     *                  direction.
-     *                  <p>
-     *                  The magnitude has no effect.
+     *                  the {@link Servo}, {@link Servo.Direction#FORWARD} makes
+     *                  the {@link Servo} rotate in the direction of
+     *                  {@link Servo#getDirection()}, and
+     *                  {@link Servo.Direction#REVERSE} makes the {@link Servo}
+     *                  rotate in the opposite direction.
      */
-    public void rotatePitchAxisServo(double direction) {
+    public void rotatePitchServo(Servo.Direction direction) {
+        int directionSign = direction == Servo.Direction.FORWARD ? 1 : -1;
+        rotatePitchServo(directionSign * MAX_SERVO_INCREMENT);
+    }
+
+    /**
+     * Rotate the {@link #PITCH_SERVO} to a relative position specified by a
+     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     *
+     * @param power How far to rotate the {@link #PITCH_SERVO} by as a
+     *              proportion of {@link #MAX_SERVO_INCREMENT}. Negative values
+     *              will make the {@link #PITCH_SERVO} rotate backwards.
+     */
+    public void rotatePitchServo(double power) {
+        // Clamp the absolute value of the power to be less than 
+        // MAX_SERVO_INCREMENT.
+        double clampedPower = Math.min(
+            Math.max(power, -MAX_SERVO_INCREMENT),
+            MAX_SERVO_INCREMENT
+        );
+        // Rotate to the relative position.
         if (PITCH_SERVO != null) {
             double targetPosition = PITCH_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
+                                    + power * MAX_SERVO_INCREMENT;
             PITCH_SERVO.setPosition(targetPosition);
         }
     }
 
     /**
-     * Rotate the {@link #PITCH_SERVO} to a position specified in degrees.
+     * Rotate the {@link #PITCH_SERVO} to an absolute position specified in
+     * degrees.
      *
      * @param degrees The target angle of the {@link #PITCH_SERVO} in degrees.
      */
@@ -280,28 +306,48 @@ public abstract class Claw {
     }
 
     /**
-     * Rotate the {@link  #YAW_SERVO} in a certain direction by
-     * {@link #servoIncrement}.
+     * Rotate the {@link  #YAW_SERVO} to a relative position specified by
+     * {@link #MAX_SERVO_INCREMENT} in a given direction.
      *
      * @param direction The direction to rotate the servo in relative to
      *                  {@link Servo#getDirection()}. As seen from the front of
-     *                  the {@link Servo}, positive values make the servo rotate
-     *                  in the direction of {@link Servo#getDirection()}, and
-     *                  negative values make the servo rotate in the opposite
-     *                  direction.
-     *                  <p>
-     *                  The magnitude has no effect.
+     *                  the {@link Servo}, {@link Servo.Direction#FORWARD} makes
+     *                  the {@link Servo} rotate in the direction of
+     *                  {@link Servo#getDirection()}, and
+     *                  {@link Servo.Direction#REVERSE} makes the {@link Servo}
+     *                  rotate in the opposite direction.
      */
-    public void rotateYawServo(double direction) {
-        if (YAW_SERVO != null) {
+    public void rotateYawServo(Servo.Direction direction) {
+        int directionSign = direction == Servo.Direction.FORWARD ? 1 : -1;
+        rotateYawServo(directionSign * MAX_SERVO_INCREMENT);
+    }
+
+    /**
+     * Rotate the {@link #YAW_SERVO} to a relative position specified by a
+     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     *
+     * @param power How far to rotate the {@link #YAW_SERVO} by as a proportion
+     *              of {@link #MAX_SERVO_INCREMENT}. Negative values will make
+     *              the {@link #YAW_SERVO} rotate backwards.
+     */
+    public void rotateYawServo(double power) {
+        // Clamp the absolute value of the power to be less than 
+        // MAX_SERVO_INCREMENT.
+        double clampedPower = Math.min(
+            Math.max(power, -MAX_SERVO_INCREMENT),
+            MAX_SERVO_INCREMENT
+        );
+        // Rotate to the relative position.
+        if (PITCH_SERVO != null) {
             double targetPosition = YAW_SERVO.getPosition()
-                                    + Math.signum(direction) * servoIncrement;
-            YAW_SERVO.setPosition(targetPosition);
+                                    + power * MAX_SERVO_INCREMENT;
+            PITCH_SERVO.setPosition(targetPosition);
         }
     }
 
     /**
-     * Rotate the {@link #YAW_SERVO} to a position specified in degrees.
+     * Rotate the {@link #YAW_SERVO} to an absolute position specified in
+     * degrees.
      *
      * @param degrees The target angle of the {@link #YAW_SERVO} in degrees.
      */
