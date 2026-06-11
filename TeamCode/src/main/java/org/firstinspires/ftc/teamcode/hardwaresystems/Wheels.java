@@ -213,19 +213,15 @@ public abstract class Wheels {
     }
 
     /**
-     * Get the power that the motors drive with.
-     *
-     * @return The power that the motors drive with.
+     * {@return the power that the motors drive with}
      */
     public double getMotorPower() {
         return MAX_MOTOR_POWER;
     }
 
     /**
-     * Get all the {@link DcMotor}s that are used by this wheel system.
-     *
-     * @return A {@link Set} that contains every {@link DcMotor} included by
-     * this wheel system.
+     * {@return a {@link Set} that contains every {@link DcMotor} included by
+     * this wheel system}
      */
     public Set<DcMotor> getMotors() {
         return MOTORS;

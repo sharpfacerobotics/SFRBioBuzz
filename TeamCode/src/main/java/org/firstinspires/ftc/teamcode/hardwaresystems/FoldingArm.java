@@ -470,7 +470,8 @@ public class FoldingArm extends Arm {
      * Instantiate a foldable arm with a given {@link Builder} containing the
      * necessary parameters.
      *
-     * @throws IllegalArgumentException If the builder is invalid as defined by
+     * @throws IllegalArgumentException If the {@link Builder} object is invalid
+     *                                  as defined by
      *                                  {@link Builder#isValid()}.
      */
     protected FoldingArm(Builder builder) throws IllegalArgumentException {
@@ -505,36 +506,30 @@ public class FoldingArm extends Arm {
     }
 
     /**
-     * Get the {@link DcMotor} that is used to rotate the arm.
-     *
-     * @return The {@link DcMotor} that is used to rotate the arm.
+     * {@return the {@link DcMotor} that rotates the entire arm, like a shoulder
+     * with only one degree of freedom}
      */
     public DcMotor getRotationMotor() {
         return ROTATION_MOTOR;
     }
 
     /**
-     * Get the power multiplier that the arm motor rotates with.
-     *
-     * @return The power multiplier that the arm motor rotates with.
+     * {@return the maximum power that the rotation motor moves with, which is
+     * also a multiplier for the argument passed into {@link #rotate(double)}}
      */
-    public double getRotationPower() {
+    public double getMaxRotationPower() {
         return MAX_ROTATION_POWER;
     }
 
     /**
-     * Return the rotation position of the arm in motor ticks.
-     *
-     * @return The rotation position of the arm in motor ticks.
+     * {@return the rotation position of the arm in motor ticks}
      */
     public int getRotationTicks() {
         return ROTATION_MOTOR.getCurrentPosition();
     }
 
     /**
-     * Return the rotation position of the arm in degrees.
-     *
-     * @return The rotation angle of the arm in degrees.
+     * {@return the rotation angle of the arm in degrees}
      */
     public double getRotationDegrees() {
         return ROTATION_MOTOR.getCurrentPosition() / TICKS_PER_ROTATION_DEGREE
@@ -571,9 +566,13 @@ public class FoldingArm extends Arm {
      *                is 0 degrees.
      */
     public void rotateToAngle(double degrees) {
-        double targetDegrees = degrees - INITIAL_ROTATION_ANGLE;
-        int targetPosition = (int) -Math.round(targetDegrees
-                                               * TICKS_PER_ROTATION_DEGREE);
+        int targetPosition = (int) -Math.round(
+            (
+                degrees
+                - INITIAL_ROTATION_ANGLE
+            )
+            * TICKS_PER_ROTATION_DEGREE
+        );
         // Keep the target position within acceptable bounds
         targetPosition = Math.min(
             Math.max(targetPosition, MIN_ROTATION_TICKS),
@@ -583,7 +582,7 @@ public class FoldingArm extends Arm {
 
         /*
          * Calculate the direction that the arm will have to rotate.
-         * Negative is down, positive is up
+         * Negative is down, positive is up.
          */
         int direction = (int) Math.signum(
             targetPosition
@@ -595,36 +594,29 @@ public class FoldingArm extends Arm {
     }
 
     /**
-     * Get the {@link DcMotor} that is used to fold the arm.
-     *
-     * @return The {@link DcMotor} that is used to fold the arm.
+     * {@return the {@link DcMotor} that is used to fold the arm}
      */
     public DcMotor getFoldingMotor() {
         return FOLDING_MOTOR;
     }
 
     /**
-     * Get the power multiplier that the arm motor rotates with.
-     *
-     * @return The power multiplier that the arm motor rotates with.
+     * {@return the maximum power that the folding arm moves with, which is also
+     * a multiplier for the argument passed into {@link #fold(double)}}
      */
-    public double getFoldingPower() {
+    public double getMaxFoldingPower() {
         return MAX_FOLDING_POWER;
     }
 
     /**
-     * Get the current position of the folding motor in ticks.
-     *
-     * @return The current position of the folding motor in ticks.
+     * {@return the current position of the folding motor in ticks}
      */
     public int getFoldingTicks() {
         return FOLDING_MOTOR.getCurrentPosition();
     }
 
     /**
-     * Return the folding of the arm in degrees.
-     *
-     * @return A double representing the folding angle of the arm in degrees.
+     * {@return the folding angle of the arm in degrees}
      */
     public double getFoldingDegrees() {
         return FOLDING_MOTOR.getCurrentPosition() / TICKS_PER_FOLDING_DEGREE
@@ -658,17 +650,16 @@ public class FoldingArm extends Arm {
      * @param degrees The position to move the joint of the arm to in degrees.
      */
     public void foldToAngle(double degrees) {
-        double targetDegrees = degrees - INITIAL_FOLDING_ANGLE;
-        int targetPosition = (int) Math.round(
-            targetDegrees * TICKS_PER_FOLDING_DEGREE
-        );
-        // Keep the target position within acceptable bounds
+        int targetPosition = (int) Math.round((degrees - INITIAL_FOLDING_ANGLE)
+                                              * TICKS_PER_FOLDING_DEGREE);
+        // Keep the target position within acceptable bounds.
         targetPosition = -Math.min(
             Math.max(targetPosition, MIN_FOLDING_TICKS),
             MAX_FOLDING_TICKS
         );
         FOLDING_MOTOR.setTargetPosition(targetPosition);
 
+        // Move in the appropriate direction.
         int direction = (int) Math.signum(
             targetPosition
             - FOLDING_MOTOR.getCurrentPosition()
