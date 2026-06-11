@@ -220,11 +220,15 @@ public abstract class Claw {
 
     /**
      * Rotate the {@link #ROLL_SERVO} to a relative position specified by a
-     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     * <em>proportion</em> of {@link #MAX_SERVO_INCREMENT}.
+     * <p>
+     * <strong>Note that it is impossible to exceed
+     * {@link #MAX_SERVO_INCREMENT}</strong>
      *
-     * @param power How far to rotate the {@link #ROLL_SERVO} by as a proportion
-     *              of {@link #MAX_SERVO_INCREMENT}. Negative values will make
-     *              the {@link #ROLL_SERVO} rotate backwards.
+     * @param power How far to rotate the {@link #ROLL_SERVO} as a proportion of
+     *              {@link #MAX_SERVO_INCREMENT}. Negative values will make the
+     *              {@link #ROLL_SERVO} rotate backwards. <strong>Values with a
+     *              magnitude greater than 1.0 will be clamped.</strong>
      */
     public void rotateRollServo(double power) {
         // Clamp the absolute value of the power to be less than 
@@ -272,11 +276,16 @@ public abstract class Claw {
 
     /**
      * Rotate the {@link #PITCH_SERVO} to a relative position specified by a
-     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     * <em>proportion</em> of {@link #MAX_SERVO_INCREMENT}.
+     * <p>
+     * <strong>Note that it is impossible to exceed
+     * {@link #MAX_SERVO_INCREMENT}</strong>
      *
-     * @param power How far to rotate the {@link #PITCH_SERVO} by as a
-     *              proportion of {@link #MAX_SERVO_INCREMENT}. Negative values
-     *              will make the {@link #PITCH_SERVO} rotate backwards.
+     * @param power How far to rotate the {@link #PITCH_SERVO} as a proportion
+     *              of {@link #MAX_SERVO_INCREMENT}. Negative values will make
+     *              the {@link #PITCH_SERVO} rotate backwards.
+     *              <strong>Values with a magnitude greater than 1.0 will be
+     *              clamped.</strong>
      */
     public void rotatePitchServo(double power) {
         // Clamp the absolute value of the power to be less than 
@@ -324,11 +333,15 @@ public abstract class Claw {
 
     /**
      * Rotate the {@link #YAW_SERVO} to a relative position specified by a
-     * proportion of {@link #MAX_SERVO_INCREMENT}.
+     * <em>proportion</em> of {@link #MAX_SERVO_INCREMENT}.
+     * <p>
+     * <strong>Note that it is impossible to exceed
+     * {@link #MAX_SERVO_INCREMENT}</strong>
      *
-     * @param power How far to rotate the {@link #YAW_SERVO} by as a proportion
-     *              of {@link #MAX_SERVO_INCREMENT}. Negative values will make
-     *              the {@link #YAW_SERVO} rotate backwards.
+     * @param power How far to rotate the {@link #YAW_SERVO} as a proportion of
+     *              {@link #MAX_SERVO_INCREMENT}. Negative values will make the
+     *              {@link #YAW_SERVO} rotate backwards. <strong>Values with a
+     *              magnitude greater than 1.0 will be clamped.</strong>
      */
     public void rotateYawServo(double power) {
         // Clamp the absolute value of the power to be less than 
