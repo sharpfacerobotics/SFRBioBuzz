@@ -30,18 +30,21 @@ public class CustomLinearOp extends LinearOpMode {
      * Whether the robot will automatically sleep after each command.
      */
     protected boolean autoSleepEnabled;
+
     /**
      * Use for our own system.
      * TODO: By default, the class is set to {@link Wheels}. Replace as
      *  necessary.
      */
     protected Wheels WHEELS;
+
     /**
      * Use for RoadRunner.
      * TODO: By default, the class is set to {@link MecanumDrive}. Replace as
      *  necessary.
      */
     protected MecanumDrive MECANUM_DRIVE;
+
     /**
      * The arm used by the robot.
      * TODO: By default, the type is set to {@link Arm}. Replace or delete as
@@ -141,6 +144,7 @@ public class CustomLinearOp extends LinearOpMode {
      * @return The {@link DcMotor} associated with the first name found.
      * @throws IllegalArgumentException if no candidate names match a motor.
      */
+    @Deprecated
     private DcMotor pickMotor(String... candidates) {
         for (String name : candidates) {
             try {
