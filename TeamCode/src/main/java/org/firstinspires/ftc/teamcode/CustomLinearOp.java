@@ -140,6 +140,9 @@ public class CustomLinearOp extends LinearOpMode {
      * exists. If none of the names are present, an
      * {@link IllegalArgumentException} is thrown.
      *
+     * @deprecated
+     * The motor names should be known. Do not query for the motor.
+     *
      * @param candidates One or more hardware device names to try.
      * @return The {@link DcMotor} associated with the first name found.
      * @throws IllegalArgumentException if no candidate names match a motor.
