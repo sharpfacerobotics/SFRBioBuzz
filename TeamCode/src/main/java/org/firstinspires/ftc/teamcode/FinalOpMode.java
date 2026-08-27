@@ -1,13 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
-import static java.lang.Thread.sleep;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.DriveTrain.MecanumDriveFieldRelative;
 import org.firstinspires.ftc.teamcode.states.Intake;
 import org.firstinspires.ftc.teamcode.states.Shooter;
@@ -40,10 +37,11 @@ public class FinalOpMode extends OpMode {
     RobotState previousRobotState = robotState;
 
     Marchas marchaAtual = Marchas.ALTA;
-    MecanumDriveFieldRelative drive = new MecanumDriveFieldRelative();
+    MecanumDriveFieldRelative driveFieldRelative = new MecanumDriveFieldRelative();
     Intake intake = null;
     Shooter shooter = null;
     double forward, strafe, rotate;
+
 
 
 
@@ -52,9 +50,10 @@ public class FinalOpMode extends OpMode {
     public void init () {
 
 
-    drive.init(hardwareMap);
+    driveFieldRelative.init(hardwareMap);
     intake = new Intake(hardwareMap);
    shooter = new Shooter(hardwareMap);
+
 
     }
     boolean previousXButtonValue = false;
@@ -63,7 +62,9 @@ public class FinalOpMode extends OpMode {
 
     boolean isPreviousBButtonValue = false;
 
-    boolean previousXButtonValue2 = false;
+    boolean isPreviousRightStick = false;
+
+    boolean isPreviousLeftStick = false;
 
     boolean previousBButtonValue2 = false;
 
@@ -77,25 +78,22 @@ public class FinalOpMode extends OpMode {
     @Override
     public void loop() {
 
-        boolean buttonX2 = gamepad2.x;
-        boolean buttonY2 = gamepad2.y;
-        boolean buttonB2 = gamepad2.b;
+        boolean rightStick = gamepad1.right_stick_button;
+        boolean leftStick = gamepad1.left_stick_button;
 
         switch (marchaAtual){
             case ALTA:
-                drive.setMaxSpeed(0.9);
-                if (buttonY2 && !isPreviousYButtonValue) {marchaAtual = Marchas.MEDIA;}
-                else if (buttonB2 && !previousBButtonValue2){marchaAtual = Marchas.BAIXA;;}
+                driveFieldRelative.setMaxSpeed(0.9);
+                if (leftStick && !isPreviousLeftStick) {marchaAtual = Marchas.MEDIA;}
                 break;
             case MEDIA:
-                drive.setMaxSpeed(0.6);
-                if (buttonB2 && !previousBButtonValue2) {marchaAtual = Marchas.BAIXA;}
-                else if (buttonX2 && !previousXButtonValue2){marchaAtual = Marchas.ALTA;}
+                driveFieldRelative.setMaxSpeed(0.6);
+                if (leftStick && !isPreviousLeftStick) {marchaAtual = Marchas.BAIXA;}
+                else if (rightStick && !isPreviousRightStick){marchaAtual = Marchas.ALTA;}
                 break;
             case BAIXA:
-                drive.setMaxSpeed(0.3);
-                if (buttonX2 && !previousXButtonValue2) {marchaAtual = Marchas.ALTA;}
-                else if (buttonB2 && !previousBButtonValue2){marchaAtual = Marchas.MEDIA;}
+                driveFieldRelative.setMaxSpeed(0.3);
+                if (rightStick && !isPreviousRightStick) {marchaAtual = Marchas.MEDIA;}
                 break;
         }
 
@@ -112,33 +110,33 @@ public class FinalOpMode extends OpMode {
          case DEFAULT:
                 intake.starCollectBall();
              if(buttonX && !previousXButtonValue) {previousRobotState = robotState;
-                 robotState =robotState.PREPARAR;}
+                 robotState = RobotState.PREPARAR;}
              else if (buttonY && !previousYButtonValue){ previousRobotState = robotState;
-                 robotState = robotState.DESLIGA;}
+                 robotState = RobotState.DESLIGA;}
              break;
          case PREPARAR:
              intake.defaultCollect();
              if(buttonY && !previousYButtonValue){ previousRobotState = robotState;
-             robotState = robotState.DESLIGA;}
+             robotState = RobotState.DESLIGA;}
              else if (buttonA && !previousAButtonValue){previousRobotState = robotState;
-                 robotState = robotState.DEFAULT;
+                 robotState = RobotState.DEFAULT;
              }
              break;
          case DESLIGA:
              intake.stopCollectBall();
              if (buttonB && !previousXButtonValue) {previousRobotState = robotState;
-                 robotState = robotState.EXPELIR;}
+                 robotState = RobotState.EXPELIR;}
              else if (buttonA && !previousAButtonValue){previousRobotState = robotState;
-                 robotState = robotState.DEFAULT;
+                 robotState = RobotState.DEFAULT;
              }
              break;
          case EXPELIR:
              intake.expelBall();
              if(buttonA && !previousAButtonValue) {previousRobotState = robotState;
-                 robotState = robotState.DEFAULT;
+                 robotState = RobotState.DEFAULT;
          }
             else if(buttonY && !previousYButtonValue){ previousRobotState = robotState;
-                 robotState = robotState.DESLIGA;}
+                 robotState = RobotState.DESLIGA;}
              break;
      }
 
@@ -155,23 +153,22 @@ public class FinalOpMode extends OpMode {
 
 
 
-    forward = -gamepad2.left_stick_y;
-    strafe = gamepad2.left_stick_x*1.1;
-    rotate = gamepad2.right_stick_x;
+    forward = -gamepad1.left_stick_y;
+    strafe = gamepad1.left_stick_x*1.1;
+    rotate = gamepad1.right_stick_x;
 
-    drive.drive(forward,strafe,rotate);
+    driveFieldRelative.driveFieldRelative(forward,strafe,rotate);
 
         telemetry.addData("Marcha atual", marchaAtual);
         telemetry.addData("Estado atual do robo", robotState);
         telemetry.addData("Estado anterior do robo", previousRobotState);
-        telemetry.addData("Shooter Left", shooter.getLeftPosition());
-        telemetry.addData("Shooter Right", shooter.getRightPosition());
-        telemetry.addData("Shooter Avg", shooter.getAveragePosition());
+        telemetry.addData("Yaw (Z)", driveFieldRelative.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        telemetry.addData("Pitch (X)", driveFieldRelative.imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES));
+        telemetry.addData("Roll (Y)", driveFieldRelative.imu.getRobotYawPitchRollAngles().getRoll(AngleUnit.DEGREES));
         telemetry.update();
 
-        previousXButtonValue2 = buttonX2;
-        previousBButtonValue2 = buttonB2;
-        isPreviousYButtonValue = buttonY2;
+        isPreviousRightStick = rightStick;
+        isPreviousLeftStick = leftStick;
 
         previousXButtonValue = buttonX;
         previousAButtonValue = buttonA;

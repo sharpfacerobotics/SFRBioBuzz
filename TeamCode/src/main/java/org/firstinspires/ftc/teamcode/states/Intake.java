@@ -12,20 +12,16 @@ public class Intake {
     private static double INTAKE_COLLECT = 0.9;
 
     private static double INTAKE_STOP = 0;
-
+    
     private static double INTAKE_EXPEL = -0.8;
 
     private static double INTAKE_DEFAULT = 0.4;
 
-    public DcMotor IntakeMotor;
+    public  DcMotor IntakeMotor;
 
-    public Intake (HardwareMap hardwareMap){
+    public Intake (HardwareMap hardwareMap){IntakeMotor = hardwareMap.get(DcMotor.class, INTAKE_NAME);}
 
-        IntakeMotor = hardwareMap.get(DcMotor.class, INTAKE_NAME);
-
-    }
-
-    public void starCollectBall () {
+    public  void starCollectBall () {
         IntakeMotor.setPower(INTAKE_COLLECT);
     }
 

@@ -13,13 +13,7 @@ public class Shooter {
     private static final String SHOOTER_LEFT = "shooterLeft";
     private static final String SHOOTER_RIGHT = "shooterRight";
 
-    private static int POS_CHARGING = -2000;
-    private static int POS_SHOOT = -3000;
-    private static int POS_DEFAULT = 0;
-
-    private static double POWER_UP = -1;
-
-    private ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime timer = new ElapsedTime();
     private boolean chargingAuto = false;
     private long chargingDuration = 0;
 

@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class MecanumDriveFieldRelative {
 
     private DcMotor leftFront, rightFront, leftBack, rightBack;
-    private IMU imu;
+    public IMU imu;
 
     public double maxSpeedDefault = 0.8;
 
@@ -33,15 +33,15 @@ public class MecanumDriveFieldRelative {
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        /*imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot revHubOrientation = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.DOWN,
+                RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT
         );
 
         imu.initialize(new IMU.Parameters(revHubOrientation));
-    */}
+    }
 
 
     public void drive(double forward, double strafe, double rotate) {
@@ -66,7 +66,7 @@ public class MecanumDriveFieldRelative {
     }
 
 
-   /* public void driveFieldRelative(double forward, double strafe, double rotate) {
+   public void driveFieldRelative(double forward, double strafe, double rotate) {
 
         double theta = Math.atan2(forward, strafe);
         double r = Math.hypot(strafe, forward);
@@ -79,7 +79,7 @@ public class MecanumDriveFieldRelative {
         double newStrafe = r * Math.cos(theta);
 
         drive(newForward, newStrafe, rotate);
-    }*/
+    }
 
     public void setMaxSpeed(double speed) {
         this.maxSpeedDefault = speed;
