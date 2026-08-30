@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.robot.PoseStorage;
 import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.Vision;
-
+//CHANGE TO LINEAROPMODE!!
 public abstract class BaseAuto extends OpMode {
 
     protected RobotHardware robot = new RobotHardware();
