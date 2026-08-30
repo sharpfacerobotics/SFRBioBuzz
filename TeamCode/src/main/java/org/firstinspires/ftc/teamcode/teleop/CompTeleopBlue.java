@@ -44,6 +44,7 @@ import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
 import org.firstinspires.ftc.teamcode.robot.Vision;
 
+//CHANGE TO OPMODE
 @TeleOp(name="CompTeleopBlue", group="Linear OpMode")
 @Configurable
 public class CompTeleopBlue extends LinearOpMode {
