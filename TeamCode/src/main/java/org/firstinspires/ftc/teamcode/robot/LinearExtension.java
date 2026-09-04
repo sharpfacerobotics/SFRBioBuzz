@@ -4,8 +4,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.robot.MotionProfile;
 
 // MUST HAVE MOTOR AND SENSOR IN RobotHardware
+// TODO: FINISH MOTION PROFILE INTEGRATION IN update()
 public class LinearExtension {
     private RobotHardware robot;
 
@@ -18,6 +21,9 @@ public class LinearExtension {
     private TouchSensor lowerLimitSwitch;
     private int targetExtensionTicks = 0;
     private boolean wasAtLowerLimit = false;
+
+    private MotionProfile currentProfile;
+    private ElaspedTime extendingTime = new ElaspedTime();
 
     public LinearExtension(RobotHardware robot, int MIN_TICKS, int MAX_TICKS, double nudgePower, double extensionPower) {
         this.robot = robot;
@@ -40,6 +46,7 @@ public class LinearExtension {
             resetExtensionMotor(extensionMotor);
         }
         wasAtLowerLimit = atLowerLimit;
+        
 
     }
 
@@ -59,19 +66,27 @@ public class LinearExtension {
         extensionMotor.setPower(extensionPower);
     }
 
-    public void setTargetExtensionTicks(int ticks, double extensionPower) {
+    public void setTargetExtensionTicks(int ticks, int start, int goal, double currV, double maxV, double maxA) {
+        extendingTime.reset();
+        MotionProfile currentProfile =  new MotionProfile((double) start, (double) goal, currV, maxV, maxA);
+        MotionProfile.State currentState = currentProfile.get(0.0);
         targetExtensionTicks = Range.clip(ticks, MIN_TICKS, MAX_TICKS);
 
         extensionMotor.setTargetPosition(targetExtensionTicks);
         if (extensionMotor.getMode() != DcMotorEx.RunMode.RUN_TO_POSITION) {
             extensionMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         }
-        extensionMotor.setPower(Math.abs(clipPower(extensionPower, 1.00)));
+        extensionMotor.setPower(Math.abs(clipPower(currentState.velocity, 1.00)));
     }
 
     public void setTargetExtensionPercent(int percent) {
         targetExtensionTicks = (int) Range.scale(percent, 0, 100, MIN_TICKS, MAX_TICKS);
         setTargetExtensionTicks(targetExtensionTicks);
+    }
+
+    public void setTargetExtensionPercent(int percent, int start, int goal, double currV, double maxV, double maxA) {
+        targetExtensionTicks = (int) Range.scale(percent, 0, 100, MIN_TICKS, MAX_TICKS);
+        setTargetExtensionTicks(targetExtensionTicks, start, goal, currV, maxV, maxA);
     }
 
     public boolean isBusy() { return extensionMotor.isBusy();}
