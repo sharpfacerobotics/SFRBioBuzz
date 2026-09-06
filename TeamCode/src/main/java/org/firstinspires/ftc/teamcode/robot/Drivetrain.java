@@ -16,8 +16,7 @@ public class Drivetrain {
     private RobotHardware robot;
     public Follower follower;
     public boolean autoDriving = false;
-
-    /* CHANGE FOR BIOBUZZ
+    // CHANGE FOR BIOBUZZ
     public final Pose CLOSE_BLUE_SHOOT_POSE = new Pose(58.78, 84.27,  Math.toRadians(135));
     public final Pose CLOSE_BLUE_INTAKE_POSE = new Pose(129.8,  62.4,     Math.toRadians(35)).mirror();
     public final Pose CLOSE_BLUE_INTAKE_CONTROL_POSE = new Pose(95.4, 48.7, Math.toRadians(0)).mirror();
@@ -28,7 +27,6 @@ public class Drivetrain {
     public final Pose CLOSE_RED_INTAKE_CONTROL_POSE = new Pose(95.4, 48.7, Math.toRadians(0));
     public final Pose FAR_RED_SHOOT_POSE = new Pose(86.7, 20.3, Math.toRadians(shootAngle));
     public final Pose FAR_RED_INTAKE_POSE = new Pose(132.57660626029653, 9.043956043956046,  Math.toRadians(0));
-    */
 
     public Drivetrain(RobotHardware robot) {
         this.robot = robot;
@@ -99,5 +97,12 @@ public class Drivetrain {
                 .build();
         follower.followPath(path, true);
         autoDriving = true;
+    }
+
+    public void initStartingPoint(Pose startPose) {
+        follower.setStartingPose(startPose);
+    }
+    public void holdPoint(Pose targetPose) {
+        follower.holdPoint(targetPose);
     }
 }
