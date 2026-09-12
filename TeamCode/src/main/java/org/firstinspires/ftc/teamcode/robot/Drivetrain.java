@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import static org.firstinspires.ftc.teamcode.auto.FarAuto.shootAngle;
+import com.pedropathing.api.PoseFactory;
 
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -15,6 +16,7 @@ public class Drivetrain {
 
     private RobotHardware robot;
     public Follower follower;
+    private final PoseFactory p = PoseFactory.degrees(); // add this
     public boolean autoDriving = false;
     // CHANGE FOR BIOBUZZ
     public final Pose CLOSE_BLUE_SHOOT_POSE = new Pose(58.78, 84.27,  Math.toRadians(135));
