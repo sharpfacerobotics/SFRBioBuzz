@@ -1,145 +1,223 @@
 package com.arcrobotics.ftclib.util;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
- * Performs spline interpolation given a set of control points.
+ * Shape-preserving piecewise cubic Hermite interpolation (PCHIP).
+ *
+ * <p>Provide all control points at construction time. X values must be finite
+ * and strictly increasing; Y values must be finite. Inputs outside the domain
+ * clamp to the nearest endpoint. NaN input returns NaN.</p>
+ *
+ * <p>Each interval is converted once into a cubic polynomial in normalized
+ * coordinates t in [0, 1]:</p>
+ *
+ * <pre>
+ * t = (x - x0) / (x1 - x0)
+ * P(t) = a*t^3 + b*t^2 + c*t + d
+ * </pre>
+ *
+ * <p>The four coefficients for every interval are precomputed in the
+ * constructor. Runtime lookup is therefore only a binary search, normalization,
+ * and a cubic evaluation using Horner's method.</p>
  */
-public class InterpLUT {
+public final class InterpLUT {
 
-    private List<Double> mX = new ArrayList<>();
-    private List<Double> mY = new ArrayList<>();
-    private List<Double> mM = new ArrayList<>();
+    private final double[] mX;
+    private final double[] mY;
 
-    private InterpLUT(List<Double> x, List<Double> y, List<Double> m) {
-        mX = x;
-        mY = y;
-        mM = m;
-    }
-
-    public InterpLUT() {
-    }
-
-    public void add(double input, double output) {
-        mX.add(input);
-        mY.add(output);
-    }
+    // Four coefficients per interval: [a, b, c, d].
+    // Interval i begins at index 4*i.
+    private final double[] mCoefficients;
 
     /**
-     * Creates a monotone cubic spline from a given set of control points.
+     * Constructs and fully builds the interpolation table.
      *
-     * <p>
-     * The spline is guaranteed to pass through each control point exactly. Moreover, assuming the control points are
-     * monotonic (Y is non-decreasing or non-increasing) then the interpolated values will also be monotonic.
-     *
-     * @throws IllegalArgumentException if the X or Y arrays are null, have different lengths or have fewer than 2 values.
+     * @param x strictly increasing X coordinates
+     * @param y Y coordinates corresponding one-to-one with x
      */
-    //public static LUTWithInterpolator createLUT(List<Double> x, List<Double> y) {
-    public void createLUT() {
-        List<Double> x = this.mX;
-        List<Double> y = this.mY;
+    public InterpLUT(double[] x, double[] y) {
+        validateInput(x, y);
 
-        if (x == null || y == null || x.size() != y.size() || x.size() < 2) {
-            throw new IllegalArgumentException("There must be at least two control "
-                    + "points and the arrays must be of equal length.");
+        // Defensive copies prevent the caller from silently changing the LUT
+        // after its polynomial coefficients have already been calculated.
+        mX = x.clone();
+        mY = y.clone();
+        mCoefficients = buildCoefficients(mX, mY);
+    }
+
+    private static void validateInput(double[] x, double[] y) {
+        if (x == null || y == null) {
+            throw new IllegalArgumentException("X and Y arrays cannot be null.");
+        }
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("X and Y arrays must have equal length.");
+        }
+        if (x.length < 2) {
+            throw new IllegalArgumentException("At least two control points are required.");
         }
 
-        final int n = x.size();
-        Double[] d = new Double[n - 1]; // could optimize this out
-        Double[] m = new Double[n];
-
-        // Compute slopes of secant lines between successive points.
-        for (int i = 0; i < n - 1; i++) {
-            Double h = x.get(i + 1) - x.get(i);
-            if (h <= 0f) {
-                throw new IllegalArgumentException("The control points must all "
-                        + "have strictly increasing X values.");
+        for (int i = 0; i < x.length; i++) {
+            if (!Double.isFinite(x[i]) || !Double.isFinite(y[i])) {
+                throw new IllegalArgumentException(
+                        "Control-point X and Y values must be finite at index " + i + ".");
             }
-            d[i] = (y.get(i + 1) - y.get(i)) / h;
+            if (i > 0 && !(x[i] > x[i - 1])) {
+                throw new IllegalArgumentException(
+                        "X values must be strictly increasing at index " + i + ".");
+            }
         }
+    }
 
-        // Initialize the tangents as the average of the secants.
-        m[0] = d[0];
-        for (int i = 1; i < n - 1; i++) {
-            m[i] = (d[i - 1] + d[i]) * 0.5f;
-        }
-        m[n - 1] = d[n - 2];
+    private static double[] buildCoefficients(double[] x, double[] y) {
+        final int n = x.length;
 
-        // Update the tangents to preserve monotonicity.
+        double[] widths = new double[n - 1];
+        double[] secants = new double[n - 1];
+        double[] tangents = new double[n];
+
+        // Secant slope of every interval.
         for (int i = 0; i < n - 1; i++) {
-            if (d[i] == 0f) { // successive Y values are equal
-                m[i] = Double.valueOf(0f);
-                m[i + 1] = Double.valueOf(0f);
-            } else {
-                double a = m[i] / d[i];
-                double b = m[i + 1] / d[i];
-                double h = Math.hypot(a, b);
-                if (h > 9f) {
-                    double t = 3f / h;
-                    m[i] = t * a * d[i];
-                    m[i + 1] = t * b * d[i];
+            double h = x[i + 1] - x[i];
+            double d = (y[i + 1] - y[i]) / h;
+
+            if (!Double.isFinite(d)) {
+                throw new IllegalArgumentException(
+                        "Control-point scale produced a non-finite slope at interval " + i + ".");
+            }
+
+            widths[i] = h;
+            secants[i] = d;
+        }
+
+        if (n == 2) {
+            // With only two points, the unique shape-preserving interpolation
+            // is simply the straight line joining them.
+            tangents[0] = secants[0];
+            tangents[1] = secants[0];
+        } else {
+            // Interior PCHIP tangents.
+            // Same-sign neighboring secants use a weighted harmonic mean.
+            // Flat sections or direction changes get zero tangent to avoid
+            // creating a new peak/valley between control points.
+            for (int i = 1; i < n - 1; i++) {
+                double left = secants[i - 1];
+                double right = secants[i];
+
+                if (left == 0.0 || right == 0.0
+                        || Math.signum(left) != Math.signum(right)) {
+                    tangents[i] = 0.0;
+                } else {
+                    double w1 = 2.0 * widths[i] + widths[i - 1];
+                    double w2 = widths[i] + 2.0 * widths[i - 1];
+                    tangents[i] = (w1 + w2) / (w1 / left + w2 / right);
+                }
+            }
+
+            tangents[0] = endpointTangent(
+                    widths[0], widths[1], secants[0], secants[1]);
+            tangents[n - 1] = endpointTangent(
+                    widths[n - 2], widths[n - 3], secants[n - 2], secants[n - 3]);
+        }
+
+        // Convert each interval into P(t) = a*t^3 + b*t^2 + c*t + d,
+        // where t = (x - x0) / h.
+        double[] coefficients = new double[4 * (n - 1)];
+
+        for (int i = 0; i < n - 1; i++) {
+            double y0 = y[i];
+            double y1 = y[i + 1];
+            double h = widths[i];
+
+            // Because t is normalized, dP/dt = h * dP/dx.
+            double m0 = h * tangents[i];
+            double m1 = h * tangents[i + 1];
+
+            int k = 4 * i;
+            coefficients[k]     =  2.0 * y0 - 2.0 * y1 + m0 + m1;       // a
+            coefficients[k + 1] = -3.0 * y0 + 3.0 * y1 - 2.0 * m0 - m1; // b
+            coefficients[k + 2] = m0;                                    // c
+            coefficients[k + 3] = y0;                                    // d
+
+            for (int j = 0; j < 4; j++) {
+                if (!Double.isFinite(coefficients[k + j])) {
+                    throw new IllegalArgumentException(
+                            "Control-point scale produced a non-finite coefficient at interval " + i + ".");
                 }
             }
         }
-        mX = x;
-        mY = y;
-        mM = Arrays.asList(m);
+
+        return coefficients;
     }
 
     /**
-     * Interpolates the value of Y = f(X) for given X. Clamps X to the domain of the spline.
-     *
-     * @param input The X value.
-     * @return The interpolated Y = f(X) value.
+     * Shape-preserving one-sided endpoint tangent used by PCHIP.
+     */
+    private static double endpointTangent(double h0, double h1, double d0, double d1) {
+        double result = ((2.0 * h0 + h1) * d0 - h0 * d1) / (h0 + h1);
+
+        if (Math.signum(result) != Math.signum(d0)) {
+            return 0.0;
+        }
+
+        if (Math.signum(d0) != Math.signum(d1)
+                && Math.abs(result) > 3.0 * Math.abs(d0)) {
+            return 3.0 * d0;
+        }
+
+        return result;
+    }
+
+    /**
+     * Evaluates the interpolation at the requested X value.
+     * Values outside the LUT domain clamp to the nearest endpoint.
      */
     public double get(double input) {
-        // Handle the boundary cases.
-        final int n = mX.size();
         if (Double.isNaN(input)) {
-            return input;
-        }
-        if (input <= mX.get(0)) {
-            throw new IllegalArgumentException("User requested value outside of bounds of LUT. Bounds are: " + mX.get(0).toString() + " to " + mX.get(n - 1).toString() + ". Value provided was: " + input);
-        }
-        if (input >= mX.get(n - 1)) {
-            throw new IllegalArgumentException("User requested value outside of bounds of LUT. Bounds are: " + mX.get(0).toString() + " to " + mX.get(n - 1).toString() + ". Value provided was: " + input);
+            return Double.NaN;
         }
 
-        // Find the index 'i' of the last point with smaller X.
-        // We know this will be within the spline due to the boundary tests.
-        int i = 0;
-        while (input >= mX.get(i + 1)) {
-            i += 1;
-            if (input == mX.get(i)) {
-                return mY.get(i);
-            }
+        final int last = mX.length - 1;
+
+        if (input <= mX[0]) {
+            return mY[0];
+        }
+        if (input >= mX[last]) {
+            return mY[last];
         }
 
-        // Perform cubic Hermite spline interpolation.
-        double h = mX.get(i + 1) - mX.get(i);
-        double t = (input - mX.get(i)) / h;
-        return (mY.get(i) * (1 + 2 * t) + h * mM.get(i) * t) * (1 - t) * (1 - t)
-                + (mY.get(i + 1) * (3 - 2 * t) + h * mM.get(i + 1) * (t - 1)) * t * t;
+        // Arrays.binarySearch returns the exact index when input is a control
+        // point, otherwise -(insertionPoint) - 1.
+        int index = Arrays.binarySearch(mX, input);
+        if (index >= 0) {
+            return mY[index];
+        }
+
+        int i = -index - 2;
+        double t = (input - mX[i]) / (mX[i + 1] - mX[i]);
+        int k = 4 * i;
+
+        // Horner's method:
+        // a*t^3 + b*t^2 + c*t + d
+        // = ((a*t + b)*t + c)*t + d
+        return ((mCoefficients[k] * t + mCoefficients[k + 1]) * t
+                + mCoefficients[k + 2]) * t + mCoefficients[k + 3];
     }
 
-    // For debugging.
+    /** Number of supplied control points. */
+    public int size() {
+        return mX.length;
+    }
+
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder();
-        final int n = mX.size();
-        str.append("[");
-        for (int i = 0; i < n; i++) {
-            if (i != 0) {
-                str.append(", ");
+        StringBuilder result = new StringBuilder("[");
+        for (int i = 0; i < mX.length; i++) {
+            if (i > 0) {
+                result.append(", ");
             }
-            str.append("(").append(mX.get(i));
-            str.append(", ").append(mY.get(i));
-            str.append(": ").append(mM.get(i)).append(")");
+            result.append('(').append(mX[i]).append(", ").append(mY[i]).append(')');
         }
-        str.append("]");
-        return str.toString();
+        return result.append(']').toString();
     }
-
 }
