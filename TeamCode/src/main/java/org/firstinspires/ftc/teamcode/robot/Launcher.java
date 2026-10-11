@@ -12,13 +12,13 @@ public class Launcher {
     }
     private double targetVel;
     private double currVel1;
-    private double currVel2;
-    private double hoodRetractionPos1;
-    private double hoodRetractionPos2;
-    private double hoodAnglePos1;
-    private double hoodAnglePos2;
+    public static double hoodRetractionPos1;
+    public static double hoodRetractionPos2;
+    public static double hoodAnglePos1;
+    public static double hoodAnglePos2;
 
     /*
+    comp method
     public void setLauncher(Queue<String> q) {
         String next = q.peek();
         double vx = ShooterConfig.elementVelocity[0];
@@ -30,27 +30,37 @@ public class Launcher {
         currVel2 = robot.launchMotor2.getVelocity();
         setHoodRetraction(next);
         setHoodAngle(next);
-        setVelocityNormal(targetVel);
-        //setVelocityBang(targetVel);
-        //setVelocityPFPow(targetVel);
-        //setVelocityPFVol(targetVel);
+        setVelocityNormal();
+        //setVelocityBang();
+        //setVelocityPFPow();
+        //setVelocityPFVol();
     }
     */
-
+    //testing
     public void setLauncher(double targetVel, Queue<String> q) {
         currVel1 = robot.launchMotor1.getVelocity();
-        currVel2 = robot.launchMotor2.getVelocity();
+        this.targetVel = targetVel;
         //setHoodRetraction(Queue<String> q);
         //setHoodAngle(Queue<String> q);
-        setVelocityNormal(targetVel);
-        //setVelocityBang(targetVel);
-        //setVelocityPFPow(targetVel);
-        //setVelocityPFVol(targetVel);
+        setVelocityNormal();
+        //setVelocityBang();
+        //setVelocityPFPow();
+        //setVelocityPFVol();
+    }
+    //testing method
+    public void setLauncher(double targetVel) {
+        currVel1 = robot.launchMotor1.getVelocity();
+        this.targetVel = targetVel;
+        //setHoodRetraction(Queue<String> q);
+        //setHoodAngle(Queue<String> q);
+        setVelocityNormal();
+        //setVelocityBang();
+        //setVelocityPFPow();
+        //setVelocityPFVol();
     }
 
-    private void setVelocityNormal(double targetVel) {
+    private void setVelocityNormal() {
         robot.launchMotor1.setVelocity(targetVel);
-        robot.launchMotor2.setVelocity(targetVel);
     }
 
     private void setVelocityBang() {
@@ -59,27 +69,37 @@ public class Launcher {
         } else if (currVel1 > targetVel) {
             robot.launchMotor1.setPower(0.0);
         }
-
-        if (currVel2 < targetVel) {
-            robot.launchMotor2.setPower(1.0);
-        } else if (currVel2 > targetVel) {
-            robot.launchMotor2.setPower(0.0);
-        }
     }
     private void setVelocityPF() {
         double pow1 = kF * targetVel + kP * (targetVel - currVel1);
-        double pow2 = kF * targetVel + kP * (targetVel - currVel2);
         pow1 = Math.max(-1.0, Math.min(1.0, pow1));
-        pow2 = Math.max(-1.0, Math.min(1.0, pow2));
 
         robot.launchMotor1.setPower(pow1);
-        robot.launchMotor2.setPower(pow2);
+    }
+    public void setkP(double kP) {
+        Launcher.kP = kP;
+    }
+    public void setkF(double kF) {
+        Launcher.kF = kF;
     }
 
     public double getTargetVelocity() {
         return targetVel;
     }
+    public double getCurrVelocity() {
+        return currVel1;
+    }
+    //testing method
     /*
+    public void setHoodAngle() {
+        robot.hoodAngleServo1.setPosition(hoodAnglePos1);
+        robot.hoodAngleServo2.setPosition(hoodAnglePos2);
+    }
+    public void setHoodRetraction() {
+        robot.hoodGapServo1.setPosition(hoodRetractionPos1);
+        robot.hoodGapServo2.setPosition(hoodRetractionPos2);
+    }
+
     public void setHoodAngle(String next) {
         if (next.equals("POLLEN")) {
             hoodAnglePos1 = ShooterConfig.elementVelocity[2] + RobotConfig.hoodAngleServo1Transform;

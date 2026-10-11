@@ -22,6 +22,7 @@ public class Turret {
     public Turret (RobotHardware robot) {
         this.robot = robot;
     }
+    /*
     private void aim(double deltaTime) {
         int transformedTargetPosition = targetHeadingToTargetPos(goalHeading); //smth like that
         double currPos = robot.turretEncoder.getCurrentPosition();
@@ -50,9 +51,12 @@ public class Turret {
         lastError = tickError;
 
     }
+
+     */
     public void localizeTurret() {
         //use the Cow Path Problem algorithm to find the hall effect zero point
     }
+    /*
     public void updateTurret() {
         double deltaTime = timer.seconds();
         timer.reset();
@@ -66,6 +70,8 @@ public class Turret {
             aim(deltaTime);
         }
     }
+    */
+
     public void restartTimer() {
         timer.reset();
     }
@@ -77,17 +83,16 @@ public class Turret {
     }
     private int targetHeadingToTargetPos(double targetHeading) {
         //gear math + robot orientation and such
+        return 90; //type cast or smth
     }
     private double[] vectorSubtraction(double[] a, double[] b) {
         //vector subtraction logic
         //only get first two elements on list a
+        return new double[2]; //placeholder
     }
-    private void setPosition(int position, double angularVelocity) {
-        //get the initial position from external encoder
-        //PID here
-    }
+
     private void emergencyUnWind(boolean decreaseTick) {
-        unwinding = true;
+        turretState = TurretState.UNWINDING;
         //if encoder pos is above limits, update state
         //unwind in the other direction until back to safety zone
         // if in saftey zone, update unwinding
@@ -95,6 +100,7 @@ public class Turret {
     public boolean goodTurretConfig() {
         //IMPORTANT: DO NOT USE limelight ta, since later will have shoot on the move
         // compare current heading to the target heading in ShooterConfig
+        return Math.abs(ShooterConfig.currentRobotHeading - goalHeading) < RobotConfig.TURRET_HEADING_TOLERANCE;
     }
 
 }

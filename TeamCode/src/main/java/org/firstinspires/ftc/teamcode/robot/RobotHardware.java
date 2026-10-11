@@ -34,7 +34,10 @@ public class RobotHardware {
 
     // Sensors
     public DcMotorEx launchMotor1;
-    public DcMotorEx launchMotor2;
+    public Servo hoodAngleServo1;
+    public Servo hoodAngleServo2;
+    public Servo hoodGapServo1;
+    public Servo hoodGapServo2;
     //public GoBildaPinpointDriver pinpoint;
     //public Limelight3A limelight;
     //public VoltageSensor myControlHubVoltageSensor;
@@ -74,11 +77,14 @@ public class RobotHardware {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         */
-        launchMotor1     = hardwareMap.get(DcMotorEx.class, "launch_motor_1");
+        launchMotor1     = hardwareMap.get(DcMotorEx.class, "launch_motor");
         launchMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
-        launchMotor2     = hardwareMap.get(DcMotorEx.class, "launch_motor_2");
-        launchMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
         launchMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        launchMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        /*
+        hoodAngleServo1 = hardwareMap.get(Servo.class, "hood_angle_servo_1");
+        hoodAngleServo2 = hardwareMap.get(Servo.class, "hood_angle_servo_2");
+        hoodGapServo1 = hardwareMap.get(Servo.class, "hood_gap_servo_1");
+        hoodGapServo2 = hardwareMap.get(Servo.class, "hood_gap_servo_2");
+        */
     }
 }

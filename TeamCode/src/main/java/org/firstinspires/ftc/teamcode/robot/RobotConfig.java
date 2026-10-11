@@ -12,6 +12,7 @@ public class RobotConfig {
     // - turret constants need to be tuned
     // actually make that everything needs to be tuned
     public static final double TURRET_TICK_TOLERANCE = 2;
+    public static final double TURRET_HEADING_TOLERANCE = 0.05;
     public static final double TURRET_LIMIT_TICK_TOLERANCE = 10;
     public static final double MAX_TURRET_POWER = 0.9;
     public static final double MAX_TURRET_TICKS = 100;

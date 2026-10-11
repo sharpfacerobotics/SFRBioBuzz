@@ -27,14 +27,14 @@ public class ShooterConfig {
     public void calculateShootingConfig(double averageTa, double[] dist, double[] robotTranslationalVelocity, double targetLLHeading, double currRobotHeading) {
         //use the InterpLUT class to get the shooter velocity from averageTa and dist, then AVERAGE the two.
         double distance = Math.hypot(dist[0], dist[1]);
+        double magnitude = distToVel.get(distance);
         if (averageTa != 0.0) {
-            double magnitude = 0.9 * (distToVel.get(distance)) + 0.1 * (apriltagTaToVel.get(averageTa));
-        } else {
-            double magnitude = (distToVel.get(distance));
+            magnitude = 0.9 * (distToVel.get(distance)) + 0.1 * (apriltagTaToVel.get(averageTa));
         }
         currentRobotHeading = currRobotHeading;
 
         //then do vector math for x and y
+
         //update the elementVelocity list
 
     }
