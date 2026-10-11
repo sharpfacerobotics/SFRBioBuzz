@@ -78,5 +78,7 @@ public class RobotHardware {
         launchMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
         launchMotor2     = hardwareMap.get(DcMotorEx.class, "launch_motor_2");
         launchMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
+        launchMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        launchMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 }

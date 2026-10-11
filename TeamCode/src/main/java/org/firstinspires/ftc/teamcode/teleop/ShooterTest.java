@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -14,29 +15,18 @@ import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
 import org.firstinspires.ftc.teamcode.robot.Vision;
 @TeleOp(name="Shooter Test", group="OpMode")
+@Configurable
 public class ShooterTest extends OpMode {
-    private double velocity = 0;
+    public static double velocity = 0;
     private RobotHardware robot = new RobotHardware();
     private Launcher launcher = new Launcher(robot);
-    boolean aWasPressed = false;
-    boolean bWasPressed = false;
+
     @Override
     public void init() {
     }
 
     @Override
     public void loop() {
-        if (gamepad1.a && !aWasPressed) {
-            velocity += 1000;
-            aWasPressed = true;
-        } else if (!gamepad1.a) {
-            aWasPressed = false;
-        }
-        if (gamepad1.b && !bWasPressed) {
-            velocity -= 100;
-        } else if (!gamepad1.b) {
-            bWasPressed = false;
-        }
-        launcher.setVelocityNormal(velocity);
+        launcher.setLauncher(velocity);
     }
 }
