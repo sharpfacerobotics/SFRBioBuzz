@@ -23,7 +23,7 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 │   ├── HiveVision          Limelight AprilTag: averaged ta + MegaTag2 relocalization
 │   ├── ElementVision       Limelight detector: finds pollen/nectar on the field
 │   ├── PoseStorage         carries the pose from auto into TeleOp
-│   └── helperClasses/      InterpLUT, MotionProfile, ShotDetector, FieldDrawing, ValueTuner
+│   └── helperClasses/      InterpLUT, MotionProfile, ShotDetector, FieldDrawing, MatchLogger, ValueTuner
 ├── teleop/                 TeleopBase + CompTeleopRed/Blue, pit test + tuning OpModes
 ├── auto/                   AutoBase + Subordinate / Parallel Inside / Parallel Outside autos
 └── pedro/                  Pedro Constants (follower setup) + tuning procedures
@@ -124,12 +124,30 @@ The shooter test OpModes (`ShooterTestPanels`, `FlywheelPFTuning*`) call
 |---|---|---|---|
 | Left stick | drive | A | flywheel on/off |
 | Right stick | turn | Right trigger (hold) | **fire** |
-| Right bumper | slow mode | D-pad left/right | turret trim ±1° |
-| Right trigger | intake | D-pad down | clear trim |
-| Left trigger | outtake | Y | re-home turret |
-| Left bumper | snap pose to Limelight | Start | turret: call current spot zero (if homing fails) |
-| Options | reset field-centric heading | Back | reset storage count |
-| Back | field ↔ robot centric | | |
+| Right bumper | slow mode | X | auto-fire on/off |
+| Right trigger | intake | B | manual turret on/off (right stick X) |
+| Left trigger | outtake | D-pad left/right | turret trim ±1° |
+| A (hold) | aim chassis at hive | D-pad down | clear trim |
+| Left bumper | snap pose to Limelight | Y | re-home turret |
+| Options | reset field-centric heading | Start | turret: call current spot zero (if homing fails) |
+| Back | field ↔ robot centric | Back | reset storage count |
+
+**Shooting modes:**
+- **Auto spin-up:** the flywheel spins up whenever storage has elements in it
+  (`AUTO_SPINUP_WHEN_LOADED`), so it's already at speed when you pull fire.
+- **Auto-fire (X):** fires on its own whenever the robot is loaded, within
+  `MIN/MAX_SHOT_DISTANCE`, and the shot is ready. Driver 2 just watches.
+- **Turret down?** Press B for manual turret on driver 2's right stick, or have driver 1 hold
+  A to turn the whole robot toward the hive. In both cases the driver judges the aim, so
+  firing doesn't wait for the turret to report on target.
+
+**On-screen stats and warnings:** shots fired, elements intaken and last cycle time, plus
+warnings for low battery, a disconnected Limelight, a slow loop, or a match log that isn't writing.
+
+**Match logs:** every TeleOp and auto writes a CSV of pose, flywheel, turret, storage and
+firing to `/sdcard/FIRST/data/matchlogs/` on the Control Hub, at 20 Hz. Pull them with
+`adb pull /sdcard/FIRST/data/matchlogs` or Android Studio's Device Explorer, then graph them
+in a spreadsheet to see why a shot missed or where cycle time went.
 
 **Feedback:** gamepad1 double-buzzes when storage fills. Gamepad2's light is **green** when a
 shot is ready, **yellow** while the turret homes, and **red** if homing failed (press Start
