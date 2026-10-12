@@ -3,44 +3,34 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.pedropathing.math.Pose;
 
 /**
- * "Parallel" auto from the OUTSIDE start (far from our hive). Owner: Vivek.
+ * "Parallel" auto, OUTSIDE start (audience wall). Owner: Vivek.
  *
- * <p>Shoots preloads from the far zone, then works the far and middle spike marks so it
- * stays out of the way of a partner running the inside auto, then parks.</p>
+ * <p>Pairs with the INSIDE auto: this one works the audience end of our half - the GARDEN's 4
+ * POLLEN and the FLOWER on our wall - shooting from the low spot, then parks.</p>
  *
- * <p>Poses are for BLUE in Pedro coordinates (inches, degrees). Red is mirrored automatically.
- * TODO(measure): every pose below is a placeholder until the BioBuzz field is measured.</p>
+ * <p>Poses are RED (see FieldPoses); blue is rotated automatically.</p>
  */
 public abstract class ParallelAutoOutsideBase extends AutoBase {
-    protected Pose startPose       = pose(56, 9, 90);
-    protected Pose farShootPose    = pose(56, 20, 90);
-    protected Pose farSpikeLineUp  = pose(48, 36, 180);
-    protected Pose farSpikeEnd     = pose(18, 36, 180);
-    protected Pose midSpikeLineUp  = pose(48, 60, 180);
-    protected Pose midSpikeEnd     = pose(18, 60, 180);
-    protected Pose midReturnControl = pose(50, 40, 180);
-    protected Pose parkPose        = pose(36, 12, 90);
-
     @Override
     protected Pose startPose() {
-        return startPose;
+        return FieldPoses.START_AUDIENCE_WALL;
     }
 
     @Override
     protected void buildRoutine() {
-        drive("to far shoot zone", farShootPose);
-        shoot("preloads");
+        drive("to low shoot spot", FieldPoses.SHOOT_LOW);
+        shoot("pre-loads");
 
-        drive("line up far spike", farSpikeLineUp);
-        driveIntaking("intake far spike", farSpikeEnd);
-        drive("back to far shoot zone", farShootPose);
-        shoot("far spike");
+        drive("line up garden", FieldPoses.GARDEN_LINE_UP);
+        driveIntaking("sweep garden pollen", FieldPoses.GARDEN_END);
+        drive("back to low shoot spot", FieldPoses.SHOOT_LOW);
+        shoot("garden pollen");
 
-        drive("line up middle spike", midSpikeLineUp);
-        driveIntaking("intake middle spike", midSpikeEnd);
-        drive("back to far shoot zone", midReturnControl, farShootPose);
-        shoot("middle spike");
+        drive("line up wall flower", FieldPoses.WALL_FLOWER_LINE_UP);
+        driveIntaking("take wall flower pollen", FieldPoses.WALL_FLOWER);
+        drive("back to low shoot spot", FieldPoses.SHOOT_LOW);
+        shoot("wall flower pollen");
 
-        drive("park", parkPose);
+        drive("park in loading zone", FieldPoses.WALL_FLOWER_LINE_UP, FieldPoses.PARK);
     }
 }
