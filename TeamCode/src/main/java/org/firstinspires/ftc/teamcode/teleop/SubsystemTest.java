@@ -79,7 +79,7 @@ public class SubsystemTest extends OpMode {
             flywheelOn = !flywheelOn;
         }
         if (gamepad1.yWasPressed()) {
-            hoodElement = hoodElement == Element.POLLEN ? Element.NECTAR : Element.POLLEN;
+            hoodElement = hoodElement == Element.POLLEN ? Element.RED_NECTAR : Element.POLLEN;
         }
         if (gamepad1.dpadUpWasPressed()) {
             hoodAngle = Range.clip(hoodAngle + 0.05, RobotConfig.HOOD_ANGLE_MIN, RobotConfig.HOOD_ANGLE_MAX);

@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 import org.firstinspires.ftc.teamcode.robot.Trigger;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry;
 
 /**
  * Builds the ShooterConfig distance table. Drive to a spot, set VELOCITY and HOOD_ANGLE in
@@ -38,7 +39,8 @@ import org.firstinspires.ftc.teamcode.robot.Turret;
 public class ShotTableTuner extends OpMode {
     public static double VELOCITY = 1500;
     public static double HOOD_ANGLE = 0.4;
-    public static boolean BLUE = true;
+    public static boolean BLUE = false;
+    public static boolean FAR_CELL = false;
     public static double START_X = 72;
     public static double START_Y = 72;
     public static double START_HEADING_DEG = 90;
@@ -75,15 +77,16 @@ public class ShotTableTuner extends OpMode {
         robot.follower.update();
         Pose pose = robot.follower.pose();
         Velocity velocity = robot.follower.velocity();
-        double goalX = BLUE ? RobotConfig.BLUE_HIVE_X : RobotConfig.RED_HIVE_X;
-        double goalY = BLUE ? RobotConfig.BLUE_HIVE_Y : RobotConfig.RED_HIVE_Y;
+        // Shoot at the cell you pick in Panels (FAR_CELL) - it must be the one facing up.
+        double goalX = FieldGeometry.cellX(!BLUE);
+        double goalY = FieldGeometry.cellY(FAR_CELL ? FieldGeometry.Cell.FAR : FieldGeometry.Cell.AUDIENCE);
 
         drivetrain.drive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x,
                 pose.heading(), 0, false, true);
         intake.update(gamepad1.left_trigger > 0.3, false, false);
 
         if (gamepad1.yWasPressed()) {
-            element = element == Element.POLLEN ? Element.NECTAR : Element.POLLEN;
+            element = element == Element.POLLEN ? Element.RED_NECTAR : Element.POLLEN;
         }
         if (gamepad1.startWasPressed()) {
             turret.forceZeroHere();
