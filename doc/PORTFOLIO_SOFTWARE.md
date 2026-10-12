@@ -53,7 +53,11 @@ distance depends on the virtual goal, so we iterate three times, which converges
 size of the cell. Flywheel speed and hood angle come from a measured distance table, using
 shape-preserving (PCHIP) interpolation so the curve never overshoots between data points.
 
-**Tracking the moving target.** Each cell's AprilTag cluster is on its underside, facing down.
+**Tracking the moving target.** We modeled the hive's tipping from the official field
+calibration spec: a hive tips at 8 POLLEN, or 3 POLLEN + 3 NECTAR, so one NECTAR weighs about 5/3
+of a POLLEN. The upward cell starts with 3 NECTAR, so our model predicts **the 3rd pre-load tips
+it**. Auto then pauses for the hive to settle and sends the 4th pre-load to the other cell.
+Each cell's AprilTag cluster is on its underside, facing down.
 The cell facing up therefore shows its tags to our camera, and a tipped cell hides them. When
 we keep seeing the *other* cell's tags and not the target's, `HiveTracker` decides the hive has
 tipped and switches targets, even when our partner caused the tip. Driver 2 can override it

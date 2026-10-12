@@ -41,9 +41,16 @@ Field data comes from the Competition Manual (sections 9–11). It's in
   wall. +x points toward the blue wall, +y away from the audience. Heading 0 faces the blue wall.
   The field is **180° rotationally symmetric**, so blue = red rotated about the centre.
 - **HIVE:** in the field centre. Each alliance has two CELLS, and only the **upward** one
-  scores. Each HIVE TIP (20 pts) flips which one that is. `HiveTracker` follows this from the
-  AprilTags under the cells (red 30–33 far / 34–37 audience, blue 38–41 audience / 42–45 far),
-  and driver 2's left bumper overrides it.
+  scores. Each HIVE TIP (20 pts) flips which one that is. `HiveTracker` follows it in three ways:
+  - A **weight model**: hives are calibrated to tip at 8 POLLEN, or 3 POLLEN + 3 NECTAR
+    (Event Field Setup Guide §12). The starting cell already holds 3 NECTAR, so **the 3rd
+    pre-load tips it** and the 4th goes into the other cell.
+  - The **AprilTags** under the cells (red 30–33 far / 34–37 audience, blue 38–41 audience /
+    42–45 far), which catch tips our partner causes.
+  - Driver 2's left bumper as a manual override.
+
+  Firing pauses for 0.6 s after each tip while the hive swings, and auto passes the hive state
+  to TeleOp.
 - **Elements:** POLLEN is a yellow 2.8 in ball, NECTAR a red or blue 3.6 in ball. The hood gap
   is set by size, and storage tells them apart by hue.
 - **Rules enforced in code:**
@@ -154,6 +161,7 @@ The shooter test OpModes (`ShooterTestPanels`, `FlywheelPFTuning*`) call
 | Left trigger | outtake | D-pad left/right | turret trim ±1° |
 | A (hold) | aim chassis at hive | D-pad down | clear trim |
 | B (hold) | **park assist:** drive into the LOADING ZONE | Y | re-home turret |
+| X (hold) | **element assist:** turn toward the nearest legal element | | |
 | Left bumper | snap pose to Limelight | Start | turret: call current spot zero (if homing fails) |
 | Options | reset field-centric heading | Back | reset storage count |
 | Back | field ↔ robot centric | Left bumper | "hive tipped": flip the target cell |
@@ -239,6 +247,16 @@ Or right-click `TeamCode/src/test/java` in Android Studio, then Run Tests.
 ## Tuning checklist
 
 Every placeholder is marked `TODO(tune)`, `TODO(measure)` or `TODO(confirm)`. Search for `TODO(`.
+
+**Status:**
+
+| Item | Status |
+|---|---|
+| Field layout, tag IDs, zones | ✅ Done from the Competition Manual and the Event Field Setup Guide's tile map (red loading zone A5, garden A1; blue F2/F6) |
+| Hive tip threshold | ✅ Done: calibration spec built into `HiveTracker` |
+| FTC → field rotation for the Limelight | ✅ Done: derived from the official FTC field coordinate definition |
+| Pedro, flywheel, shot table, turret, storage hues | ⏳ Needs the robot: steps 1–5 below |
+| Exact hive/cell positions (±2 in), tag visibility from the robot | ⏳ Needs a real field: steps 6–7 |
 
 1. **Pedro:** run the Pinpoint, Mecanum and Foresight tuners in `pedro/procedures`, then
    paste their output into `pedro/Constants.java`.
