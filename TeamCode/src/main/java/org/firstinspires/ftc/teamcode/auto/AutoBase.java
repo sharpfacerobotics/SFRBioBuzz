@@ -251,6 +251,7 @@ public abstract class AutoBase extends LinearOpMode {
             Pose pose = robot.follower.pose();
             Velocity velocity = robot.follower.velocity();
             PoseStorage.save(pose); // every loop, in case auto gets cut off at 30 s
+            PoseStorage.saveHive(hive.getUpCell(), hive.getWeight());
 
             if (voltageTimer.seconds() > 0.25) {
                 voltageTimer.reset();
@@ -296,8 +297,11 @@ public abstract class AutoBase extends LinearOpMode {
             launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
 
             if (shooting) {
-                trigger.fire(launcher.isReady(), turret.isOnTarget());
+                // Hold fire while the hive swings after a tip - the 3rd pre-load tips it and
+                // the 4th must go into the OTHER cell once it has settled.
+                trigger.fire(launcher.isReady(), turret.isOnTarget() && !hive.isSettling(matchTimer.seconds()));
                 if (launcher.shotDetected()) {
+                    hive.recordShot(next != null && next.isNectar(), matchTimer.seconds());
                     storage.removeNext();
                     shotsFired++; // running total so the 20 Hz log can't miss a shot
                 }
@@ -372,7 +376,7 @@ public abstract class AutoBase extends LinearOpMode {
                 }
                 return pathDone && (t > RobotConfig.AUTO_INTAKE_DWELL || storage.isFull());
             case SHOOT:
-                return storage.isEmpty() || t > RobotConfig.AUTO_SHOOT_TIMEOUT;
+                return storage.isEmpty() || t > RobotConfig.AUTO_SHOOT_TIMEOUT + HiveTracker.SETTLE_TIME;
             case PAUSE:
             default:
                 return t > step.seconds;
