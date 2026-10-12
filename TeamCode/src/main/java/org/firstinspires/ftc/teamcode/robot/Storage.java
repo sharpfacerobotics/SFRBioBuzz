@@ -18,6 +18,9 @@ import java.util.ArrayDeque;
  *
  * <p>The launcher needs {@link #peekNext()} to pick the right hood angle/gap for the next
  * element.</p>
+ *
+ * <p>BIOBUZZ rules this enforces: never count past 4 (G407), and never keep the opponent's
+ * NECTAR (G408) - it isn't counted and {@link #shouldReject()} tells the OpMode to spit it out.</p>
  */
 public class Storage {
     private final RobotHardware robot;
@@ -30,6 +33,9 @@ public class Storage {
     private Element lastSeen = Element.UNKNOWN;
     private double lastHue = 0;
     private int totalIntaken = 0;
+    /** The element sitting at the entry was never counted (rejected, or we were full). */
+    private boolean entryUncounted = false;
+    private boolean rejectRequested = false;
 
     public Storage(RobotHardware robot) {
         this.robot = robot;
@@ -38,10 +44,12 @@ public class Storage {
     /**
      * Call once per loop. Reads the entry sensor and keeps the count in sync.
      *
-     * @param intaking  intake is pulling in - a new element at the entry is counted
-     * @param outtaking intake is spitting out - an element leaving the entry is uncounted
+     * @param intaking       intake is pulling in - a new element at the entry is counted
+     * @param outtaking      intake is spitting out - an element leaving the entry is uncounted
+     * @param opponentNectar RobotConfig.opponentNectar(alliance) - never counted, flagged to reject
      */
-    public void update(boolean intaking, boolean outtaking) {
+    public void update(boolean intaking, boolean outtaking, Element opponentNectar) {
+        rejectRequested = false;
         // The distance read is a slow I2C call (not in the bulk read). Elements can only
         // cross the entry while the intake is moving, so skip it the rest of the time.
         if (!intaking && !outtaking) {
@@ -56,13 +64,23 @@ public class Storage {
         if (outtaking) {
             // Count it out when it clears the sensor on the way out (falling edge).
             if (!present && elementAtEntry) {
-                elements.pollLast(); // last in is first out of the intake
+                if (!entryUncounted) {
+                    elements.pollLast(); // last in is first out of the intake
+                }
+                entryUncounted = false;
             }
         } else if (present && !elementAtEntry && debounceTimer.seconds() > RobotConfig.STORAGE_DEBOUNCE_TIME) {
             // Count on the rising edge only, so one element sitting there counts once.
             debounceTimer.reset();
             lastSeen = classify(robot.storageSensor.getNormalizedColors());
-            if (!isFull()) {
+            if (lastSeen == opponentNectar) {
+                entryUncounted = true;
+                rejectRequested = true;
+            } else if (isFull()) {
+                entryUncounted = true; // a 5th element: G407 - the OpMode should back it out
+                rejectRequested = true;
+            } else {
+                entryUncounted = false;
                 elements.addLast(lastSeen);
                 totalIntaken++;
             }
@@ -81,6 +99,14 @@ public class Storage {
     /** Classify whatever is at the entry right now, for SubsystemTest. */
     public Element readEntryColor() {
         return classify(robot.storageSensor.getNormalizedColors());
+    }
+
+    /**
+     * True for one loop when something just came in that we must not keep: opponent NECTAR
+     * (G408) or a 5th element (G407). Run the intake backwards for REJECT_TIME.
+     */
+    public boolean shouldReject() {
+        return rejectRequested;
     }
 
     /** Next element to be launched, or null if empty. */
@@ -159,11 +185,18 @@ public class Storage {
     }
 
     static Element classifyHue(double hue) {
+        if (hue < 0) {
+            return Element.UNKNOWN;
+        }
         if (hue >= RobotConfig.POLLEN_HUE_MIN && hue <= RobotConfig.POLLEN_HUE_MAX) {
             return Element.POLLEN;
         }
-        if (hue >= RobotConfig.NECTAR_HUE_MIN && hue <= RobotConfig.NECTAR_HUE_MAX) {
-            return Element.NECTAR;
+        if (hue >= RobotConfig.BLUE_NECTAR_HUE_MIN && hue <= RobotConfig.BLUE_NECTAR_HUE_MAX) {
+            return Element.BLUE_NECTAR;
+        }
+        // red wraps around 0 degrees
+        if (hue >= RobotConfig.RED_NECTAR_HUE_MIN || hue <= RobotConfig.RED_NECTAR_HUE_MAX) {
+            return Element.RED_NECTAR;
         }
         return Element.UNKNOWN;
     }

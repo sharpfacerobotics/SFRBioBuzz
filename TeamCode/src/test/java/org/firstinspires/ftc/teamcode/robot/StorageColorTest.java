@@ -21,11 +21,11 @@ public class StorageColorTest {
     }
 
     @Test
-    public void classifiesConfiguredWindows() {
-        double pollen = (RobotConfig.POLLEN_HUE_MIN + RobotConfig.POLLEN_HUE_MAX) / 2;
-        double nectar = (RobotConfig.NECTAR_HUE_MIN + RobotConfig.NECTAR_HUE_MAX) / 2;
-        assertEquals(Element.POLLEN, Storage.classifyHue(pollen));
-        assertEquals(Element.NECTAR, Storage.classifyHue(nectar));
-        assertEquals(Element.UNKNOWN, Storage.classifyHue(180));
+    public void classifiesBiobuzzColours() {
+        assertEquals(Element.POLLEN, Storage.classifyHue(Storage.hue(1, 0.85, 0.1)));  // yellow
+        assertEquals(Element.BLUE_NECTAR, Storage.classifyHue(Storage.hue(0.1, 0.3, 1))); // blue
+        assertEquals(Element.RED_NECTAR, Storage.classifyHue(Storage.hue(1, 0.1, 0.15)));  // red, hue ~355
+        assertEquals(Element.RED_NECTAR, Storage.classifyHue(5));                          // red wraps past 0
+        assertEquals(Element.UNKNOWN, Storage.classifyHue(120));                           // green
     }
 }
