@@ -41,7 +41,7 @@ public class ShooterConfigTest {
     @Test
     public void hoodDependsOnElement() {
         sc.calculateShootingConfig(72, 72, 0, 0, 0, 72, 120, 0);
-        assertNotEquals(sc.getHoodAngle(Element.POLLEN), sc.getHoodAngle(Element.NECTAR), 1e-9);
+        assertNotEquals(sc.getHoodAngle(Element.POLLEN), sc.getHoodAngle(Element.RED_NECTAR), 1e-9);
         assertEquals(sc.getHoodAngle(Element.POLLEN), sc.getHoodAngle(null), 1e-12); // empty -> pollen
     }
 

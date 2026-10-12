@@ -113,7 +113,7 @@ public class ShooterConfig {
 
     /** Hood angle for the element about to be shot (null/UNKNOWN use pollen). */
     public double getHoodAngle(Element next) {
-        return next == Element.NECTAR ? nectarAngle : pollenAngle;
+        return next != null && next.isNectar() ? nectarAngle : pollenAngle;
     }
 
     /** Close enough (and far enough) to shoot - the distance table only covers this band. */

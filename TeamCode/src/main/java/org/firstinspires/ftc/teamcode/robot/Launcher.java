@@ -195,7 +195,7 @@ public class Launcher {
             return;
         }
         hoodElement = next;
-        if (next == Element.NECTAR) {
+        if (next.isNectar()) { // NECTAR is 3.6 in, POLLEN 2.8 in
             robot.hoodGapServo1.setPosition(RobotConfig.HOOD_NECTAR_GAP_1);
             robot.hoodGapServo2.setPosition(RobotConfig.HOOD_NECTAR_GAP_2);
         } else {
