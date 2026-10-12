@@ -81,10 +81,13 @@ public final class FieldGeometry {
     }
 
     // ------------------------------------------------------------------ zones (red values)
-    /** Red LOADING ZONE (23 x 11 in box on the red wall): park here for 5 pts. */
+    // Tile grid (Event Field Setup Guide 8.3/8.4): columns A-F run from the red wall (x) and
+    // rows 1-6 from the audience wall (y), 24 in each. Red LOADING ZONE = tile A5, red
+    // GARDEN = tile A1; blue's are F2 and F6 - exactly the 180 degree rotation.
+    /** Red LOADING ZONE (tile A5: 11 in deep from the red wall along the A5 seams): PARK here. */
     public static double RED_LOADING_ZONE_X = 5.5;   // centre; zone spans x 0..11
-    public static double RED_LOADING_ZONE_Y = 107.5; // centre; zone spans ~y 96..119
-    /** Red GARDEN: strip along the audience wall from the red corner, x 0..23. */
+    public static double RED_LOADING_ZONE_Y = 108.0; // centre; zone spans y 96..120 (tile seams)
+    /** Red GARDEN: tile A1, strip along the audience wall from the red corner, x 0..23. */
     public static double RED_GARDEN_X = 11.5;
     public static double RED_GARDEN_Y = 1.0;
     /** The two FLOWERS on red's side (each starts with 4 POLLEN to retrieve from the bottom). */

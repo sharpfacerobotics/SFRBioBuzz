@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import com.pedropathing.math.Pose;
 
+import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry.Cell;
+
 /**
  * Hands the robot's pose from auto to TeleOp. Owner: Ryan.
  *
@@ -11,6 +13,9 @@ import com.pedropathing.math.Pose;
  */
 public class PoseStorage {
     private static Pose currentPose = null;
+    // Hive state at the end of auto, so TeleOp aims at the right cell (auto usually tips it).
+    private static Cell hiveUpCell = null;
+    private static double hiveWeight = 0;
 
     private PoseStorage() {
     }
@@ -36,5 +41,24 @@ public class PoseStorage {
     /** Call at the end of TeleOp so an old pose doesn't carry into the next match. */
     public static void clear() {
         currentPose = null;
+        hiveUpCell = null;
+    }
+
+    /** Call in auto (every loop) with the HiveTracker's state. */
+    public static void saveHive(Cell upCell, double weight) {
+        hiveUpCell = upCell;
+        hiveWeight = weight;
+    }
+
+    public static boolean hasHive() {
+        return hiveUpCell != null;
+    }
+
+    public static Cell getHiveUpCell() {
+        return hiveUpCell;
+    }
+
+    public static double getHiveWeight() {
+        return hiveWeight;
     }
 }
