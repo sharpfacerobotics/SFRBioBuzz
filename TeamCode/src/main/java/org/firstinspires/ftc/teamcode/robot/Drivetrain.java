@@ -109,6 +109,16 @@ public class Drivetrain {
         return Math.max(-RobotConfig.AIM_ASSIST_MAX_TURN, Math.min(RobotConfig.AIM_ASSIST_MAX_TURN, turn));
     }
 
+    /**
+     * Turn command toward something the camera sees tx degrees to the right (ElementVision).
+     *
+     * @return turn power (CCW +), capped at AIM_ASSIST_MAX_TURN
+     */
+    public static double bearingTurn(double txDegrees) {
+        double turn = -RobotConfig.ELEMENT_ASSIST_KP * Math.toRadians(txDegrees); // right of centre -> turn CW
+        return Math.max(-RobotConfig.AIM_ASSIST_MAX_TURN, Math.min(RobotConfig.AIM_ASSIST_MAX_TURN, turn));
+    }
+
     /** True if any stick is pushed past LOCK_BREAK_STICK - driver wants control back. */
     public static boolean sticksActive(double forward, double strafe, double turn) {
         return Math.abs(forward) > RobotConfig.LOCK_BREAK_STICK

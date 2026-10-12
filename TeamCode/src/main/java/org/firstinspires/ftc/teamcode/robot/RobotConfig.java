@@ -95,6 +95,8 @@ public class RobotConfig {
     /** Chassis aim assist (turret-down fallback): turn = kP * heading error, capped. */
     public static double AIM_ASSIST_KP = 1.5;
     public static double AIM_ASSIST_MAX_TURN = 0.6;
+    /** Element assist (hold X): turn toward the nearest element, turn = kP * bearing (rad). */
+    public static double ELEMENT_ASSIST_KP = 1.2;
     /** Manual turret: stick -> power scale. */
     public static double MANUAL_TURRET_SCALE = 0.6;
     // Health warnings shown on telemetry

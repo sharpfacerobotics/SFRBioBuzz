@@ -24,4 +24,11 @@ public class DrivetrainAimTest {
         assertEquals(RobotConfig.AIM_ASSIST_MAX_TURN, Drivetrain.aimTurn(Math.PI / 2, 0), 1e-12);
         assertEquals(-RobotConfig.AIM_ASSIST_MAX_TURN, Drivetrain.aimTurn(-Math.PI / 2, 0), 1e-12);
     }
+
+    @Test
+    public void elementOnTheRightMeansTurnRight() {
+        assertTrue(Drivetrain.bearingTurn(10) < 0);   // CW
+        assertTrue(Drivetrain.bearingTurn(-10) > 0);  // CCW
+        assertEquals(0, Drivetrain.bearingTurn(0), 1e-12);
+    }
 }
