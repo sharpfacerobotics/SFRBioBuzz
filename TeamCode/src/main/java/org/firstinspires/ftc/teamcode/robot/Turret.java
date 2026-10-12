@@ -86,6 +86,27 @@ public class Turret {
         return turretState == TurretState.AIMING || turretState == TurretState.UNWINDING;
     }
 
+    /**
+     * Driver-controlled turret (fallback when auto-aim is wrong). Still respects the soft
+     * limits once the turret knows where zero is.
+     *
+     * @param stick [-1, 1], + = CCW
+     */
+    public void updateManual(double stick) {
+        timer.reset();
+        if (isLocalized()) {
+            angle = (readTicks() - zeroOffsetTicks) / RobotConfig.TURRET_TICKS_PER_RAD;
+            lastAngle = angle;
+        }
+        power = Range.clip(stick * RobotConfig.MANUAL_TURRET_SCALE,
+                -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER);
+        if (isLocalized() && ((angle >= RobotConfig.TURRET_MAX_ANGLE && power > 0)
+                || (angle <= RobotConfig.TURRET_MIN_ANGLE && power < 0))) {
+            power = 0;
+        }
+        robot.turretServo.setPower(power);
+    }
+
     /** Restart the hall effect search (e.g. driver button if the turret got bumped). */
     public void relocalize() {
         turretState = TurretState.LOCALIZING;

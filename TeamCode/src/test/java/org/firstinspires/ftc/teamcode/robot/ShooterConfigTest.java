@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -57,5 +58,15 @@ public class ShooterConfigTest {
         } finally {
             ShooterConfig.velocity[1] = old;
         }
+    }
+
+    @Test
+    public void rangeCheckUsesDistanceBand() {
+        sc.calculateShootingConfig(72, 72, 0, 0, 0, 72, 120, 0);     // 48 in
+        assertTrue(sc.isInRange());
+        sc.calculateShootingConfig(72, 110, 0, 0, 0, 72, 120, 0);    // 10 in - too close
+        assertFalse(sc.isInRange());
+        sc.calculateShootingConfig(0, 0, 0, 0, 0, 144, 144, 0);      // ~204 in - too far
+        assertFalse(sc.isInRange());
     }
 }

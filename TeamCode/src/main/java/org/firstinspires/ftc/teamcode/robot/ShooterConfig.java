@@ -116,6 +116,11 @@ public class ShooterConfig {
         return next == Element.NECTAR ? nectarAngle : pollenAngle;
     }
 
+    /** Close enough (and far enough) to shoot - the distance table only covers this band. */
+    public boolean isInRange() {
+        return distanceToGoal >= RobotConfig.MIN_SHOT_DISTANCE && distanceToGoal <= RobotConfig.MAX_SHOT_DISTANCE;
+    }
+
     public double getDistanceToGoal() {
         return distanceToGoal;
     }
