@@ -26,4 +26,7 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
+
+    // Plain-JVM unit tests for robot math (run: gradlew :TeamCode:testDebugUnitTest)
+    testImplementation 'junit:junit:4.13.2'
 }
