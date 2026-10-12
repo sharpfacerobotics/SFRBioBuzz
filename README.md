@@ -23,11 +23,36 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 │   ├── HiveVision          Limelight AprilTag: averaged ta + MegaTag2 relocalization
 │   ├── ElementVision       Limelight detector: finds pollen/nectar on the field
 │   ├── PoseStorage         carries the pose from auto into TeleOp
-│   └── helperClasses/      InterpLUT, MotionProfile, ShotDetector, FieldDrawing, MatchLogger, ValueTuner
+│   └── helperClasses/      FieldGeometry (BIOBUZZ field), HiveTracker, InterpLUT, MotionProfile,
+│                           ShotDetector, FieldDrawing, MatchLogger, ValueTuner
 ├── teleop/                 TeleopBase + CompTeleopRed/Blue, pit test + tuning OpModes
 ├── auto/                   AutoBase + Subordinate / Parallel Inside / Parallel Outside autos
 └── pedro/                  Pedro Constants (follower setup) + tuning procedures
+tools/analyze_matchlog.py   turns match logs into cycle times, bottlenecks, battery/loop health
+doc/PORTFOLIO_SOFTWARE.md   draft of the portfolio's software section
 ```
+
+## BIOBUZZ in the code
+
+Field data comes from the Competition Manual (sections 9–11). It's in
+`robot/helperClasses/FieldGeometry.java`.
+
+- **Field frame:** inches, with the origin at the corner where the audience wall meets the red
+  wall. +x points toward the blue wall, +y away from the audience. Heading 0 faces the blue wall.
+  The field is **180° rotationally symmetric**, so blue = red rotated about the centre.
+- **HIVE:** in the field centre. Each alliance has two CELLS, and only the **upward** one
+  scores. Each HIVE TIP (20 pts) flips which one that is. `HiveTracker` follows this from the
+  AprilTags under the cells (red 30–33 far / 34–37 audience, blue 38–41 audience / 42–45 far),
+  and driver 2's left bumper overrides it.
+- **Elements:** POLLEN is a yellow 2.8 in ball, NECTAR a red or blue 3.6 in ball. The hood gap
+  is set by size, and storage tells them apart by hue.
+- **Rules enforced in code:**
+  - G407: storage caps at 4, and a 5th element is spat back out.
+  - G408: the opponent's NECTAR is never counted and is ejected automatically.
+  - G402: auto paths are checked to stay on our half (init warning plus a unit test).
+  - G304: autos preload 4 POLLEN.
+- **Timing:** TeleOp is 2:00. Controllers rumble at 60 s (FLOWERS open, G410) and 15 s (park).
+  PARK means at least partly in your LOADING ZONE: 5 pts in auto and 5 in TeleOp.
 
 ## How the pieces fit
 
@@ -128,9 +153,10 @@ The shooter test OpModes (`ShooterTestPanels`, `FlywheelPFTuning*`) call
 | Right trigger | intake | B | manual turret on/off (right stick X) |
 | Left trigger | outtake | D-pad left/right | turret trim ±1° |
 | A (hold) | aim chassis at hive | D-pad down | clear trim |
-| Left bumper | snap pose to Limelight | Y | re-home turret |
-| Options | reset field-centric heading | Start | turret: call current spot zero (if homing fails) |
-| Back | field ↔ robot centric | Back | reset storage count |
+| B (hold) | **park assist:** drive into the LOADING ZONE | Y | re-home turret |
+| Left bumper | snap pose to Limelight | Start | turret: call current spot zero (if homing fails) |
+| Options | reset field-centric heading | Back | reset storage count |
+| Back | field ↔ robot centric | Left bumper | "hive tipped": flip the target cell |
 
 **Shooting modes:**
 - **Auto spin-up:** the flywheel spins up whenever storage has elements in it
@@ -151,7 +177,7 @@ in a spreadsheet to see why a shot missed or where cycle time went.
 
 **Feedback:** gamepad1 double-buzzes when storage fills. Gamepad2's light is **green** when a
 shot is ready, **yellow** while the turret homes, and **red** if homing failed (press Start
-with the turret pointing forward). Both controllers buzz at 30 s and 10 s left.
+with the turret pointing forward). Both controllers buzz at 60 s left (FLOWERS open) and 15 s left (time to park).
 
 **Optional assists** (off by default until Pedro and the Limelight are tuned; turn on in `RobotConfig`):
 - `LOCK_POSITION_WHILE_FIRING`: Pedro holds the robot in place while firing, so defense
@@ -165,12 +191,19 @@ and the hive.
 ## Autos
 
 `AutoBase` handles the subsystems, the loop and `PoseStorage`. Each auto only lists its
-steps for **blue**, using `drive`, `driveIntaking`, `shoot` and `pause`. Red mirrors them
-automatically across the field centre line, so there's one set of numbers to tune per auto.
+steps for **red**, using `drive`, `driveIntaking`, `shoot` and `pause`. Blue is the 180°
+rotation, so there's one set of numbers to tune per auto. Shared poses are in
+`auto/FieldPoses.java`.
 
-- **Subordinate:** preloads, the far spike only, then park out of the partner's way.
-- **Parallel Inside:** start near the hive; preloads, then the close and middle spikes.
-- **Parallel Outside:** start far; preloads, then the far and middle spikes from the far zone.
+Every auto starts touching our wall (not in the loading zone), launches the 4 POLLEN pre-loads
+at our upward cell, and ends **parked in the LOADING ZONE but off the wall**, so it scores
+LEAVE 3 + PARK 5.
+
+- **Subordinate (far wall start):** pre-loads, then park. It leaves every pickup for the
+  partner; use the start-delay menu to stay out of their way.
+- **Parallel Inside (red wall start):** pre-loads, then the far-wall FLOWER's 4 POLLEN, then park.
+- **Parallel Outside (audience wall start):** pre-loads, then the GARDEN's 4 POLLEN, then the
+  red-wall FLOWER's 4 POLLEN, then park. It pairs with Inside without collisions.
 
 Set the robot up with the **turret facing straight forward**. Auto uses that position as
 turret zero instead of spending time homing.
@@ -192,9 +225,10 @@ after each pickup so the last element gets all the way in.
 
 ## Unit tests
 
-`TeamCode/src/test` has JUnit tests for the pure math: interpolation, motion profile, shot
-detection, shooter geometry, turret wrap-around, color classification and auto mirroring. They
-run on the computer, with no robot needed:
+`TeamCode/src/test` has 47 JUnit tests: interpolation, motion profile, shot detection,
+shooter geometry, turret wrap-around, color classification, hive tip detection, field symmetry,
+and **every auto checked against G304/G402 and the PARK/LEAVE rules**. They run on the computer,
+with no robot needed:
 
 ```
 ./gradlew :TeamCode:testDebugUnitTest
@@ -218,5 +252,20 @@ Every placeholder is marked `TODO(tune)`, `TODO(measure)` or `TODO(confirm)`. Se
    `TURRET_ENCODER_REVERSED`. Then set `TURRET_TICKS_PER_RAD` and the soft limits, and tune
    with `TurretTuner`.
 5. **Storage:** hold each element at the sensor in `SubsystemTest` and set the hue windows.
-6. **Field:** measure hive positions, tag IDs and every auto pose.
-7. **Vision:** check the FTC → Pedro conversion in `HiveVision.readBotpose` on a known spot.
+6. **Field:** positions in `FieldGeometry` and `auto/FieldPoses` were read off the manual's
+   figures (±2 in). Check them on a real field or the official CAD, especially
+   `RED_HIVE_X` and `CELL_OFFSET_Y`.
+7. **Vision:** drive to a known spot and press driver 1's left bumper; the pose should snap
+   correctly. The FTC → field rotation is `HiveVision.FTC_TO_FIELD_ROTATION`. Also check that
+   `HiveTracker` flips when the hive tips: the camera must see the tags under the cells.
+
+## After a practice or match
+
+```
+adb pull /sdcard/FIRST/data/matchlogs
+python3 tools/analyze_matchlog.py matchlogs/*.csv
+python3 tools/analyze_matchlog.py --plot matchlogs/teleop_RED_*.csv   # graphs (needs matplotlib)
+```
+
+The report shows median cycle time, shots, flywheel recovery, and whether the flywheel or the
+turret held up firing. It also flags battery sag and slow loops.
