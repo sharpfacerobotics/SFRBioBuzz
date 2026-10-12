@@ -8,6 +8,7 @@ import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.robot.HiveVision;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
@@ -21,6 +22,9 @@ import org.firstinspires.ftc.teamcode.robot.Storage;
 import org.firstinspires.ftc.teamcode.robot.Trigger;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldDrawing;
+import org.firstinspires.ftc.teamcode.robot.helperClasses.MatchLogger;
+
+import java.io.File;
 
 import java.util.ArrayList;
 
@@ -145,6 +149,9 @@ public abstract class AutoBase extends LinearOpMode {
         telemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
         robot.init(hardwareMap);
         FieldDrawing fieldDrawing = new FieldDrawing();
+        MatchLogger log = new MatchLogger(new File(AppUtil.ROBOT_DATA_DIR, "matchlogs"),
+                "auto_" + getClass().getSimpleName(), "x", "y", "heading", "step", "storage",
+                "flyTarget", "flyVel", "flyReady", "turretOnTarget", "shooting", "shot");
         boolean blue = alliance() == Alliance.BLUE;
         double goalX = blue ? RobotConfig.BLUE_HIVE_X : RobotConfig.RED_HIVE_X;
         double goalY = blue ? RobotConfig.BLUE_HIVE_Y : RobotConfig.RED_HIVE_Y;
@@ -226,10 +233,12 @@ public abstract class AutoBase extends LinearOpMode {
             Element next = storage.peekNext();
             launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
 
+            boolean shot = false;
             if (shooting) {
                 trigger.fire(launcher.isReady(), turret.isOnTarget());
                 if (launcher.shotDetected()) {
                     storage.removeNext();
+                    shot = true;
                 }
             } else {
                 trigger.stopFiring();
@@ -246,6 +255,12 @@ public abstract class AutoBase extends LinearOpMode {
                 startStep(stepIndex + 1);
             }
 
+            if (log.shouldLog(matchTimer.seconds())) {
+                log.value(pose.x()).value(pose.y()).value(pose.heading()).value(stepIndex)
+                        .value(storage.count()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
+                        .value(launcher.isReady()).value(turret.isOnTarget()).value(shooting).value(shot).endRow();
+            }
+
             fieldDrawing.draw(pose.x(), pose.y(), pose.heading(), shooterConfig.getFieldAimHeading(),
                     shooterConfig.getDistanceToGoal(), goalX, goalY);
 
@@ -258,6 +273,7 @@ public abstract class AutoBase extends LinearOpMode {
         }
 
         PoseStorage.save(robot.follower.pose());
+        log.close();
         trigger.stopFiring();
         intake.stop();
         launcher.stop();
