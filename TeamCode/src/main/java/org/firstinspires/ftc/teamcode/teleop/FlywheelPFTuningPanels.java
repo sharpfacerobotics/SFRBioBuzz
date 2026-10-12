@@ -17,7 +17,8 @@ public class FlywheelPFTuningPanels extends OpMode {
 
     @Override
     public void init() {
-        robot.init(hardwareMap);
+        robot.initLauncher(hardwareMap);
+        launcher.setControlModeOverride(Launcher.ControlMode.PF);
     }
 
     @Override
@@ -25,5 +26,7 @@ public class FlywheelPFTuningPanels extends OpMode {
         launcher.setLauncher(velocity);
         telemetry.addData("Target Velocity", velocity);
         telemetry.addData("Current Velocity", launcher.getCurrVelocity());
+        telemetry.addData("kP / kF", "%.6f / %.6f", Launcher.kP, Launcher.kF);
+        telemetry.update();
     }
 }

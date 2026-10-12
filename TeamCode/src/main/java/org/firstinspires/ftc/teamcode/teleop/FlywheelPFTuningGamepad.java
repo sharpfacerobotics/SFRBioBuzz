@@ -16,18 +16,19 @@ public class FlywheelPFTuningGamepad extends OpMode {
     private Launcher launcher = new Launcher(robot);
     private final double[] stepSizes = {0.0001, 0.001, 0.01, 0.1};
 
-    private ValueTuner tunerP = new ValueTuner(0.0, "Tuning P", "D-Pad R/L/A", stepSizes);
-    private ValueTuner tunerF = new ValueTuner(0.0, "Tuning F", "D-Pad U/D/B", stepSizes);
+    private ValueTuner tunerP = new ValueTuner(Launcher.kP, "Tuning P", "D-Pad R/L/A", stepSizes);
+    private ValueTuner tunerF = new ValueTuner(Launcher.kF, "Tuning F", "D-Pad U/D/B", stepSizes);
     private final double[] stepSizesVel = {1000, 100, 10, 1};
     private ValueTuner tunerVelocity = new ValueTuner(0.0, "Tuning Velocity", "X/Y/LeftBumper", stepSizesVel);
     @Override
     public void init() {
-        robot.init(hardwareMap);
+        robot.initLauncher(hardwareMap);
+        launcher.setControlModeOverride(Launcher.ControlMode.PF);
     }
 
     @Override
     public void loop() {
-        // 1. Update P Tuner (Right increases, Left decreases, B cycles step size)
+        // 1. Update P Tuner (Right increases, Left decreases, A cycles step size)
         tunerP.update(
                 gamepad1.dpadRightWasPressed(),
                 gamepad1.dpadLeftWasPressed(),
@@ -51,12 +52,12 @@ public class FlywheelPFTuningGamepad extends OpMode {
         launcher.setkP(tunerP.getValue());
         launcher.setkF(tunerF.getValue());
 
-        // remember to switch to PF mode before tuning
         launcher.setLauncher(tunerVelocity.getValue());
         // 4. Print formatted telemetry for each tuner instance
         tunerP.printTelemetry(telemetry);
         tunerF.printTelemetry(telemetry);
         tunerVelocity.printTelemetry(telemetry);
+        telemetry.addData("Current Velocity", launcher.getCurrVelocity());
         telemetry.update();
 
     }

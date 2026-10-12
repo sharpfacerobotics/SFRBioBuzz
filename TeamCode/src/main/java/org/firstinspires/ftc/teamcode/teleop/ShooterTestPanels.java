@@ -18,7 +18,8 @@ public class ShooterTestPanels extends OpMode {
 
     @Override
     public void init() {
-        robot.init(hardwareMap);
+        robot.initLauncher(hardwareMap);
+        launcher.setControlModeOverride(Launcher.ControlMode.VELOCITY);
     }
 
     @Override

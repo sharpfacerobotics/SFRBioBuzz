@@ -1,62 +1,163 @@
 package org.firstinspires.ftc.teamcode.robot;
-import com.bylazar.configurables.annotations.Configurable;
-import java.util.Queue;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
+import org.firstinspires.ftc.teamcode.robot.helperClasses.ShotDetector;
+
+/**
+ * Flywheel + hood. Owner: Alex.
+ *
+ * <p>Target velocity and hood angle come from ShooterConfig; the next element comes from
+ * Storage. The OpMode passes both in, so Launcher never reaches into another subsystem.</p>
+ */
 @Configurable
 public class Launcher {
     public static double kP = 0.00006;
     public static double kF = 0.0006;
-    private RobotHardware robot;
+
+    public enum ControlMode {
+        /** Motor controller's built-in velocity PIDF (setVelocity). */
+        VELOCITY,
+        /** Our own P + feedforward, voltage compensated. */
+        PF,
+        /** Full power below target, off above. Fastest recovery, noisiest. */
+        BANG_BANG
+    }
+    /** Mode used in competition. Tuning OpModes use setControlModeOverride() instead of this. */
+    public static ControlMode controlMode = ControlMode.VELOCITY;
+
+    private final RobotHardware robot;
+    private final ElapsedTime hoodTimer = new ElapsedTime();
+    private final ElapsedTime clock = new ElapsedTime();
+    private final ShotDetector shotDetector = new ShotDetector();
+
+    private ControlMode appliedMode = null;
+    private ControlMode modeOverride = null;
+    private double targetVel;
+    private double currVel1;
+    private double voltage = RobotConfig.NOMINAL_VOLTAGE;
+    private double hoodAnglePos = -1;
+    private Element hoodElement = null;
+
+    private boolean shotDetected = false;
+
     public Launcher(RobotHardware robot) {
         this.robot = robot;
     }
-    private double targetVel;
-    private double currVel1;
-    public static double hoodRetractionPos1;
-    public static double hoodRetractionPos2;
-    public static double hoodAnglePos1;
-    public static double hoodAnglePos2;
 
-    /*
-    comp method
-    public void setLauncher(Queue<String> q) {
-        String next = q.peek();
-        double vx = ShooterConfig.elementVelocity[0];
-        double vy = ShooterConfig.elementVelocity[1];
+    // ------------------------------------------------------------------ comp method
 
-        targetVel = Math.hypot(vx, vy);
-
-        currVel1 = robot.launchMotor1.getVelocity();
-        currVel2 = robot.launchMotor2.getVelocity();
+    /**
+     * Call once per loop.
+     *
+     * @param targetVel      ticks/s from ShooterConfig (0 to coast down)
+     * @param hoodAngle      hood servo position for this element, from ShooterConfig
+     * @param next           next element from Storage.peekNext() (null = empty)
+     * @param batteryVoltage robot.getVoltage(), for PF voltage compensation
+     */
+    public void update(double targetVel, double hoodAngle, Element next, double batteryVoltage) {
+        if (batteryVoltage > 1) {
+            voltage = batteryVoltage;
+        }
         setHoodRetraction(next);
-        setHoodAngle(next);
-        setVelocityNormal();
-        //setVelocityBang();
-        //setVelocityPFPow();
-        //setVelocityPFVol();
+        setHoodAngle(hoodAngle);
+        setLauncher(targetVel);
+        detectShot();
     }
-    */
-    //testing
-    public void setLauncher(double targetVel, Queue<String> q) {
-        currVel1 = robot.launchMotor1.getVelocity();
-        this.targetVel = targetVel;
-        //setHoodRetraction(Queue<String> q);
-        //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
-        //setVelocityBang();
-        //setVelocityPFPow();
-        //setVelocityPFVol();
+
+    public void stop() {
+        targetVel = 0;
+        robot.launchMotor1.setPower(0);
+        shotDetector.reset();
     }
-    //testing method
+
+    // ------------------------------------------------------------------ testing methods
+
+    /** Velocity only - used by the flywheel tuning OpModes, which have no hood mapped. */
     public void setLauncher(double targetVel) {
-        currVel1 = robot.launchMotor1.getVelocity();
         this.targetVel = targetVel;
-        //setHoodRetraction(Queue<String> q);
-        //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
-        //setVelocityBang();
-        //setVelocityPFPow();
-        //setVelocityPFVol();
+        currVel1 = robot.launchMotor1.getVelocity();
+        applyMode();
+
+        if (targetVel <= 0) {
+            robot.launchMotor1.setPower(0);
+            return;
+        }
+        switch (activeMode()) {
+            case PF:
+                setVelocityPF();
+                break;
+            case BANG_BANG:
+                setVelocityBang();
+                break;
+            default:
+                setVelocityNormal();
+                break;
+        }
+    }
+
+    /**
+     * Use this mode for this Launcher only. Kept per-instance on purpose: setting the static
+     * controlMode from a tuning OpMode would leak into the next comp OpMode.
+     */
+    public void setControlModeOverride(ControlMode mode) {
+        modeOverride = mode;
+    }
+
+    public ControlMode activeMode() {
+        return modeOverride != null ? modeOverride : controlMode;
+    }
+
+    public void setkP(double kP) {
+        Launcher.kP = kP;
+    }
+
+    public void setkF(double kF) {
+        Launcher.kF = kF;
+    }
+
+    // ------------------------------------------------------------------ status
+
+    /** Flywheel at speed and hood has had time to move. Feed Trigger.fire() with this. */
+    public boolean isReady() {
+        return targetVel > 0
+                && Math.abs(targetVel - currVel1) < RobotConfig.FLYWHEEL_VELOCITY_TOLERANCE
+                && hoodTimer.seconds() > RobotConfig.HOOD_SETTLE_TIME;
+    }
+
+    /**
+     * True for exactly one loop when an element leaves: the flywheel was at speed and
+     * suddenly dipped. The OpMode should call Storage.removeNext() when this is true.
+     */
+    public boolean shotDetected() {
+        return shotDetected;
+    }
+
+    public double getTargetVelocity() {
+        return targetVel;
+    }
+
+    public double getCurrVelocity() {
+        return currVel1;
+    }
+
+    // ------------------------------------------------------------------ internals
+
+    private void applyMode() {
+        ControlMode mode = activeMode();
+        if (appliedMode == mode) {
+            return;
+        }
+        // Built-in velocity control needs the encoder loop; our own controllers must not
+        // fight it, so they run raw power.
+        robot.launchMotor1.setMode(mode == ControlMode.VELOCITY
+                ? DcMotor.RunMode.RUN_USING_ENCODER
+                : DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        appliedMode = mode;
     }
 
     private void setVelocityNormal() {
@@ -64,71 +165,44 @@ public class Launcher {
     }
 
     private void setVelocityBang() {
-        if (currVel1 < targetVel) {
-            robot.launchMotor1.setPower(1.0);
-        } else if (currVel1 > targetVel) {
-            robot.launchMotor1.setPower(0.0);
-        }
+        robot.launchMotor1.setPower(currVel1 < targetVel ? 1.0 : 0.0);
     }
+
     private void setVelocityPF() {
-        double pow1 = kF * targetVel + kP * (targetVel - currVel1);
-        pow1 = Math.max(-1.0, Math.min(1.0, pow1));
-
-        robot.launchMotor1.setPower(pow1);
-    }
-    public void setkP(double kP) {
-        Launcher.kP = kP;
-    }
-    public void setkF(double kF) {
-        Launcher.kF = kF;
+        double voltageComp = RobotConfig.NOMINAL_VOLTAGE / voltage;
+        double pow1 = kF * targetVel * voltageComp + kP * (targetVel - currVel1);
+        robot.launchMotor1.setPower(Range.clip(pow1, -1.0, 1.0));
     }
 
-    public double getTargetVelocity() {
-        return targetVel;
-    }
-    public double getCurrVelocity() {
-        return currVel1;
-    }
-    //testing method
-    /*
-    public void setHoodAngle() {
-        robot.hoodAngleServo1.setPosition(hoodAnglePos1);
-        robot.hoodAngleServo2.setPosition(hoodAnglePos2);
-    }
-    public void setHoodRetraction() {
-        robot.hoodGapServo1.setPosition(hoodRetractionPos1);
-        robot.hoodGapServo2.setPosition(hoodRetractionPos2);
+    private void detectShot() {
+        shotDetected = shotDetector.update(isReady(), currVel1, clock.seconds(),
+                RobotConfig.SHOT_DETECT_DROP, RobotConfig.SHOT_DETECT_WINDOW);
     }
 
-    public void setHoodAngle(String next) {
-        if (next.equals("POLLEN")) {
-            hoodAnglePos1 = ShooterConfig.elementVelocity[2] + RobotConfig.hoodAngleServo1Transform;
-            hoodAnglePos2 = ShooterConfig.elementVelocity[2] + RobotConfig.hoodAngleServo2Transform;
-        } else if (next.equals("NECTAR")) {
-            hoodAnglePos1 = ShooterConfig.elementVelocity[3] + RobotConfig.hoodAngleServo1Transform;
-            hoodAnglePos2 = ShooterConfig.elementVelocity[3] + RobotConfig.hoodAngleServo2Transform;
+    private void setHoodAngle(double angle) {
+        angle = Range.clip(angle, RobotConfig.HOOD_ANGLE_MIN, RobotConfig.HOOD_ANGLE_MAX);
+        // Only write (and restart the settle timer) when it actually changes noticeably.
+        if (Math.abs(angle - hoodAnglePos) > 0.005) {
+            hoodAnglePos = angle;
+            robot.hoodAngleServo1.setPosition(angle);
+            robot.hoodAngleServo2.setPosition(angle + RobotConfig.HOOD_ANGLE_SERVO_2_OFFSET);
+            hoodTimer.reset();
         }
-        robot.hoodAngleServo1.setPosition(hoodAnglePos1);
-        robot.hoodAngleServo2.setPosition(hoodAnglePos2);
     }
 
-    public boolean goodShooterConfig() {
-        boolean hoodRetracted = Math.abs((robot.hoodGapServo1.getPosition() + robot.hoodGapServo2.getPosition())/2 - hoodRetractionPos) < RobotConfig.hoodRetractionTolerance;
-        boolean flywheelSpunUp = Math.abs(targetVel - (currVel1 + currVel2)/2) < RobotConfig.flywheelVelocityTolerance;
-        boolean hoodAngleSet = Math.abs((robot.hoodAngleServo1.getPosition() + robot.hoodAngleServo2.getPosition())/2 - hoodRetractionPos) < RobotConfig.hoodAngleTolerance;
-        return hoodRetracted && flywheelSpunUp && hoodAngleSet;
-    }
-
-    public void setHoodRetraction(String next) {
-        if (next.equals("POLLEN")) {
-            hoodRetractionPos1 = RobotConfig.HOOD_POLLEN_GAP_1;
-            hoodRetractionPos2 = RobotConfig.HOOD_POLLEN_GAP_2;
-        } else if (next.equals("NECTAR")) {
-            hoodRetractionPos1 = RobotConfig.HOOD_NECTAR_GAP_1;
-            hoodRetractionPos2 = RobotConfig.HOOD_NECTAR_GAP_2;
+    private void setHoodRetraction(Element next) {
+        if (next == null || next == hoodElement) {
+            return;
         }
-        robot.hoodGapServo1.setPosition(hoodRetractionPos1);
-        robot.hoodGapServo2.setPosition(hoodRetractionPos2);
+        hoodElement = next;
+        if (next == Element.NECTAR) {
+            robot.hoodGapServo1.setPosition(RobotConfig.HOOD_NECTAR_GAP_1);
+            robot.hoodGapServo2.setPosition(RobotConfig.HOOD_NECTAR_GAP_2);
+        } else {
+            // POLLEN, and UNKNOWN falls back to pollen
+            robot.hoodGapServo1.setPosition(RobotConfig.HOOD_POLLEN_GAP_1);
+            robot.hoodGapServo2.setPosition(RobotConfig.HOOD_POLLEN_GAP_2);
+        }
+        hoodTimer.reset();
     }
-    */
 }

@@ -16,7 +16,8 @@ public class ShooterTestGamepadTuning extends OpMode {
     private ValueTuner tunerVelocity = new ValueTuner(0.0, "Tuning Velocity", "A/B", stepSizesVel);
     @Override
     public void init() {
-        robot.init(hardwareMap);
+        robot.initLauncher(hardwareMap);
+        launcher.setControlModeOverride(Launcher.ControlMode.VELOCITY);
     }
 
 
@@ -30,6 +31,7 @@ public class ShooterTestGamepadTuning extends OpMode {
         launcher.setLauncher(tunerVelocity.getValue());
 
         tunerVelocity.printTelemetry(telemetry);
+        telemetry.addData("Current Velocity", launcher.getCurrVelocity());
         telemetry.update();
     }
 }
