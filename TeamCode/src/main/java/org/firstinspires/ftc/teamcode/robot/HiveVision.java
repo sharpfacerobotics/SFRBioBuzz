@@ -10,6 +10,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 
+import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry;
+
 import java.util.List;
 
 /**
@@ -26,6 +28,12 @@ public class HiveVision {
     public static double STALE_TIME = 0.3;
     /** Only trust MegaTag2 while the robot is turning slower than this (rad/s). */
     public static double MAX_RELOCALIZE_OMEGA = 1.0;
+    /**
+     * Rotation from the official FTC field frame to ours. FTC: origin at centre, +Y away from
+     * the red wall, +X to the right seen from the red wall. Ours: +x away from the red wall.
+     * So ours = FTC rotated by -90 deg, for positions AND heading.
+     */
+    public static double FTC_TO_FIELD_ROTATION = -Math.PI / 2;
 
     private final double[] taWindow = new double[RobotConfig.TA_AVERAGE_WINDOW];
     private int taIndex = 0;
@@ -34,6 +42,7 @@ public class HiveVision {
     private final ElapsedTime lastSeenTimer = new ElapsedTime();
 
     private boolean hasTarget = false;
+    private boolean seesOtherCell = false;
     private double tx = 0;
     private double ta = 0;
 
@@ -54,26 +63,30 @@ public class HiveVision {
     /**
      * Call once per loop.
      *
-     * @param hiveTagId    RobotConfig.BLUE_HIVE_TAG_ID or RED_HIVE_TAG_ID
-     * @param robotHeading Pedro heading (rad), MegaTag2 needs it
-     * @param robotOmega   yaw rate (rad/s); MegaTag2 is unreliable while spinning fast
+     * @param targetTagBase first tag ID under our upward (target) cell, from FieldGeometry.tagBase
+     * @param otherTagBase  first tag ID under our other cell - seeing it means the hive tipped
+     * @param robotHeading  field heading (rad), MegaTag2 needs it
+     * @param robotOmega    yaw rate (rad/s); MegaTag2 is unreliable while spinning fast
      */
-    public void update(int hiveTagId, double robotHeading, double robotOmega) {
-        // MegaTag2 wants FTC-frame yaw in degrees; Pedro heading is 90 deg ahead of FTC.
-        robot.limelight.updateRobotOrientation(Math.toDegrees(robotHeading - Math.PI / 2));
+    public void update(int targetTagBase, int otherTagBase, double robotHeading, double robotOmega) {
+        // MegaTag2 wants the FTC-frame yaw in degrees.
+        robot.limelight.updateRobotOrientation(Math.toDegrees(robotHeading - FTC_TO_FIELD_ROTATION));
 
         hasTarget = false;
+        seesOtherCell = false;
         hasBotpose = false;
         LLResult result = robot.limelight.getLatestResult();
         if (result != null && result.isValid() && result.getPipelineIndex() == RobotConfig.HIVE_PIPELINE) {
             List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
             for (int i = 0; i < tags.size(); i++) {
                 LLResultTypes.FiducialResult tag = tags.get(i);
-                if (tag.getFiducialId() == hiveTagId) {
+                int id = tag.getFiducialId();
+                if (!hasTarget && FieldGeometry.inCluster(id, targetTagBase)) {
                     hasTarget = true;
                     tx = tag.getTargetXDegrees();
                     ta = tag.getTargetArea();
-                    break;
+                } else if (FieldGeometry.inCluster(id, otherTagBase)) {
+                    seesOtherCell = true;
                 }
             }
             if (Math.abs(robotOmega) < MAX_RELOCALIZE_OMEGA) {
@@ -91,6 +104,11 @@ public class HiveVision {
 
     public boolean hasTarget() {
         return hasTarget;
+    }
+
+    /** We can see the tags under our OTHER cell (feed HiveTracker to detect tips). */
+    public boolean seesOtherCell() {
+        return seesOtherCell;
     }
 
     /** Horizontal angle to the hive tag (deg, + = right). */
@@ -130,11 +148,13 @@ public class HiveVision {
         if (ftcX == 0 && ftcY == 0) {
             return; // Limelight reports all zeros when it has no solution
         }
-        // FTC field frame (origin at centre) -> Pedro (origin at corner, rotated -90 deg).
+        // FTC frame (origin at centre) -> ours (origin at corner): rotate, then shift.
         // TODO(verify) on the field: drive to a known spot and compare.
-        botposeX = ftcY + RobotConfig.FIELD_SIZE / 2;
-        botposeY = -ftcX + RobotConfig.FIELD_SIZE / 2;
-        botposeHeading = pose.getOrientation().getYaw(AngleUnit.RADIANS) + Math.PI / 2;
+        double cos = Math.cos(FTC_TO_FIELD_ROTATION);
+        double sin = Math.sin(FTC_TO_FIELD_ROTATION);
+        botposeX = cos * ftcX - sin * ftcY + FieldGeometry.CENTER;
+        botposeY = sin * ftcX + cos * ftcY + FieldGeometry.CENTER;
+        botposeHeading = pose.getOrientation().getYaw(AngleUnit.RADIANS) + FTC_TO_FIELD_ROTATION;
         hasBotpose = true;
     }
 

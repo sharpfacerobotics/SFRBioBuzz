@@ -14,7 +14,8 @@ import java.util.List;
  * <p>Picks the best detection (biggest = usually closest), works out how far away it is from
  * the camera angle, and can turn that into a field position for autos to drive to.</p>
  *
- * <p>Detector class names must be "pollen" and "nectar" (case doesn't matter).</p>
+ * <p>Detector class names must be "pollen", "red_nectar" and "blue_nectar". Pass the
+ * opponent's NECTAR colour as "not wanted" - we may never pick it up (G408).</p>
  */
 @Configurable
 public class ElementVision {
@@ -40,9 +41,10 @@ public class ElementVision {
     /**
      * Call once per loop while looking for elements.
      *
-     * @param wanted only report this type, or null for either
+     * @param wanted only report this type, or null for any
+     * @param never  never report this type - pass RobotConfig.opponentNectar(alliance) (G408)
      */
-    public void update(Element wanted) {
+    public void update(Element wanted, Element never) {
         hasElement = false;
         LLResult result = robot.limelight.getLatestResult();
         if (result == null || !result.isValid() || result.getPipelineIndex() != RobotConfig.ELEMENT_PIPELINE) {
@@ -57,7 +59,7 @@ public class ElementVision {
                 continue;
             }
             Element detectedType = parse(d.getClassName());
-            if (wanted != null && detectedType != wanted) {
+            if ((wanted != null && detectedType != wanted) || detectedType == never) {
                 continue;
             }
             if (d.getTargetArea() > bestArea) {
@@ -114,16 +116,32 @@ public class ElementVision {
                 + getDistance() * Math.sin(bearing);
     }
 
-    private static Element parse(String className) {
+    /** Detector class names: "pollen", "red_nectar", "blue_nectar" (case-insensitive). */
+    static Element parse(String className) {
         if (className == null) {
             return Element.UNKNOWN;
         }
-        if (className.equalsIgnoreCase("pollen")) {
+        if (contains(className, "pollen")) {
             return Element.POLLEN;
         }
-        if (className.equalsIgnoreCase("nectar")) {
-            return Element.NECTAR;
+        if (contains(className, "nectar")) {
+            if (contains(className, "red")) {
+                return Element.RED_NECTAR;
+            }
+            if (contains(className, "blue")) {
+                return Element.BLUE_NECTAR;
+            }
         }
         return Element.UNKNOWN;
+    }
+
+    /** Case-insensitive contains without allocating (toLowerCase makes a new String). */
+    private static boolean contains(String text, String part) {
+        for (int i = 0; i + part.length() <= text.length(); i++) {
+            if (text.regionMatches(true, i, part, 0, part.length())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
