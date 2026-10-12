@@ -18,8 +18,26 @@ public class RobotConfig {
 
     public enum Alliance { RED, BLUE }
 
-    /** Game elements that can sit in storage. UNKNOWN = sensed but colour didn't match. */
-    public enum Element { POLLEN, NECTAR, UNKNOWN }
+    /**
+     * Game elements that can sit in storage (manual 9.8). POLLEN = 2.8 in yellow ball,
+     * NECTAR = 3.6 in red or blue ball. UNKNOWN = sensed but the colour didn't match.
+     */
+    public enum Element {
+        POLLEN, RED_NECTAR, BLUE_NECTAR, UNKNOWN;
+
+        public boolean isNectar() {
+            return this == RED_NECTAR || this == BLUE_NECTAR;
+        }
+    }
+
+    /** Our nectar colour. The other colour must never be controlled (G408). */
+    public static Element ownNectar(Alliance alliance) {
+        return alliance == Alliance.RED ? Element.RED_NECTAR : Element.BLUE_NECTAR;
+    }
+
+    public static Element opponentNectar(Alliance alliance) {
+        return alliance == Alliance.RED ? Element.BLUE_NECTAR : Element.RED_NECTAR;
+    }
 
     // ------------------------------------------------------------------ hardware map names
     // These must match the Driver Station robot configuration exactly.
@@ -45,28 +63,23 @@ public class RobotConfig {
     public static final String LIMELIGHT          = "limelight";
     public static final String VOLTAGE_SENSOR     = "Control Hub";
 
-    // ------------------------------------------------------------------ field (Pedro coords, inches)
-    // Pedro field: origin in a corner, 144 x 144 in, heading in radians.
+    // ------------------------------------------------------------------ field
+    // Field layout (hive, tags, zones) lives in helperClasses/FieldGeometry, written for RED;
+    // blue is the 180 degree rotation. Frame: origin at audience/red-wall corner, +x toward
+    // the blue wall, +y away from the audience, inches, radians.
 
-    public static final double FIELD_SIZE = 144.0;
-    // TODO(measure): hive centre positions from the BioBuzz field drawings.
-    public static double BLUE_HIVE_X = 12.0;
-    public static double BLUE_HIVE_Y = 132.0;
-    public static double RED_HIVE_X  = 132.0;
-    public static double RED_HIVE_Y  = 132.0;
-
-    /** TeleOp starting pose when auto didn't run (PoseStorage empty). TODO(measure) */
-    public static double TELEOP_DEFAULT_X = 72.0;
-    public static double TELEOP_DEFAULT_Y = 72.0;
-    public static double TELEOP_DEFAULT_HEADING = Math.PI / 2;
+    /** TeleOp start pose (RED) when auto didn't run: against our wall, beside the loading zone. */
+    public static double TELEOP_DEFAULT_X = 9.0;
+    public static double TELEOP_DEFAULT_Y = 84.0;
+    public static double TELEOP_DEFAULT_HEADING = 0;
 
     // ------------------------------------------------------------------ drivetrain
 
     public static double DRIVE_SLOW_SCALE = 0.35;
     public static double DRIVE_DEADZONE   = 0.05;
-    /** Driver heading offset for field centric (driver faces +Y from the blue wall). */
-    public static double BLUE_DRIVER_HEADING = Math.PI / 2;
-    public static double RED_DRIVER_HEADING  = Math.PI / 2;
+    /** Direction the drivers face, for field centric: red stands at x = 0 looking +x. */
+    public static double RED_DRIVER_HEADING  = 0;
+    public static double BLUE_DRIVER_HEADING = Math.PI;
     /** Hold position (Pedro) while firing so defense can't push us off our shot. Needs Foresight tuned. */
     public static boolean LOCK_POSITION_WHILE_FIRING = false;
     /** Stick deflection that cancels the position lock. */
@@ -89,8 +102,10 @@ public class RobotConfig {
     public static double SLOW_LOOP_MS = 40.0;
 
     public static final double TELEOP_LENGTH = 120.0;          // seconds
-    public static double ENDGAME_WARNING_1 = 30.0;             // seconds left -> rumble
-    public static double ENDGAME_WARNING_2 = 10.0;
+    /** 60 s left: FLOWERS unlock and all remaining NECTAR may be entered (G410, 10.1). */
+    public static double ENDGAME_WARNING_1 = 60.0;
+    /** Time to head for the LOADING ZONE (PARK = 5 pts). */
+    public static double ENDGAME_WARNING_2 = 15.0;
     /** Snap odometry to Limelight automatically when stopped and the tag is clear. Off until verified. */
     public static boolean AUTO_RELOCALIZE = false;
     public static double AUTO_RELOCALIZE_MIN_ERROR = 2.0;      // inches before we bother snapping
@@ -110,14 +125,21 @@ public class RobotConfig {
 
     // ------------------------------------------------------------------ storage
 
-    public static final int STORAGE_CAPACITY = 3;               // TODO(confirm) with game manual
+    /** G407: a robot may not CONTROL more than 4 SCORING ELEMENTS. */
+    public static final int STORAGE_CAPACITY = 4;
     public static double STORAGE_PRESENT_DISTANCE_CM = 4.0;     // closer than this = element at entry
     public static double STORAGE_DEBOUNCE_TIME = 0.12;          // seconds between counted elements
-    // Hue windows in degrees [0, 360). TODO(tune) under event lighting.
+    // Hue windows in degrees [0, 360). POLLEN is yellow, NECTAR red or blue.
+    // TODO(tune) under event lighting with SubsystemTest.
     public static double POLLEN_HUE_MIN = 35.0;
     public static double POLLEN_HUE_MAX = 75.0;
-    public static double NECTAR_HUE_MIN = 250.0;
-    public static double NECTAR_HUE_MAX = 320.0;
+    public static double BLUE_NECTAR_HUE_MIN = 190.0;
+    public static double BLUE_NECTAR_HUE_MAX = 255.0;
+    /** Red wraps around 0: anything >= MIN or <= MAX. */
+    public static double RED_NECTAR_HUE_MIN = 335.0;
+    public static double RED_NECTAR_HUE_MAX = 20.0;
+    /** How long to run the intake backwards to spit out opponent NECTAR (G408). */
+    public static double REJECT_TIME = 0.4;
     public static double STORAGE_MIN_SATURATION = 0.25;
 
     // ------------------------------------------------------------------ trigger / gate
@@ -140,7 +162,7 @@ public class RobotConfig {
     public static double HOOD_ANGLE_SERVO_2_OFFSET = 0.0;       // trim so both hood servos agree
     public static double HOOD_ANGLE_MIN = 0.0;
     public static double HOOD_ANGLE_MAX = 1.0;
-    // Hood gap per element (elements are different sizes). TODO(tune)
+    // Hood gap per element: POLLEN is 2.8 in, NECTAR 3.6 in. TODO(tune)
     public static double HOOD_POLLEN_GAP_1 = 0.40;
     public static double HOOD_POLLEN_GAP_2 = 0.40;
     public static double HOOD_NECTAR_GAP_1 = 0.55;
@@ -177,8 +199,7 @@ public class RobotConfig {
 
     public static final int HIVE_PIPELINE    = 0;
     public static final int ELEMENT_PIPELINE = 1;
-    public static int BLUE_HIVE_TAG_ID = 20;   // TODO(confirm) BioBuzz tag IDs
-    public static int RED_HIVE_TAG_ID  = 24;
+    // Hive tag IDs are in FieldGeometry (30-45, four per cell).
     public static final int TA_AVERAGE_WINDOW = 8;
     public static final double METERS_TO_INCHES = 39.3700787;
     // Camera mounting for element distance estimates. TODO(measure)
@@ -195,5 +216,6 @@ public class RobotConfig {
     /** Keep the intake running this long into the next step to finish swallowing. */
     public static double AUTO_INTAKE_CARRY   = 0.5;
     public static double AUTO_MAX_START_DELAY = 15.0;
-    public static final int AUTO_PRELOAD_COUNT = 3;
+    /** G304.G: every robot starts with exactly 4 POLLEN. */
+    public static final int AUTO_PRELOAD_COUNT = 4;
 }

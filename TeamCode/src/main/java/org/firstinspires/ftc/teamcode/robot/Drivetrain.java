@@ -70,6 +70,16 @@ public class Drivetrain {
         robot.follower.manual(forward, strafe, turn);
     }
 
+    /** Let Pedro drive a path (e.g. TeleOp park assist). Any drive() call takes control back. */
+    public void followPath(com.pedropathing.paths.Path path) {
+        locked = false;
+        robot.follower.follow(path);
+    }
+
+    public boolean isPathBusy() {
+        return robot.follower.isBusy();
+    }
+
     /**
      * Hold the current spot with Pedro (pushes back against defense). Call every loop you want
      * to stay locked; it only grabs the pose once, when the lock starts.
