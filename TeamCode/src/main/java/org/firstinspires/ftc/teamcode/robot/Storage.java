@@ -29,6 +29,7 @@ public class Storage {
     private boolean elementAtEntry = false;
     private Element lastSeen = Element.UNKNOWN;
     private double lastHue = 0;
+    private int totalIntaken = 0;
 
     public Storage(RobotHardware robot) {
         this.robot = robot;
@@ -63,6 +64,7 @@ public class Storage {
             lastSeen = classify(robot.storageSensor.getNormalizedColors());
             if (!isFull()) {
                 elements.addLast(lastSeen);
+                totalIntaken++;
             }
         }
         elementAtEntry = present;
@@ -114,6 +116,11 @@ public class Storage {
 
     public boolean isEmpty() {
         return elements.isEmpty();
+    }
+
+    /** Elements picked up this OpMode (for stats). */
+    public int getTotalIntaken() {
+        return totalIntaken;
     }
 
     public Element getLastSeen() {
