@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
+import org.firstinspires.ftc.teamcode.robot.ElementVision;
+import org.firstinspires.ftc.teamcode.robot.HiveVision;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
@@ -31,6 +33,7 @@ import org.firstinspires.ftc.teamcode.robot.Turret;
  * Y             hood gap: pollen / nectar
  * dpad up/down  hood angle
  * bumpers       turret raw power left/right (NO soft limits - be careful)
+ * left stick button  Limelight pipeline: hive tags / element detector
  * </pre>
  */
 @Configurable
@@ -45,6 +48,9 @@ public class SubsystemTest extends OpMode {
     private final Storage storage = new Storage(robot);
     private final Launcher launcher = new Launcher(robot);
     private final Turret turret = new Turret(robot);
+    private final HiveVision hiveVision = new HiveVision(robot);
+    private final ElementVision elementVision = new ElementVision(robot);
+    private boolean elementPipeline = false;
 
     private boolean gateOpen = false;
     private boolean flywheelOn = false;
@@ -97,6 +103,15 @@ public class SubsystemTest extends OpMode {
         }
         turret.setRawPower(turretPower);
 
+        if (gamepad1.leftStickButtonWasPressed()) {
+            elementPipeline = !elementPipeline;
+            if (elementPipeline) {
+                elementVision.activate();
+            } else {
+                hiveVision.activate();
+            }
+        }
+
         Pose pose = robot.follower.pose();
         telemetry.addData("Pinpoint pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
         telemetry.addData("Intake", "%s  %.2f A", intake.getState(), robot.intakeMotor.getCurrent(CurrentUnit.AMPS));
@@ -111,6 +126,22 @@ public class SubsystemTest extends OpMode {
         telemetry.addLine("  if they go down set RobotConfig.TURRET_ENCODER_REVERSED = true");
         telemetry.addData("Limelight", "%s  pipeline %d", robot.limelight.isConnected() ? "connected" : "NOT CONNECTED",
                 robot.limelight.getLatestResult() == null ? -1 : robot.limelight.getLatestResult().getPipelineIndex());
+        if (elementPipeline) {
+            elementVision.update(null, null);
+            telemetry.addData("Element", elementVision.hasElement()
+                    ? String.format("%s  tx %.1f°  ty %.1f°  ~%.0f in", elementVision.getType(),
+                    elementVision.getTx(), elementVision.getTy(), elementVision.getDistance())
+                    : "none");
+        } else {
+            // show which hive tag clusters are visible (red far 30, red aud 34, blue aud 38, blue far 42)
+            hiveVision.update(30, 34, pose.heading(), 0);
+            telemetry.addData("Hive tags", "red far %s  red audience %s",
+                    hiveVision.hasTarget() ? "SEEN" : "-", hiveVision.seesOtherCell() ? "SEEN" : "-");
+            telemetry.addData("MegaTag2", hiveVision.hasBotpose()
+                    ? String.format("x %.1f  y %.1f  h %.0f°", hiveVision.getBotposeX(), hiveVision.getBotposeY(),
+                    Math.toDegrees(hiveVision.getBotposeHeading()))
+                    : "no pose");
+        }
         telemetry.addData("Battery", "%.2f V", robot.getVoltage());
         telemetry.update();
     }

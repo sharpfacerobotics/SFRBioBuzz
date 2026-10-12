@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
+import org.firstinspires.ftc.teamcode.robot.ElementVision;
 import org.firstinspires.ftc.teamcode.robot.HiveVision;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
@@ -47,6 +48,7 @@ import static com.pedropathing.api.Paths.line;
  *   left trig    outtake                     dpad L/R     turret trim
  *   A (hold)     aim chassis at hive         dpad down    clear trim
  *   B (hold)     auto-drive to LOADING ZONE  Y            re-home turret
+ *   X (hold)     turn toward nearest element (ElementVision; drive forward into it)
  *   left bump    snap pose to Limelight      start        turret: call current spot zero
  *   options      reset field-centric heading back         reset storage count
  *   back         toggle field / robot centric left bump  "hive tipped" (flip target cell)
@@ -75,6 +77,8 @@ public abstract class TeleopBase extends OpMode {
     private final Turret turret = new Turret(robot);
     private final Trigger trigger = new Trigger(robot);
     private final HiveVision hiveVision = new HiveVision(robot);
+    private final ElementVision elementVision = new ElementVision(robot);
+    private boolean elementAssist = false;
     private FieldDrawing fieldDrawing;
     private MatchLogger log;
 
@@ -124,7 +128,9 @@ public abstract class TeleopBase extends OpMode {
         red = alliance() == Alliance.RED;
         goalX = FieldGeometry.cellX(red);
         goalY = FieldGeometry.cellY(FieldGeometry.startingUpCell(red));
-        hive = new HiveTracker(FieldGeometry.startingUpCell(red));
+        // Continue from wherever auto left the hive (it almost always tips it).
+        hive = PoseStorage.hasHive() ? new HiveTracker(PoseStorage.getHiveUpCell(), PoseStorage.getHiveWeight())
+                : new HiveTracker(FieldGeometry.startingUpCell(red));
         opponentNectar = RobotConfig.opponentNectar(alliance());
         driverHeading = red ? RobotConfig.RED_DRIVER_HEADING : RobotConfig.BLUE_DRIVER_HEADING;
         parkPose = red ? new Pose(14, FieldGeometry.RED_LOADING_ZONE_Y, 0)
@@ -258,7 +264,25 @@ public abstract class TeleopBase extends OpMode {
         double forward = -gamepad1.left_stick_y;
         double strafe = -gamepad1.left_stick_x;
         double turn = -gamepad1.right_stick_x;
-        if (gamepad1.b) {
+        // Element assist: the Limelight switches to the element pipeline while X is held
+        // (hive tags aren't tracked meanwhile - HiveTracker's shot model still runs).
+        if (gamepad1.x != elementAssist) {
+            elementAssist = gamepad1.x;
+            if (elementAssist) {
+                elementVision.activate();
+            } else {
+                hiveVision.activate();
+            }
+        }
+        if (elementAssist) {
+            elementVision.update(null, opponentNectar); // never chase opponent NECTAR (G408)
+        }
+
+        if (elementAssist && elementVision.hasElement()) {
+            parking = false;
+            drivetrain.driveAiming(forward, strafe, Drivetrain.bearingTurn(elementVision.getTx()),
+                    heading, driverHeading, fieldCentric, gamepad1.right_bumper);
+        } else if (gamepad1.b) {
             // Park assist: Pedro drives us into the LOADING ZONE (PARK = 5 pts). Release = manual.
             if (!parking) {
                 parking = true;
@@ -284,7 +308,8 @@ public abstract class TeleopBase extends OpMode {
             turret.updateTurret(shooterConfig.getTurretAngle() + turretTrim, velocity.omega);
         }
         // Manual turret / chassis aim: the driver is the judge of "on target".
-        boolean aimed = manualTurret || gamepad1.a || turret.isOnTarget();
+        boolean aimed = (manualTurret || gamepad1.a || turret.isOnTarget())
+                && !hive.isSettling(matchTimer.seconds()); // don't launch into a swinging hive
 
         Element next = storage.peekNext();
         boolean spinUp = flywheelOn || firing || (RobotConfig.AUTO_SPINUP_WHEN_LOADED && loaded);
@@ -294,6 +319,9 @@ public abstract class TeleopBase extends OpMode {
         if (firing) {
             trigger.fire(launcher.isReady(), aimed);
             if (launcher.shotDetected()) {
+                if (hive.recordShot(next != null && next.isNectar(), matchTimer.seconds())) {
+                    gamepad2.rumbleBlips(2); // our shot tipped it: now aiming at the other cell
+                }
                 storage.removeNext();
                 shotsFired++; // logged as a running total: a 1-loop flag would fall between 20 Hz log rows
             }
@@ -326,8 +354,8 @@ public abstract class TeleopBase extends OpMode {
                 launcher.isReady() ? "READY" : "");
         telemetry.addData("Turret", "%s  %.1f° → %.1f°  trim %.0f°", turret.getState(),
                 Math.toDegrees(turret.getAngle()), Math.toDegrees(turret.getTargetAngle()), Math.toDegrees(turretTrim));
-        telemetry.addData("Hive", "aiming at %s cell  tags %s  tips %d", hive.getUpCell(),
-                hiveVision.hasTarget() ? "seen" : "-", hive.getTips());
+        telemetry.addData("Hive", "aiming at %s cell  load %.1f/%.0f  tags %s  tips %d", hive.getUpCell(),
+                hive.getWeight(), HiveTracker.TIP_WEIGHT, hiveVision.hasTarget() ? "seen" : "-", hive.getTips());
         if (parking) {
             telemetry.addLine("PARK ASSIST driving to loading zone");
         }
