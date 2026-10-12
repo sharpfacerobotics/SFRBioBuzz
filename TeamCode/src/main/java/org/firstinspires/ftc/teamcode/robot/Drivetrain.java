@@ -28,9 +28,24 @@ public class Drivetrain {
      */
     public void drive(double forward, double strafe, double turn, double robotHeading,
                       double driverHeading, boolean fieldCentric, boolean slowMode) {
+        move(forward, strafe, shape(turn), true, robotHeading, driverHeading, fieldCentric, slowMode);
+    }
+
+    /**
+     * Drive with the sticks but let aim assist control the turn. The turn is used as-is
+     * (no cubing or slow-mode scaling) because it's already a controller output.
+     *
+     * @param aimTurn from {@link #aimTurn(double, double)}
+     */
+    public void driveAiming(double forward, double strafe, double aimTurn, double robotHeading,
+                            double driverHeading, boolean fieldCentric, boolean slowMode) {
+        move(forward, strafe, aimTurn, false, robotHeading, driverHeading, fieldCentric, slowMode);
+    }
+
+    private void move(double forward, double strafe, double turn, boolean slowTurn, double robotHeading,
+                      double driverHeading, boolean fieldCentric, boolean slowMode) {
         forward = shape(forward);
         strafe = shape(strafe);
-        turn = shape(turn);
 
         if (fieldCentric) {
             // Rotate the driver-frame stick vector into the robot frame.
@@ -46,7 +61,9 @@ public class Drivetrain {
         if (slowMode) {
             forward *= RobotConfig.DRIVE_SLOW_SCALE;
             strafe *= RobotConfig.DRIVE_SLOW_SCALE;
-            turn *= RobotConfig.DRIVE_SLOW_SCALE;
+            if (slowTurn) {
+                turn *= RobotConfig.DRIVE_SLOW_SCALE;
+            }
         }
 
         locked = false;
@@ -66,6 +83,20 @@ public class Drivetrain {
 
     public boolean isLocked() {
         return locked;
+    }
+
+    /**
+     * Turn command that points the robot's front at a field heading - used to aim the
+     * chassis at the hive when the turret is down.
+     *
+     * @return turn power (CCW +), capped at AIM_ASSIST_MAX_TURN
+     */
+    public static double aimTurn(double targetHeading, double robotHeading) {
+        double error = targetHeading - robotHeading;
+        while (error > Math.PI) error -= 2 * Math.PI;
+        while (error <= -Math.PI) error += 2 * Math.PI;
+        double turn = RobotConfig.AIM_ASSIST_KP * error;
+        return Math.max(-RobotConfig.AIM_ASSIST_MAX_TURN, Math.min(RobotConfig.AIM_ASSIST_MAX_TURN, turn));
     }
 
     /** True if any stick is pushed past LOCK_BREAK_STICK - driver wants control back. */

@@ -74,6 +74,20 @@ public class RobotConfig {
 
     // ------------------------------------------------------------------ driver feedback / assists
 
+    /** Spin the flywheel up on its own whenever storage has something in it. */
+    public static boolean AUTO_SPINUP_WHEN_LOADED = true;
+    /** Auto-fire / range check: only shoot between these distances (in) from the hive. */
+    public static double MIN_SHOT_DISTANCE = 24.0;
+    public static double MAX_SHOT_DISTANCE = 144.0;
+    /** Chassis aim assist (turret-down fallback): turn = kP * heading error, capped. */
+    public static double AIM_ASSIST_KP = 1.5;
+    public static double AIM_ASSIST_MAX_TURN = 0.6;
+    /** Manual turret: stick -> power scale. */
+    public static double MANUAL_TURRET_SCALE = 0.6;
+    // Health warnings shown on telemetry
+    public static double LOW_BATTERY_VOLTAGE = 11.5;
+    public static double SLOW_LOOP_MS = 40.0;
+
     public static final double TELEOP_LENGTH = 120.0;          // seconds
     public static double ENDGAME_WARNING_1 = 30.0;             // seconds left -> rumble
     public static double ENDGAME_WARNING_2 = 10.0;
