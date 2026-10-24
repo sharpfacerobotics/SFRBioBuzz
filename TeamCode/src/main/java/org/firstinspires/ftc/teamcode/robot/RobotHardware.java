@@ -78,8 +78,8 @@ public class RobotHardware {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         */
         launchMotor1     = hardwareMap.get(DcMotorEx.class, "launch_motor");
-        launchMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
-        launchMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        launchMotor1.setDirection(DcMotorEx.Direction.REVERSE);
+        launchMotor1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         /*
         hoodAngleServo1 = hardwareMap.get(Servo.class, "hood_angle_servo_1");
         hoodAngleServo2 = hardwareMap.get(Servo.class, "hood_angle_servo_2");

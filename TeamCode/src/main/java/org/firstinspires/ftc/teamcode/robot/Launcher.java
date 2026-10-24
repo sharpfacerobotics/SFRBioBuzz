@@ -42,9 +42,9 @@ public class Launcher {
         this.targetVel = targetVel;
         //setHoodRetraction(Queue<String> q);
         //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
+        //setVelocityNormal();
         //setVelocityBang();
-        //setVelocityPFPow();
+        setVelocityPF();
         //setVelocityPFVol();
     }
     //testing method
@@ -53,9 +53,9 @@ public class Launcher {
         this.targetVel = targetVel;
         //setHoodRetraction(Queue<String> q);
         //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
+        //setVelocityNormal();
         //setVelocityBang();
-        //setVelocityPFPow();
+        setVelocityPF();
         //setVelocityPFVol();
     }
 
