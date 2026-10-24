@@ -17,8 +17,8 @@ public class Launcher {
     public static double hoodAnglePos1;
     public static double hoodAnglePos2;
 
-    /*
-    comp method
+
+    //comp method
     public void setLauncher(Queue<String> q) {
         String next = q.peek();
         double vx = ShooterConfig.elementVelocity[0];
@@ -35,7 +35,7 @@ public class Launcher {
         //setVelocityPFPow();
         //setVelocityPFVol();
     }
-    */
+
     //testing
     public void setLauncher(double targetVel, Queue<String> q) {
         currVel1 = robot.launchMotor1.getVelocity();

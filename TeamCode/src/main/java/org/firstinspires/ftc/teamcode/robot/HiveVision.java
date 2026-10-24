@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-public class Vision {
+public class HiveVision {
 
 }
