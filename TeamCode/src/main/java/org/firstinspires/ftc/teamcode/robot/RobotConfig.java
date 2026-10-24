@@ -103,6 +103,8 @@ public class RobotConfig {
     public static double AIM_ASSIST_MAX_TURN = 0.6;
     /** Element assist (hold X): turn toward the nearest element, turn = kP * bearing (rad). */
     public static double ELEMENT_ASSIST_KP = 1.2;
+    /** autoGetElement: forward power while closing in on an element. */
+    public static double ELEMENT_APPROACH_POWER = 0.3;
     /** Manual turret: stick -> power scale. */
     public static double MANUAL_TURRET_SCALE = 0.6;
     // Health warnings shown on telemetry
@@ -175,6 +177,9 @@ public class RobotConfig {
     public static double HOOD_NECTAR_GAP_1 = 0.55;
     public static double HOOD_NECTAR_GAP_2 = 0.55;
     public static double FLYWHEEL_IDLE_VELOCITY = 0.0;
+    /** setShooterWallSpeed(): preset for shots from against the wall. TODO(tune) at the field. */
+    public static double WALL_SHOT_VELOCITY = 1400;
+    public static double WALL_SHOT_HOOD = 0.35;
 
     // ------------------------------------------------------------------ turret
 

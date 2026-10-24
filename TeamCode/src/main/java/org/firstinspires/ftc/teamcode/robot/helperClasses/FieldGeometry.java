@@ -99,6 +99,51 @@ public final class FieldGeometry {
         return red ? x < CENTER : x > CENTER;
     }
 
+    // ------------------------------------------------------------------ hive tip state (glossary)
+    /** Glossary hive tip state: our cell nearest our own GARDEN is facing up. */
+    public static final String GARDEN_SIDE = "GARDEN_SIDE";
+    /** Glossary hive tip state: our cell on the far side from our GARDEN is facing up. */
+    public static final String OPPOSITE_GARDEN = "OPPOSITE_GARDEN";
+
+    /** Red's GARDEN is on the audience wall, blue's on the far wall (tiles A1 / F6). */
+    public static Cell gardenSideCell(boolean red) {
+        return red ? Cell.AUDIENCE : Cell.FAR;
+    }
+
+    public static String tipState(boolean red, Cell upCell) {
+        return upCell == gardenSideCell(red) ? GARDEN_SIDE : OPPOSITE_GARDEN;
+    }
+
+    public static Cell cellForTipState(boolean red, String tipState) {
+        return GARDEN_SIDE.equals(tipState) ? gardenSideCell(red) : other(gardenSideCell(red));
+    }
+
+    // ------------------------------------------------------------------ FTC frame -> ours
+    /**
+     * Official FTC field frame (origin at centre, +Y away from the red wall, +X to the right
+     * seen from the red wall) to ours: rotate -90 degrees, then shift by the half field.
+     */
+    public static double FTC_TO_FIELD_ROTATION = -Math.PI / 2;
+
+    public static double ftcToFieldX(double ftcX, double ftcY) {
+        return Math.cos(FTC_TO_FIELD_ROTATION) * ftcX - Math.sin(FTC_TO_FIELD_ROTATION) * ftcY + CENTER;
+    }
+
+    public static double ftcToFieldY(double ftcX, double ftcY) {
+        return Math.sin(FTC_TO_FIELD_ROTATION) * ftcX + Math.cos(FTC_TO_FIELD_ROTATION) * ftcY + CENTER;
+    }
+
+    public static double ftcToFieldHeading(double ftcYaw) {
+        return wrap(ftcYaw + FTC_TO_FIELD_ROTATION);
+    }
+
+    /** Angle into (-pi, pi]. */
+    public static double wrap(double angle) {
+        while (angle > Math.PI) angle -= 2 * Math.PI;
+        while (angle <= -Math.PI) angle += 2 * Math.PI;
+        return angle;
+    }
+
     /** Red -> blue (or blue -> red): 180 degree rotation about field centre. */
     public static double rotateX(double x) {
         return SIZE - x;
@@ -109,9 +154,6 @@ public final class FieldGeometry {
     }
 
     public static double rotateHeading(double heading) {
-        double h = heading + Math.PI;
-        while (h > Math.PI) h -= 2 * Math.PI;
-        while (h <= -Math.PI) h += 2 * Math.PI;
-        return h;
+        return wrap(heading + Math.PI);
     }
 }

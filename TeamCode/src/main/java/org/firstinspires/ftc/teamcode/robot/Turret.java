@@ -40,6 +40,7 @@ public class Turret {
     private int homingDirection = 1;
     private boolean homingStarted = false;
     private int homingFullSweeps = 0;
+    private double trim = 0;
     private double stallCheckTicks = 0;
     private double segmentStartTicks = 0;
     private final ElapsedTime stallTimer = new ElapsedTime();
@@ -56,14 +57,50 @@ public class Turret {
      * @param desiredAngle      turret angle to aim at (ShooterConfig.getTurretAngle() + any driver trim)
      * @param robotAngularVel   chassis yaw rate (rad/s, CCW+) from the follower, for feedforward
      */
-    public void updateTurret(double desiredAngle, double robotAngularVel) {
+    // Glossary: updateTurret() UPDATE, localizeTurret() START, goodTurretConfig() STATUS.
+
+    /**
+     * UPDATE. Loop call. Handles homing, aiming and unwinding. Aims along ShooterConfig's
+     * launch vector (team design: read from ShooterConfig) relative to the robot's heading
+     * from the follower, plus any driver trim.
+     */
+    public void updateTurret() {
+        double robotHeading = robot.follower.pose().heading();
+        double desired = ShooterConfig.aimHeading() - robotHeading + trim;
+        while (desired > Math.PI) desired -= 2 * Math.PI;
+        while (desired <= -Math.PI) desired += 2 * Math.PI;
+        updateTurretToAngle(desired, robot.follower.velocity().omega);
+    }
+
+    /** START. Begin the hall-effect search for zero; check goodTurretConfig()/getState(). */
+    public void localizeTurret() {
+        relocalize();
+    }
+
+    /** STATUS. True if the turret is aimed within tolerance - check before shooting. */
+    public boolean goodTurretConfig() {
+        return isOnTarget();
+    }
+
+    /** SET. Driver aim trim (rad, CCW +) added to the computed aim. */
+    public void setTrim(double trimRadians) {
+        trim = trimRadians;
+    }
+
+    /**
+     * Aim at a turret angle directly (TurretTuner, tests).
+     *
+     * @param desiredAngle    turret angle relative to robot forward (rad)
+     * @param robotAngularVel chassis yaw rate (rad/s, CCW+), for feedforward
+     */
+    public void updateTurretToAngle(double desiredAngle, double robotAngularVel) {
         double deltaTime = timer.seconds();
         timer.reset();
         double ticks = readTicks();
         boolean hallActive = isHallActive();
 
         if (turretState == TurretState.LOCALIZING) {
-            localizeTurret(ticks, hallActive);
+            searchForZero(ticks, hallActive);
             hallWasActive = hallActive;
             return;
         }
@@ -238,7 +275,7 @@ public class Turret {
 
     // ------------------------------------------------------------------ localization
 
-    private void localizeTurret(double ticks, boolean hallActive) {
+    private void searchForZero(double ticks, boolean hallActive) {
         if (!homingStarted) {
             homingStarted = true;
             homingStartTicks = ticks;

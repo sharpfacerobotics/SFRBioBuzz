@@ -39,13 +39,20 @@ public class ShooterConfig {
     private InterpLUT distToTof;
     private InterpLUT apriltagTaToVel;
 
+    /** Max correction (rad) the Limelight bearing may apply to the odometry aim. */
+    public static double MAX_VISION_CORRECTION = Math.toRadians(8);
+
     // ------------------------------------------------------------------ outputs
-    private double targetVelocity;
-    private double pollenAngle;
-    private double nectarAngle;
-    private double distanceToGoal;
-    private double fieldAimHeading;
-    private double turretAngle;
+    // Static, as in the team's design: Launcher.setLauncher(q) and Turret.updateTurret() read
+    // them (the glossary gives those methods no parameters for it).
+
+    /**
+     * [vx, vy, pollenHoodAngle, nectarHoodAngle]: the launch velocity as a field-frame vector
+     * (direction = where to aim, length = flywheel ticks/s) plus the hood angle per element.
+     */
+    public static final double[] elementVelocity = new double[4];
+    /** Distance (in) to the (shoot-on-the-move) aim point. */
+    public static double distanceToGoal;
 
     public ShooterConfig(RobotHardware robot) {
         this.robot = robot;
@@ -66,72 +73,70 @@ public class ShooterConfig {
     }
 
     /**
-     * Call once per loop before Launcher/Turret update.
+     * SET. Loop call. Calculates the target launch velocity and angle as a vector.
      *
-     * @param robotX       field x (in)
-     * @param robotY       field y (in)
-     * @param robotHeading field heading (rad)
-     * @param robotVx      field-frame x velocity (in/s), 0 to disable shoot-on-the-move
-     * @param robotVy      field-frame y velocity (in/s)
-     * @param goalX        hive x (in) for our alliance
-     * @param goalY        hive y (in)
-     * @param averageTa    HiveVision average target area, or 0 if no tag in view
+     * @param averageTa                  Vision.getAverageTa(), 0 if no tag in view
+     * @param dist                       {dx, dy} (in, field frame) from the robot to the target cell
+     * @param robotTranslationalVelocity {vx, vy} (in/s, field frame) from the follower
+     * @param targetHeading              Vision.getTargetHeading(): field heading to the target as
+     *                                   the camera sees it, or NaN - corrects small odometry error
      */
-    public void calculateShootingConfig(double robotX, double robotY, double robotHeading,
-                                        double robotVx, double robotVy,
-                                        double goalX, double goalY, double averageTa) {
-        double dx = goalX - robotX;
-        double dy = goalY - robotY;
-        double dist = Math.hypot(dx, dy);
+    public void calculateShootingConfig(double averageTa, double[] dist, double[] robotTranslationalVelocity,
+                                        double targetHeading) {
+        double gx = dist[0];
+        double gy = dist[1];
+        double vx = robotTranslationalVelocity[0];
+        double vy = robotTranslationalVelocity[1];
+
+        // If the camera sees the target, trust its bearing over odometry's (a little).
+        double bias = 0;
+        if (!Double.isNaN(targetHeading)) {
+            bias = normalize(targetHeading - Math.atan2(gy, gx));
+            bias = Math.max(-MAX_VISION_CORRECTION, Math.min(MAX_VISION_CORRECTION, bias));
+        }
 
         // Shoot on the move: shift the goal opposite our velocity by the flight time.
+        double dx = gx;
+        double dy = gy;
+        double d = Math.hypot(dx, dy);
         for (int i = 0; i < SHOOT_ON_MOVE_ITERATIONS; i++) {
-            double tof = distToTof.get(dist);
-            dx = goalX - robotVx * tof - robotX;
-            dy = goalY - robotVy * tof - robotY;
-            dist = Math.hypot(dx, dy);
+            double tof = distToTof.get(d);
+            dx = gx - vx * tof;
+            dy = gy - vy * tof;
+            d = Math.hypot(dx, dy);
         }
 
-        distanceToGoal = dist;
-        fieldAimHeading = Math.atan2(dy, dx);
-        turretAngle = normalize(fieldAimHeading - robotHeading);
+        double odoVelocity = distToVel.get(d);
+        double speed = averageTa > 0.0
+                ? (1.0 - TA_WEIGHT) * odoVelocity + TA_WEIGHT * apriltagTaToVel.get(averageTa)
+                : odoVelocity;
+        double aim = Math.atan2(dy, dx) + bias;
 
-        double odoVelocity = distToVel.get(dist);
-        if (averageTa > 0.0) {
-            targetVelocity = (1.0 - TA_WEIGHT) * odoVelocity + TA_WEIGHT * apriltagTaToVel.get(averageTa);
-        } else {
-            targetVelocity = odoVelocity;
-        }
-        pollenAngle = distToPollenAngle.get(dist);
-        nectarAngle = distToNectarAngle.get(dist);
+        distanceToGoal = d;
+        elementVelocity[0] = speed * Math.cos(aim);
+        elementVelocity[1] = speed * Math.sin(aim);
+        elementVelocity[2] = distToPollenAngle.get(d);
+        elementVelocity[3] = distToNectarAngle.get(d);
     }
 
-    public double getTargetVelocity() {
-        return targetVelocity;
+    /** Flywheel target (ticks/s) = length of the launch vector. */
+    public static double targetVelocity() {
+        return Math.hypot(elementVelocity[0], elementVelocity[1]);
     }
 
-    /** Hood angle for the element about to be shot (null/UNKNOWN use pollen). */
-    public double getHoodAngle(String next) {
-        return "NECTAR".equals(next) ? nectarAngle : pollenAngle;
+    /** Field heading (rad) to aim along = direction of the launch vector. */
+    public static double aimHeading() {
+        return Math.atan2(elementVelocity[1], elementVelocity[0]);
+    }
+
+    /** Hood angle for the element about to be shot ("NECTAR" / anything else = pollen). */
+    public static double hoodAngleFor(String next) {
+        return "NECTAR".equals(next) ? elementVelocity[3] : elementVelocity[2];
     }
 
     /** Close enough (and far enough) to shoot - the distance table only covers this band. */
-    public boolean isInRange() {
+    public static boolean isInRange() {
         return distanceToGoal >= RobotConfig.MIN_SHOT_DISTANCE && distanceToGoal <= RobotConfig.MAX_SHOT_DISTANCE;
-    }
-
-    public double getDistanceToGoal() {
-        return distanceToGoal;
-    }
-
-    /** Field heading (rad) from the robot to the (virtual) goal. */
-    public double getFieldAimHeading() {
-        return fieldAimHeading;
-    }
-
-    /** Turret angle (rad) relative to robot forward, in (-pi, pi]. */
-    public double getTurretAngle() {
-        return turretAngle;
     }
 
     private static double normalize(double angle) {

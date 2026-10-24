@@ -22,12 +22,59 @@ public class ElementVision {
     private final RobotHardware robot;
 
     public static double MIN_CONFIDENCE = 0.6;
+    /** Ignore Limelight results older than this (ms) - a frozen camera repeats its last frame. */
+    public static long MAX_RESULT_AGE_MS = 100;
 
     private boolean hasElement = false;
+    private boolean searching = false;
+    private Element opponentNectar = null;
     private Element type = Element.UNKNOWN;
     private double tx = 0;
     private double ty = 0;
     private double area = 0;
+
+    // ------------------------------------------------------------------ glossary methods
+    // beginAutoFind() START, elementDetected() STATUS, getElementDeltaX() STATUS, stopAutoFind() STOP
+
+    /** SET (once). Our alliance, so the opponent's NECTAR is never reported (G408). */
+    public void setAllianceColor(String allianceColor) {
+        opponentNectar = "RED".equals(allianceColor) ? Element.BLUE_NECTAR : Element.RED_NECTAR;
+    }
+
+    /** START. Switch the Limelight to the element detector and start searching. Once per search. */
+    public void beginAutoFind() {
+        if (!searching) {
+            searching = true;
+            hasElement = false;
+            activate();
+        }
+    }
+
+    /** STATUS. True if a (legal) element is visible. Loop call while searching. */
+    public boolean elementDetected() {
+        if (searching) {
+            update(null, opponentNectar);
+        }
+        return searching && hasElement;
+    }
+
+    /** STATUS. tx (deg, + = right) of the largest detected element. */
+    public double getElementDeltaX() {
+        return tx;
+    }
+
+    /** STOP. End the search and give the Limelight back to the hive AprilTag pipeline. */
+    public void stopAutoFind() {
+        if (searching) {
+            searching = false;
+            hasElement = false;
+            robot.limelight.pipelineSwitch(RobotConfig.HIVE_PIPELINE);
+        }
+    }
+
+    public boolean isSearching() {
+        return searching;
+    }
 
     public ElementVision(RobotHardware robot) {
         this.robot = robot;
@@ -47,7 +94,7 @@ public class ElementVision {
     public void update(Element wanted, Element never) {
         hasElement = false;
         LLResult result = robot.limelight.getLatestResult();
-        if (result == null || result.getStaleness() > HiveVision.MAX_RESULT_AGE_MS
+        if (result == null || result.getStaleness() > MAX_RESULT_AGE_MS
                 || !result.isValid() || result.getPipelineIndex() != RobotConfig.ELEMENT_PIPELINE) {
             return;
         }

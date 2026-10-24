@@ -20,7 +20,7 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 │   ├── Launcher            flywheel (velocity / PF / bang-bang) + hood
 │   ├── Turret              CR servo turret, hall-effect homing, cable unwinding
 │   ├── Trigger             gate + feeder, only fires when shooter and turret are ready
-│   ├── HiveVision          Limelight AprilTag: averaged ta + MegaTag2 relocalization
+│   ├── Vision          Limelight AprilTag: averaged ta + MegaTag2 relocalization
 │   ├── ElementVision       Limelight detector: finds pollen/nectar on the field
 │   ├── PoseStorage         carries the pose from auto into TeleOp
 │   └── helperClasses/      FieldGeometry (BIOBUZZ field), HiveTracker, InterpLUT, MotionProfile,
@@ -69,7 +69,7 @@ passes it into the next one as a parameter:
 ```mermaid
 flowchart LR
     F[Pedro follower<br/>pose + velocity] --> SC[ShooterConfig]
-    HV[HiveVision<br/>average ta] --> SC
+    HV[Vision<br/>average ta] --> SC
     SC -- turret angle --> T[Turret]
     SC -- velocity + hood angle --> L[Launcher]
     S[Storage] -- next element --> L
@@ -88,21 +88,39 @@ One loop of `TeleopBase` / `AutoBase`:
 5. trigger fires only if `launcher.isReady() && turret.isOnTarget()`
 6. a velocity dip on the flywheel (`launcher.shotDetected()`) removes one element from storage
 
-## Methods glossary (Storage / Intake)
+## Methods glossary
 
-Storage and Intake follow the team Software Documentation glossary exactly:
+Every file follows the team Software Documentation glossary: the exact names, parameters and
+return types. Types: **SET** sets something, **UPDATE** loop call with no output,
+**CONTINUOUS** loop call that moves something, **STATUS** returns state, **START** begins
+something you then check, **STOP** ends it, **COMMAND** returns an Ivy command, **INIT** one-time.
 
-| File | Method | Type | Use |
-|---|---|---|---|
-| Storage | `checkBeamBreaks(String allianceColor)` | UPDATE, boolean | loop call; updates the queue; true = emergency outtake (opponent NECTAR G408 / 5th element G407) |
-| Storage | `anyIntakeBeamBroken()` | STATUS, boolean | any intake beam broken |
-| Storage | `getElementQueue()` | STATUS, `Queue<String>` | `"POLLEN"` / `"NECTAR"` in intake order; `.peek()` = next to launch |
-| Intake | `emergencyOuttake()` | CONTINUOUS | call while `checkBeamBreaks` is true |
-| Intake | `setIntakePower(double)` | SET | raw power |
-| Intake | `updateIntake(runFull, runSlow, jitter)` | CONTINUOUS | normal intaking |
+| File | Methods |
+|---|---|
+| Drivetrain | `driveWith(Path)` COMMAND, `autoMoveTo(Pose)` START, `reachedAutoMovePoint()` STATUS, `autoGetElement(double deltaX)` CONTINUOUS, `move(y, x, yaw)` CONTINUOUS, `relocalize(Pose3D)` SET, `getPedroDistanceToHive(Pose, String alliance)` STATUS `double[]` |
+| ShooterConfig | `calculateShootingConfig(averageTa, double[] dist, double[] robotTranslationalVelocity, targetHeading)` SET; publishes `elementVelocity = {vx, vy, pollenHood, nectarHood}` |
+| Launcher | `setShooterWallSpeed()` SET, `setLauncher(Queue<String>)` SET, `goodShooterConfig()` STATUS, `setHoodRetraction(Queue<String>)` SET |
+| Turret | `goodTurretConfig()` STATUS, `localizeTurret()` START, `updateTurret()` UPDATE |
+| Vision (LL) | `getAverageTa()`, `getTargetHeading()`, `updateRead(String alliance)` UPDATE, `getHiveTipState()` → `"GARDEN_SIDE"` / `"OPPOSITE_GARDEN"`, `getAverageBotPose()` → `Pose3D` |
+| ElementVision | `beginAutoFind()` START, `elementDetected()` STATUS, `getElementDeltaX()` STATUS, `stopAutoFind()` STOP |
+| RobotHardware (HM) | `init(HardwareMap)` INIT |
+| Storage | `checkBeamBreaks(String alliance)` UPDATE → true = emergency outtake, `anyIntakeBeamBroken()`, `getElementQueue()` → `Queue<String>` |
+| Intake | `emergencyOuttake()`, `setIntakePower(double)`, `updateIntake(runFull, runSlow, jitter)` |
+| Trigger | `fire(goodShooterConfig, goodTurretConfig)`, the same as Ryan's version |
+| PoseStorage | `updatePoseStoragePose(Pose)`, `getPoseStoragePose()` |
 
-The storage exit beam counts each element leaving into the launcher, so the queue stays right
-without Storage ever calling the Launcher.
+**Data flow** follows the team's design. ShooterConfig writes its result to the static
+`elementVelocity`; `Launcher.setLauncher(q)` and `Turret.updateTurret()` read it, since the
+glossary gives them no parameters for it. Turret and Vision read the robot's pose from
+`robot.follower` (a RobotHardware call). Those are the only places one subsystem reads another,
+and the bytecode check confirms it.
+
+A few extra methods sit alongside the glossary ones where something needed them:
+- **Storage:** `getLaunchedCount()`, the shot counter.
+- **Vision:** `recordLaunch()` / `isHiveSettling()`, for the hive model.
+- **Drivetrain:** field-centric `drive()` and aim assist.
+- **Turret:** `setTrim()` and manual control.
+- **Launcher:** `setManual()` for tuning.
 
 ## Coding protocol
 
@@ -133,7 +151,7 @@ From the team software doc:
 | Drivetrain | `robot/Drivetrain.java`, `pedro/Constants.java` | Arnav |
 | Robot hardware / config | `robot/RobotHardware.java`, `robot/RobotConfig.java` | Arnav |
 | Launcher, shooter config, turret | `robot/Launcher.java`, `robot/ShooterConfig.java`, `robot/Turret.java` | Alex |
-| Hive vision, element vision | `robot/HiveVision.java`, `robot/ElementVision.java` | Gautham |
+| Hive vision, element vision | `robot/Vision.java`, `robot/ElementVision.java` | Gautham |
 | Storage, intake | `robot/Storage.java`, `robot/Intake.java` | Vibhav |
 | Trigger (+ gate), pose storage | `robot/Trigger.java`, `robot/PoseStorage.java` | Ryan |
 | Subordinate auto | `auto/SubordinateAutoBase.java` (+ Red/Blue) | Alex |
@@ -177,7 +195,7 @@ The shooter test OpModes (`ShooterTestPanels`, `FlywheelPFTuning*`) call
 | Right stick | turn | Right trigger (hold) | **fire** |
 | Right bumper | slow mode | X | auto-fire on/off |
 | Right trigger | intake (halfway = slow) | B | manual turret on/off (right stick X) |
-| D-pad down (hold) | intake jitter (free a stuck element) | | |
+| D-pad down (hold) | intake jitter (free a stuck element) | Left trigger (hold) | **wall shot** preset (fire with right trigger) |
 | Left trigger | outtake | D-pad left/right | turret trim ±1° |
 | A (hold) | aim chassis at hive | D-pad down | clear trim |
 | B (hold) | **park assist:** drive into the LOADING ZONE | Y | re-home turret |
@@ -294,7 +312,7 @@ Every placeholder is marked `TODO(tune)`, `TODO(measure)` or `TODO(confirm)`. Se
    figures (±2 in). Check them on a real field or the official CAD, especially
    `RED_HIVE_X` and `CELL_OFFSET_Y`.
 7. **Vision:** drive to a known spot and press driver 1's left bumper; the pose should snap
-   correctly. The FTC → field rotation is `HiveVision.FTC_TO_FIELD_ROTATION`. Also check that
+   correctly. The FTC → field rotation is `Vision.FTC_TO_FIELD_ROTATION`. Also check that
    `HiveTracker` flips when the hive tips: the camera must see the tags under the cells.
 
 ## After a practice or match

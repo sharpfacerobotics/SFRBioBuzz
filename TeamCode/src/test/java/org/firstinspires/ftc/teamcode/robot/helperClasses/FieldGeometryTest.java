@@ -47,4 +47,31 @@ public class FieldGeometryTest {
         assertEquals(Math.PI, FieldGeometry.rotateHeading(0), 1e-9);
         assertEquals(-Math.PI / 2, FieldGeometry.rotateHeading(Math.PI / 2), 1e-9);
     }
+
+    @Test
+    public void tipStateIsRelativeToOurGarden() {
+        // red GARDEN is on the audience wall, blue's on the far wall
+        assertEquals(FieldGeometry.GARDEN_SIDE, FieldGeometry.tipState(true, Cell.AUDIENCE));
+        assertEquals(FieldGeometry.GARDEN_SIDE, FieldGeometry.tipState(false, Cell.FAR));
+        assertEquals(FieldGeometry.OPPOSITE_GARDEN, FieldGeometry.tipState(true, Cell.FAR));
+        assertEquals(Cell.FAR, FieldGeometry.cellForTipState(true, FieldGeometry.OPPOSITE_GARDEN));
+        // both alliances start with the garden-side cell up
+        assertEquals(FieldGeometry.GARDEN_SIDE, FieldGeometry.tipState(true, FieldGeometry.startingUpCell(true)));
+        assertEquals(FieldGeometry.GARDEN_SIDE, FieldGeometry.tipState(false, FieldGeometry.startingUpCell(false)));
+    }
+
+    @Test
+    public void ftcFrameConversion() {
+        // FTC origin = field centre
+        assertEquals(72, FieldGeometry.ftcToFieldX(0, 0), 1e-9);
+        assertEquals(72, FieldGeometry.ftcToFieldY(0, 0), 1e-9);
+        // FTC +Y points away from the red wall = our +x
+        assertEquals(72 + 10, FieldGeometry.ftcToFieldX(0, 10), 1e-9);
+        // FTC +X is to the right seen from the red wall = toward the audience = our -y
+        assertEquals(72 - 10, FieldGeometry.ftcToFieldY(10, 0), 1e-9);
+        // facing FTC +Y (yaw 90 deg) = facing the blue wall = our heading 0
+        assertEquals(0, FieldGeometry.ftcToFieldHeading(Math.PI / 2), 1e-9);
+        // and the result is wrapped into (-pi, pi]
+        assertEquals(Math.PI, FieldGeometry.ftcToFieldHeading(-Math.PI / 2), 1e-9);
+    }
 }

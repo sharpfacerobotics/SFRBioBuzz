@@ -41,6 +41,8 @@ public class ShotTableTuner extends OpMode {
     public static double HOOD_ANGLE = 0.4;
     public static boolean BLUE = false;
     public static boolean FAR_CELL = false;
+    /** Stationary tuning: no shoot-on-the-move offset, so the table is pure distance. */
+    private static final double[] STILL = {0, 0};
     public static double START_X = 72;
     public static double START_Y = 72;
     public static double START_HEADING_DEG = 90;
@@ -67,7 +69,7 @@ public class ShotTableTuner extends OpMode {
 
     @Override
     public void start() {
-        turret.relocalize();
+        turret.localizeTurret();
         turret.restartTimer();
     }
 
@@ -78,8 +80,10 @@ public class ShotTableTuner extends OpMode {
         Pose pose = robot.follower.pose();
         Velocity velocity = robot.follower.velocity();
         // Shoot at the cell you pick in Panels (FAR_CELL) - it must be the one facing up.
+        String alliance = BLUE ? "BLUE" : "RED";
+        FieldGeometry.Cell cell = FAR_CELL ? FieldGeometry.Cell.FAR : FieldGeometry.Cell.AUDIENCE;
         double goalX = FieldGeometry.cellX(!BLUE);
-        double goalY = FieldGeometry.cellY(FAR_CELL ? FieldGeometry.Cell.FAR : FieldGeometry.Cell.AUDIENCE);
+        double goalY = FieldGeometry.cellY(cell);
 
         drivetrain.drive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x,
                 pose.heading(), 0, false, true);
@@ -93,17 +97,19 @@ public class ShotTableTuner extends OpMode {
         }
 
         // Stationary tuning: no shoot-on-the-move offset, so the table is pure distance.
-        shooterConfig.calculateShootingConfig(pose.x(), pose.y(), pose.heading(), 0, 0, goalX, goalY, 0);
-        turret.updateTurret(shooterConfig.getTurretAngle(), velocity.omega);
-        launcher.update(VELOCITY, HOOD_ANGLE, element, robot.getVoltage());
+        shooterConfig.calculateShootingConfig(0,
+                drivetrain.getPedroDistanceToHive(pose, alliance, FieldGeometry.tipState(!BLUE, cell)),
+                STILL, Double.NaN);
+        turret.updateTurret(); // aims along ShooterConfig's launch vector
+        launcher.setManual(VELOCITY, HOOD_ANGLE, element); // the values you're tuning
 
         if (gamepad1.right_trigger > 0.3) {
-            trigger.fire(launcher.isReady(), turret.isOnTarget());
+            trigger.fire(launcher.goodShooterConfig(), turret.goodTurretConfig());
         } else {
             trigger.stopFiring();
         }
 
-        double distance = shooterConfig.getDistanceToGoal();
+        double distance = ShooterConfig.distanceToGoal;
         if (gamepad1.aWasPressed()) {
             rowCount++;
             String row = String.format("%s  dist %.1f  vel %.0f  hood %.3f", element, distance, VELOCITY, HOOD_ANGLE);
@@ -113,8 +119,8 @@ public class ShotTableTuner extends OpMode {
 
         telemetry.addData("Distance to hive", "%.1f in", distance);
         telemetry.addData("Element", element);
-        telemetry.addData("Flywheel", "%.0f / %.0f %s", launcher.getCurrVelocity(), VELOCITY, launcher.isReady() ? "READY" : "");
-        telemetry.addData("Turret", "%s %s", turret.getState(), turret.isOnTarget() ? "ON TARGET" : "");
+        telemetry.addData("Flywheel", "%.0f / %.0f %s", launcher.getCurrVelocity(), VELOCITY, launcher.goodShooterConfig() ? "READY" : "");
+        telemetry.addData("Turret", "%s %s", turret.getState(), turret.goodTurretConfig() ? "ON TARGET" : "");
         telemetry.addData("Logged rows", rowCount);
         telemetry.update();
     }

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.robot.HiveVision;
+import org.firstinspires.ftc.teamcode.robot.Drivetrain;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.PoseStorage;
@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 import org.firstinspires.ftc.teamcode.robot.Storage;
 import org.firstinspires.ftc.teamcode.robot.Trigger;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+import org.firstinspires.ftc.teamcode.robot.Vision;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldDrawing;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.HiveTracker;
@@ -170,13 +171,14 @@ public abstract class AutoBase extends LinearOpMode {
     // ------------------------------------------------------------------ running
 
     protected final RobotHardware robot = new RobotHardware();
+    protected final Drivetrain drivetrain = new Drivetrain(robot);
     protected final Intake intake = new Intake(robot);
     protected final Storage storage = new Storage(robot);
     protected final ShooterConfig shooterConfig = new ShooterConfig(robot);
     protected final Launcher launcher = new Launcher(robot);
     protected final Turret turret = new Turret(robot);
     protected final Trigger trigger = new Trigger(robot);
-    protected final HiveVision hiveVision = new HiveVision(robot);
+    protected final Vision vision = new Vision(robot);
 
     private final ElapsedTime stepTimer = new ElapsedTime();
     private final ElapsedTime voltageTimer = new ElapsedTime();
@@ -201,7 +203,7 @@ public abstract class AutoBase extends LinearOpMode {
         try {
             boolean red = alliance() == Alliance.RED;
             double goalX = FieldGeometry.cellX(red);
-            HiveTracker hive = new HiveTracker(FieldGeometry.startingUpCell(red));
+            final double[] robotVelocity = new double[2]; // reused every loop
             String allianceColor = red ? "RED" : "BLUE";
             Queue<String> elements = storage.getElementQueue();
 
@@ -210,7 +212,7 @@ public abstract class AutoBase extends LinearOpMode {
             robot.follower.setPose(start);
             turret.forceZeroHere();
             trigger.stopFiring();
-            hiveVision.activate();
+            vision.activate();
 
             while (opModeInInit()) {
                 if (gamepad1.dpadUpWasPressed()) {
@@ -243,7 +245,6 @@ public abstract class AutoBase extends LinearOpMode {
             turret.restartTimer();
             matchTimer.reset();
             robot.follower.hold(start);
-            double voltage = robot.getVoltage();
 
             while (opModeIsActive()) {
                 robot.clearBulkCache();
@@ -251,11 +252,6 @@ public abstract class AutoBase extends LinearOpMode {
                 Pose pose = robot.follower.pose();
                 Velocity velocity = robot.follower.velocity();
                 PoseStorage.updatePoseStoragePose(pose); // every loop, in case auto gets cut off at 30 s
-
-                if (voltageTimer.seconds() > 0.25) {
-                    voltageTimer.reset();
-                    voltage = robot.getVoltage();
-                }
 
                 // Wait out the start delay (flywheel + turret still spin up meanwhile).
                 if (!routineStarted && matchTimer.seconds() >= startDelay) {
@@ -270,18 +266,15 @@ public abstract class AutoBase extends LinearOpMode {
                         || (carrying && carryTimer.seconds() < RobotConfig.AUTO_INTAKE_CARRY);
 
                 // Aim at whichever of our cells is up; a tip (ours or our partner's) flips it.
-                FieldGeometry.Cell upCell = hive.getUpCell();
-                hiveVision.update(FieldGeometry.tagBase(red, upCell), FieldGeometry.tagBase(red, FieldGeometry.other(upCell)),
-                        pose.heading(), velocity.omega);
-                hive.update(hiveVision.hasTarget(), hiveVision.seesOtherCell(), matchTimer.seconds());
-                double goalY = FieldGeometry.cellY(hive.getUpCell());
+                vision.updateRead(allianceColor); // Limelight reads + hive tip state
+                double goalY = FieldGeometry.cellY(vision.getHiveUpCell());
 
                 // Storage: beam breaks update the queue; the exit beam counts shots out.
                 String headBefore = elements.peek();
                 int launchedBefore = storage.getLaunchedCount();
                 boolean emergency = storage.checkBeamBreaks(allianceColor);
                 if (storage.getLaunchedCount() > launchedBefore) { // exit beam: one left into the launcher
-                    hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds());
+                    vision.recordLaunch(headBefore);
                     shotsFired++; // running total so the 20 Hz log can't miss a shot
                 }
                 if (emergency) {
@@ -290,18 +283,20 @@ public abstract class AutoBase extends LinearOpMode {
                     intake.updateIntake(intaking && elements.size() < RobotConfig.STORAGE_CAPACITY, false, false);
                 }
 
-                shooterConfig.calculateShootingConfig(pose.x(), pose.y(), pose.heading(), velocity.vx, velocity.vy,
-                        goalX, goalY, hiveVision.getAverageTa());
-                turret.updateTurret(shooterConfig.getTurretAngle(), velocity.omega);
+                robotVelocity[0] = velocity.vx;
+                robotVelocity[1] = velocity.vy;
+                shooterConfig.calculateShootingConfig(vision.getAverageTa(),
+                        drivetrain.getPedroDistanceToHive(pose, allianceColor, vision.getHiveTipState()),
+                        robotVelocity, vision.getTargetHeading());
+                turret.updateTurret();
 
                 // Keep the flywheel at speed all auto so shots never wait on spin-up.
-                String next = elements.peek();
-                launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
+                launcher.setLauncher(elements);
 
                 if (shooting) {
                     // Hold fire while the hive swings after a tip - the 3rd pre-load tips it and
                     // the 4th must go into the OTHER cell once it has settled.
-                    trigger.fire(launcher.isReady(), turret.isOnTarget() && !hive.isSettling(matchTimer.seconds()));
+                    trigger.fire(launcher.goodShooterConfig(), turret.goodTurretConfig() && !vision.isHiveSettling());
                 } else {
                     trigger.stopFiring();
                 }
@@ -319,26 +314,27 @@ public abstract class AutoBase extends LinearOpMode {
                 if (log.shouldLog(matchTimer.seconds())) {
                     log.value(pose.x()).value(pose.y()).value(pose.heading()).value(stepIndex)
                             .value(elements.size()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
-                            .value(launcher.isReady()).value(turret.isOnTarget()).value(shooting).value(shotsFired).endRow();
+                            .value(launcher.goodShooterConfig()).value(turret.goodTurretConfig()).value(shooting).value(shotsFired).endRow();
                 }
 
                 // After this loop's shots/tips, so a tip on the very last loop still reaches TeleOp.
-                PoseStorage.updateMatchState(allianceColor, hive.getUpCell(), hive.getWeight(), turret.getZeroOffsetTicks());
+                PoseStorage.updateMatchState(allianceColor, vision.getHiveUpCell(), vision.getHiveLoad(), turret.getZeroOffsetTicks());
 
-                fieldDrawing.draw(pose.x(), pose.y(), pose.heading(), shooterConfig.getFieldAimHeading(),
-                        shooterConfig.getDistanceToGoal(), goalX, goalY);
+                fieldDrawing.draw(pose.x(), pose.y(), pose.heading(), ShooterConfig.aimHeading(),
+                        ShooterConfig.distanceToGoal, goalX, goalY);
 
                 telemetry.addData("Step", "%d/%d %s", Math.min(stepIndex + 1, steps.size()), steps.size(),
                         !routineStarted ? "start delay" : step == null ? "done" : step.label);
                 telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
                 telemetry.addData("Storage", elements.size());
-                telemetry.addData("Hive", "aiming at %s cell, tips seen %d", hive.getUpCell(), hive.getTips());
+                telemetry.addData("Hive", "%s (%s cell), tips seen %d", vision.getHiveTipState(),
+                        vision.getHiveUpCell(), vision.getHiveTips());
                 telemetry.addData("Flywheel", "%.0f / %.0f", launcher.getCurrVelocity(), launcher.getTargetVelocity());
                 telemetry.update();
             }
 
             PoseStorage.updatePoseStoragePose(robot.follower.pose());
-            PoseStorage.updateMatchState(allianceColor, hive.getUpCell(), hive.getWeight(), turret.getZeroOffsetTicks());
+            PoseStorage.updateMatchState(allianceColor, vision.getHiveUpCell(), vision.getHiveLoad(), turret.getZeroOffsetTicks());
             PoseStorage.updateStoredElements(elements); // TeleOp starts with what's really inside
             trigger.stopFiring();
             intake.setIntakePower(0);

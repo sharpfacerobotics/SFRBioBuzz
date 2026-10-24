@@ -41,7 +41,7 @@ public class TurretTuner extends OpMode {
 
     @Override
     public void start() {
-        turret.relocalize();
+        turret.localizeTurret();
         turret.restartTimer();
         stepTimer.reset();
     }
@@ -50,21 +50,21 @@ public class TurretTuner extends OpMode {
     public void loop() {
         robot.clearBulkCache();
         if (gamepad1.aWasPressed()) {
-            turret.relocalize();
+            turret.localizeTurret();
         }
         if (STEP_MODE && stepTimer.seconds() > STEP_PERIOD) {
             stepTimer.reset();
             onStep = !onStep;
         }
         double targetDeg = STEP_MODE && onStep ? STEP_TARGET_DEG : TARGET_DEG;
-        turret.updateTurret(Math.toRadians(targetDeg), 0);
+        turret.updateTurretToAngle(Math.toRadians(targetDeg), 0);
 
         telemetry.addData("State", turret.getState());
         telemetry.addData("Target (deg)", targetDeg);
         telemetry.addData("Angle (deg)", Math.toDegrees(turret.getAngle()));
         telemetry.addData("Error (deg)", Math.toDegrees(turret.getError()));
         telemetry.addData("Power", turret.getPower());
-        telemetry.addData("On target", turret.isOnTarget());
+        telemetry.addData("On target", turret.goodTurretConfig());
         telemetry.addData("Gains", "kP %.3f  kD %.3f  kS %.3f", RobotConfig.TURRET_KP, RobotConfig.TURRET_KD, RobotConfig.TURRET_KS);
         telemetry.addLine("A = re-home");
         telemetry.update();

@@ -1,5 +1,17 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry;
+
+import static com.pedropathing.api.Paths.line;
+
 /**
  * Mecanum driving for TeleOp. Owner: Arnav.
  *
@@ -12,6 +24,7 @@ package org.firstinspires.ftc.teamcode.robot;
 public class Drivetrain {
     private final RobotHardware robot;
     private boolean locked = false;
+    private final double[] hiveDelta = new double[2]; // reused: getPedroDistanceToHive allocates nothing
 
     public Drivetrain(RobotHardware robot) {
         this.robot = robot;
@@ -28,7 +41,7 @@ public class Drivetrain {
      */
     public void drive(double forward, double strafe, double turn, double robotHeading,
                       double driverHeading, boolean fieldCentric, boolean slowMode) {
-        move(forward, strafe, shape(turn), true, robotHeading, driverHeading, fieldCentric, slowMode);
+        driveCore(forward, strafe, shape(turn), true, robotHeading, driverHeading, fieldCentric, slowMode);
     }
 
     /**
@@ -39,10 +52,93 @@ public class Drivetrain {
      */
     public void driveAiming(double forward, double strafe, double aimTurn, double robotHeading,
                             double driverHeading, boolean fieldCentric, boolean slowMode) {
-        move(forward, strafe, aimTurn, false, robotHeading, driverHeading, fieldCentric, slowMode);
+        driveCore(forward, strafe, aimTurn, false, robotHeading, driverHeading, fieldCentric, slowMode);
     }
 
-    private void move(double forward, double strafe, double turn, boolean slowTurn, double robotHeading,
+    // ------------------------------------------------------------------ glossary methods
+
+    /**
+     * CONTINUOUS. Mecanum drive equations, robot centric. Loop call.
+     * Standard FTC stick convention: {@code move(-gamepad.left_stick_y, gamepad.left_stick_x,
+     * gamepad.right_stick_x)}.
+     *
+     * @param y   forward (+)
+     * @param x   strafe right (+)
+     * @param yaw turn clockwise (+)
+     */
+    public void move(double y, double x, double yaw) {
+        locked = false;
+        // Pedro's convention is strafe-left and counter-clockwise positive.
+        robot.follower.manual(shape(y), -shape(x), -shape(yaw));
+    }
+
+    /** COMMAND. An Ivy command that follows the path; schedule it with Ivy. */
+    public Command driveWith(Path path) {
+        return PedroCommands.follow(robot.follower, path);
+    }
+
+    /** START. Fire and forget: drive from where we are to endPose. Check reachedAutoMovePoint(). */
+    public void autoMoveTo(Pose endPose) {
+        Pose from = robot.follower.pose();
+        followPath(line(from, endPose).linear(from, endPose));
+    }
+
+    /** STATUS. True when the autoMoveTo path has finished. Loop check. */
+    public boolean reachedAutoMovePoint() {
+        return !robot.follower.isBusy();
+    }
+
+    /**
+     * CONTINUOUS. Drive toward an element the camera sees: creep forward while turning to
+     * centre it. Loop call while ElementVision.elementDetected().
+     *
+     * @param deltaX ElementVision.getElementDeltaX() (deg, + = right of centre)
+     */
+    public void autoGetElement(double deltaX) {
+        locked = false;
+        robot.follower.manual(RobotConfig.ELEMENT_APPROACH_POWER, 0, bearingTurn(deltaX));
+    }
+
+    /**
+     * SET. Relocalize with the Limelight (FTC-frame MegaTag2 pose, e.g.
+     * Vision.getAverageBotPose()). Call only with a valid read - null is ignored.
+     */
+    public void relocalize(Pose3D botpose) {
+        if (botpose == null) {
+            return;
+        }
+        Position p = botpose.getPosition();
+        double ftcX = p.unit.toInches(p.x);
+        double ftcY = p.unit.toInches(p.y);
+        double yaw = botpose.getOrientation().getYaw(AngleUnit.RADIANS);
+        robot.follower.setPose(new Pose(FieldGeometry.ftcToFieldX(ftcX, ftcY),
+                FieldGeometry.ftcToFieldY(ftcX, ftcY), FieldGeometry.ftcToFieldHeading(yaw)));
+        locked = false; // a hold target in the old coordinates would yank the robot
+    }
+
+    /**
+     * STATUS. {dx, dy} (in, field frame) from currentPose to our alliance's HIVE (the pivot
+     * between its two cells). The array is reused - copy it if you keep it.
+     */
+    public double[] getPedroDistanceToHive(Pose currentPose, String allianceColor) {
+        boolean red = "RED".equals(allianceColor);
+        hiveDelta[0] = FieldGeometry.cellX(red) - currentPose.x();
+        hiveDelta[1] = FieldGeometry.CENTER - currentPose.y();
+        return hiveDelta;
+    }
+
+    /**
+     * {dx, dy} to the cell we're launching into (the upward one), from Vision.getHiveTipState().
+     * This is what ShooterConfig should aim at; the 2-argument version gives the hive pivot.
+     */
+    public double[] getPedroDistanceToHive(Pose currentPose, String allianceColor, String hiveTipState) {
+        boolean red = "RED".equals(allianceColor);
+        hiveDelta[0] = FieldGeometry.cellX(red) - currentPose.x();
+        hiveDelta[1] = FieldGeometry.cellY(FieldGeometry.cellForTipState(red, hiveTipState)) - currentPose.y();
+        return hiveDelta;
+    }
+
+    private void driveCore(double forward, double strafe, double turn, boolean slowTurn, double robotHeading,
                       double driverHeading, boolean fieldCentric, boolean slowMode) {
         forward = shape(forward);
         strafe = shape(strafe);

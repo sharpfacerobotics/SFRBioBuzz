@@ -13,13 +13,13 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
 import org.firstinspires.ftc.teamcode.robot.ElementVision;
-import org.firstinspires.ftc.teamcode.robot.HiveVision;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.Storage;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+import org.firstinspires.ftc.teamcode.robot.Vision;
 
 /**
  * Pit test: run every mechanism by hand and see every sensor. Use it to check wiring, motor
@@ -53,7 +53,7 @@ public class SubsystemTest extends OpMode {
     private final Storage storage = new Storage(robot);
     private final Launcher launcher = new Launcher(robot);
     private final Turret turret = new Turret(robot);
-    private final HiveVision hiveVision = new HiveVision(robot);
+    private final Vision vision = new Vision(robot);
     private final ElementVision elementVision = new ElementVision(robot);
     private boolean elementPipeline = false;
 
@@ -106,7 +106,7 @@ public class SubsystemTest extends OpMode {
         if (gamepad1.dpadDownWasPressed()) {
             hoodAngle = Range.clip(hoodAngle - 0.05, RobotConfig.HOOD_ANGLE_MIN, RobotConfig.HOOD_ANGLE_MAX);
         }
-        launcher.update(flywheelOn ? TEST_VELOCITY : 0, hoodAngle, hoodElement, robot.getVoltage());
+        launcher.setManual(flywheelOn ? TEST_VELOCITY : 0, hoodAngle, hoodElement);
 
         double turretPower = 0;
         if (gamepad1.left_bumper) {
@@ -119,9 +119,9 @@ public class SubsystemTest extends OpMode {
         if (gamepad1.leftStickButtonWasPressed()) {
             elementPipeline = !elementPipeline;
             if (elementPipeline) {
-                elementVision.activate();
+                elementVision.beginAutoFind();
             } else {
-                hiveVision.activate();
+                elementVision.stopAutoFind(); // back to the hive AprilTag pipeline
             }
         }
 
@@ -145,20 +145,20 @@ public class SubsystemTest extends OpMode {
         telemetry.addData("Limelight", "%s  pipeline %d", robot.limelight.isConnected() ? "connected" : "NOT CONNECTED",
                 robot.limelight.getLatestResult() == null ? -1 : robot.limelight.getLatestResult().getPipelineIndex());
         if (elementPipeline) {
-            elementVision.update(null, null);
-            telemetry.addData("Element", elementVision.hasElement()
+            telemetry.addData("Element", elementVision.elementDetected()
                     ? String.format("%s  tx %.1f°  ty %.1f°  ~%.0f in", elementVision.getType(),
-                    elementVision.getTx(), elementVision.getTy(), elementVision.getDistance())
+                    elementVision.getElementDeltaX(), elementVision.getTy(), elementVision.getDistance())
                     : "none");
         } else {
             // show which hive tag clusters are visible (red far 30, red aud 34, blue aud 38, blue far 42)
-            hiveVision.update(30, 34, pose.heading(), 0);
-            telemetry.addData("Hive tags", "red far %s  red audience %s",
-                    hiveVision.hasTarget() ? "SEEN" : "-", hiveVision.seesOtherCell() ? "SEEN" : "-");
-            telemetry.addData("MegaTag2", hiveVision.hasBotpose()
-                    ? String.format("x %.1f  y %.1f  h %.0f°", hiveVision.getBotposeX(), hiveVision.getBotposeY(),
-                    Math.toDegrees(hiveVision.getBotposeHeading()))
-                    : "no pose");
+            vision.updateRead("RED"); // RED: target = red audience cell (34-37), other = red far (30-33)
+            telemetry.addData("Hive tags", "tip state %s (%s cell up): its tags %s, other cell's %s",
+                    vision.getHiveTipState(), vision.getHiveUpCell(),
+                    vision.hasTarget() ? "SEEN" : "-", vision.seesOtherCell() ? "SEEN" : "-");
+            org.firstinspires.ftc.robotcore.external.navigation.Pose3D bp = vision.getAverageBotPose();
+            telemetry.addData("MegaTag2 (FTC frame)", bp == null ? "no pose"
+                    : String.format("x %.2f m  y %.2f m  yaw %.0f°", bp.getPosition().x, bp.getPosition().y,
+                    bp.getOrientation().getYaw(org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES)));
         }
         telemetry.addData("Battery", "%.2f V", robot.getVoltage());
         telemetry.update();

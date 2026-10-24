@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.robot.helperClasses.ShotDetector;
 
+import java.util.Queue;
+
 /**
  * Flywheel + hood. Owner: Alex.
  *
@@ -50,22 +52,53 @@ public class Launcher {
 
     // ------------------------------------------------------------------ comp method
 
+    // Glossary: setLauncher(Queue<String> q) SET, setHoodRetraction(Queue<String> q) SET,
+    // goodShooterConfig() STATUS, setShooterWallSpeed() SET. The target speed and hood angle
+    // come from ShooterConfig's static outputs (team design: no speed parameter here).
+
     /**
-     * Call once per loop.
-     *
-     * @param targetVel      ticks/s from ShooterConfig (0 to coast down)
-     * @param hoodAngle      hood servo position for this element, from ShooterConfig
-     * @param next           next element: Storage.getElementQueue().peek() - "POLLEN" / "NECTAR" / null
-     * @param batteryVoltage robot.getVoltage(), for PF voltage compensation
+     * SET. Loop call. Applies the target flywheel speed and hood config from ShooterConfig
+     * for the next element ({@code q.peek()}).
      */
-    public void update(double targetVel, double hoodAngle, String next, double batteryVoltage) {
-        if (batteryVoltage > 1) {
-            voltage = batteryVoltage;
-        }
-        setHoodRetraction(next);
-        setHoodAngle(hoodAngle);
-        setLauncher(targetVel);
+    public void setLauncher(Queue<String> q) {
+        setBatteryVoltage(robot.getVoltage());
+        setHoodRetraction(q);
+        setHoodAngle(ShooterConfig.hoodAngleFor(q.peek()));
+        setLauncher(ShooterConfig.targetVelocity());
         detectShot();
+    }
+
+    /**
+     * SET. Loop call instead of setLauncher(q) for a wall shot: preset flywheel speed and hood
+     * angle from a known spot against the wall, so it's CONSISTENT without odometry or vision.
+     */
+    public void setShooterWallSpeed() {
+        setBatteryVoltage(robot.getVoltage());
+        setHoodAngle(RobotConfig.WALL_SHOT_HOOD);
+        setLauncher(RobotConfig.WALL_SHOT_VELOCITY);
+        detectShot();
+    }
+
+    /**
+     * Testing method (SubsystemTest, ShotTableTuner): set flywheel speed and hood by hand
+     * instead of from ShooterConfig. Loop call.
+     */
+    public void setManual(double velocity, double hoodAngle, String element) {
+        setBatteryVoltage(robot.getVoltage());
+        setHoodRetraction(element);
+        setHoodAngle(hoodAngle);
+        setLauncher(velocity);
+        detectShot();
+    }
+
+    /** STATUS. True if the flywheel and hood are ready - check before firing. */
+    public boolean goodShooterConfig() {
+        return isReady();
+    }
+
+    /** SET. Hood linear retraction (gap) for the next element in the queue ({@code .peek()}). */
+    public void setHoodRetraction(Queue<String> q) {
+        setHoodRetraction(q.peek());
     }
 
     /** For the tuning OpModes (which call setLauncher directly): PF voltage compensation. */
