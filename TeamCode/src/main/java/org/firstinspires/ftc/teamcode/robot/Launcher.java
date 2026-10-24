@@ -68,6 +68,13 @@ public class Launcher {
         detectShot();
     }
 
+    /** For the tuning OpModes (which call setLauncher directly): PF voltage compensation. */
+    public void setBatteryVoltage(double batteryVoltage) {
+        if (batteryVoltage > 1) {
+            voltage = batteryVoltage;
+        }
+    }
+
     public void stop() {
         targetVel = 0;
         robot.launchMotor1.setPower(0);
@@ -180,17 +187,25 @@ public class Launcher {
 
     private void setHoodAngle(double angle) {
         angle = Range.clip(angle, RobotConfig.HOOD_ANGLE_MIN, RobotConfig.HOOD_ANGLE_MAX);
-        // Only write (and restart the settle timer) when it actually changes noticeably.
-        if (Math.abs(angle - hoodAnglePos) > 0.005) {
+        // Only write when it actually changes. Small changes (the hood tracking distance as we
+        // drive) settle within a loop, so only a real jump restarts the settle wait - otherwise
+        // the launcher would never be "ready" while driving toward or away from the hive.
+        double change = Math.abs(angle - hoodAnglePos);
+        if (change > 0.005) {
+            if (change > RobotConfig.HOOD_SETTLE_JUMP) {
+                hoodTimer.reset();
+            }
             hoodAnglePos = angle;
             robot.hoodAngleServo1.setPosition(angle);
             robot.hoodAngleServo2.setPosition(angle + RobotConfig.HOOD_ANGLE_SERVO_2_OFFSET);
-            hoodTimer.reset();
         }
     }
 
     private void setHoodRetraction(String next) {
-        if (next == null || next.equals(hoodElement)) {
+        if (next == null) {
+            next = "POLLEN"; // empty: still put the gap somewhere known (servos power up anywhere)
+        }
+        if (next.equals(hoodElement)) {
             return;
         }
         hoodElement = next;

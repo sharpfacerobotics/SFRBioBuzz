@@ -11,14 +11,19 @@ import org.junit.Test;
  * UPDATE, returns true = emergency outtake.
  */
 public class StorageQueueTest {
-    private static final double T = 1.0; // past the debounce
-
     private final Storage s = new Storage(null);
+    private double t = 10; // seconds; each step() advances one 20 ms loop
 
-    /** One element passes the intake beams (rising then falling edge). */
+    private boolean step(boolean low, boolean high, boolean exit, boolean outtaking, String colour, String alliance) {
+        t += 0.02;
+        return s.process(low, high, exit, outtaking, colour, alliance, t);
+    }
+
+    /** One element passes the intake beams in (rising then falling edge), then a gap. */
     private boolean feed(boolean nectar, String colour, String alliance) {
-        boolean e = s.process(true, nectar, false, false, nectar ? colour : null, alliance, T);
-        s.process(false, false, false, false, null, alliance, T);
+        boolean e = step(true, nectar, false, false, nectar ? colour : null, alliance);
+        step(false, false, false, false, null, alliance);
+        t += 0.2; // past the debounce before the next one
         return e;
     }
 
@@ -32,13 +37,20 @@ public class StorageQueueTest {
 
     @Test
     public void opponentNectarIsEmergencyAndNotCounted() { // G408
-        assertTrue(s.process(true, true, false, false, "BLUE", "RED", T));
+        assertTrue(step(true, true, false, false, "BLUE", "RED"));
         assertEquals(0, s.getElementQueue().size());
-        // still in the intake: keep asking for emergency outtake
-        assertTrue(s.process(true, true, false, true, null, "RED", T));
-        // beams clear: it's out
-        assertFalse(s.process(false, false, false, true, null, "RED", T));
+        // beams clear but we haven't been outtaking yet: it may still be inside - keep going
+        assertTrue(step(false, false, false, false, null, "RED"));
+        t += 0.3; // outtake has run past the minimum
+        assertFalse(step(false, false, false, true, null, "RED"));
         assertEquals(0, s.getElementQueue().size());
+    }
+
+    @Test
+    public void emergencyGivesUpAfterMaxTime() {
+        assertTrue(step(true, true, false, false, "BLUE", "RED"));
+        t += RobotConfig.EMERGENCY_MAX_OUTTAKE + 0.1;
+        assertFalse(step(true, true, false, true, null, "RED")); // still blocked, but don't reverse forever
     }
 
     @Test
@@ -46,7 +58,7 @@ public class StorageQueueTest {
         for (int i = 0; i < 4; i++) {
             assertFalse(feed(false, null, "BLUE"));
         }
-        assertTrue(s.process(true, false, false, false, null, "BLUE", T));
+        assertTrue(step(true, false, false, false, null, "BLUE"));
         assertEquals(4, s.getElementQueue().size());
     }
 
@@ -54,26 +66,63 @@ public class StorageQueueTest {
     public void exitBeamCountsElementsIntoTheLauncher() {
         feed(true, "BLUE", "BLUE");
         feed(false, null, "BLUE");
-        s.process(false, false, true, false, null, "BLUE", T);  // exit beam broken
-        s.process(false, false, false, false, null, "BLUE", T); // ...and cleared: one launched
+        step(false, false, true, false, null, "BLUE");  // exit beam broken
+        step(false, false, false, false, null, "BLUE"); // ...and cleared: one launched
         assertEquals(1, s.getElementQueue().size());
         assertEquals(Storage.POLLEN, s.getElementQueue().peek());
+        assertEquals(1, s.getLaunchedCount());
+    }
+
+    @Test
+    public void exitBeamIgnoredWhileOuttaking() {
+        feed(false, null, "BLUE");
+        step(false, false, true, true, null, "BLUE");
+        step(false, false, false, true, null, "BLUE"); // pulled back across the exit beam
+        assertEquals(1, s.getElementQueue().size());
+        assertEquals(0, s.getLaunchedCount());
     }
 
     @Test
     public void outtakeRemovesTheLastElement() {
         feed(false, null, "RED");
         feed(true, "RED", "RED");
-        s.process(true, true, false, true, null, "RED", T);   // nectar back at the beams, outtaking
-        s.process(false, false, false, true, null, "RED", T); // and gone
+        step(true, true, false, true, null, "RED");   // nectar back at the beams, outtaking
+        step(false, false, false, true, null, "RED"); // and gone
         assertEquals(1, s.getElementQueue().size());
         assertEquals(Storage.POLLEN, s.getElementQueue().peek());
+        assertEquals(0, s.getLaunchedCount());
+    }
+
+    @Test
+    public void lateHighBeamUpgradesToNectar() {
+        step(true, false, false, false, null, "RED");   // low first: looks like POLLEN
+        step(true, true, false, false, "RED", "RED");   // high breaks a loop later: NECTAR
+        step(false, false, false, false, null, "RED");
+        assertEquals(1, s.getElementQueue().size());
+        assertEquals(Storage.NECTAR, s.getElementQueue().peek());
+    }
+
+    @Test
+    public void lateHighBeamOpponentNectarIsRejected() {
+        step(true, false, false, false, null, "RED");
+        assertTrue(step(true, true, false, false, "BLUE", "RED"));
+        assertEquals(0, s.getElementQueue().size());
+    }
+
+    @Test
+    public void unclearColourIsReReadBeforeDeciding() {
+        assertFalse(step(true, true, false, false, null, "RED")); // colour unclear on entry
+        assertEquals(0, s.getElementQueue().size());             // not counted yet
+        assertTrue(step(true, true, false, false, "BLUE", "RED")); // next read: opponent
+        assertEquals(0, s.getElementQueue().size());
     }
 
     @Test
     public void debounceIgnoresBeamFlicker() {
-        s.process(true, false, false, false, null, "RED", 0.0); // within debounce of start
-        assertEquals(0, s.getElementQueue().size());
+        step(true, false, false, false, null, "RED");
+        step(false, false, false, false, null, "RED");
+        step(true, false, false, false, null, "RED"); // 40 ms later: flicker, same element
+        assertEquals(1, s.getElementQueue().size());
     }
 
     @Test

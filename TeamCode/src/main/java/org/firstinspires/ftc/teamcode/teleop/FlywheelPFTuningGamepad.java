@@ -28,6 +28,8 @@ public class FlywheelPFTuningGamepad extends OpMode {
 
     @Override
     public void loop() {
+        robot.clearBulkCache(); // MANUAL bulk caching: without this getVelocity() never updates
+        launcher.setBatteryVoltage(robot.getVoltage()); // same PF voltage compensation as in a match
         // 1. Update P Tuner (Right increases, Left decreases, A cycles step size)
         tunerP.update(
                 gamepad1.dpadRightWasPressed(),

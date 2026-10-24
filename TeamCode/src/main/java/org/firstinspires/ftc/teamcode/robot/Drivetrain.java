@@ -126,7 +126,13 @@ public class Drivetrain {
                 || Math.abs(turn) > RobotConfig.LOCK_BREAK_STICK;
     }
 
+    /** Forget the held spot (call whenever odometry is re-set, so a hold can't chase old coordinates). */
+    public void unlock() {
+        locked = false;
+    }
+
     public void stop() {
+        locked = false;
         robot.follower.manual(0, 0, 0);
     }
 

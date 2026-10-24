@@ -90,6 +90,8 @@ public abstract class TeleopBase extends OpMode {
     private final ElapsedTime relocalizeTimer = new ElapsedTime();
 
     private double goalX, goalY, driverHeading;
+    /** Field-centric "away from the driver" direction; options re-sets it without touching odometry. */
+    private double fieldCentricHeading;
     private boolean red;
     private HiveTracker hive;
     private Element opponentNectar;
@@ -132,19 +134,30 @@ public abstract class TeleopBase extends OpMode {
         red = alliance() == Alliance.RED;
         goalX = FieldGeometry.cellX(red);
         goalY = FieldGeometry.cellY(FieldGeometry.startingUpCell(red));
-        // Continue from wherever auto left the hive (it almost always tips it).
-        hive = PoseStorage.hasHive() ? new HiveTracker(PoseStorage.getHiveUpCell(), PoseStorage.getHiveWeight())
-                : new HiveTracker(FieldGeometry.startingUpCell(red));
         opponentNectar = RobotConfig.opponentNectar(alliance());
         allianceColor = red ? "RED" : "BLUE";
         elements = storage.getElementQueue();
         driverHeading = red ? RobotConfig.RED_DRIVER_HEADING : RobotConfig.BLUE_DRIVER_HEADING;
+        fieldCentricHeading = driverHeading;
+
+        // Only trust what auto handed over if it's ours and recent (not a pit run of the other
+        // alliance's auto an hour ago).
+        poseFromAuto = PoseStorage.isFresh(allianceColor);
+        // Continue from wherever auto left the hive (it almost always tips it)...
+        hive = poseFromAuto && PoseStorage.getHiveUpCell() != null
+                ? new HiveTracker(PoseStorage.getHiveUpCell(), PoseStorage.getHiveWeight())
+                : new HiveTracker(FieldGeometry.startingUpCell(red));
+        // ...and with what auto left in storage, so the G407 count of 4 is right from the start.
+        if (poseFromAuto) {
+            for (int i = 0; i < PoseStorage.getElementCount(); i++) {
+                elements.add(PoseStorage.getElement(i));
+            }
+        }
         parkPose = red ? new Pose(14, FieldGeometry.RED_LOADING_ZONE_Y, 0)
                 : new Pose(FieldGeometry.rotateX(14), FieldGeometry.rotateY(FieldGeometry.RED_LOADING_ZONE_Y), Math.PI);
 
-        poseFromAuto = PoseStorage.hasPose();
         if (poseFromAuto) {
-            robot.follower.setPose(PoseStorage.get());
+            robot.follower.setPose(PoseStorage.getPoseStoragePose());
         } else if (red) {
             robot.follower.setPose(new Pose(RobotConfig.TELEOP_DEFAULT_X, RobotConfig.TELEOP_DEFAULT_Y,
                     RobotConfig.TELEOP_DEFAULT_HEADING));
@@ -165,14 +178,21 @@ public abstract class TeleopBase extends OpMode {
     @Override
     public void init_loop() {
         telemetry.addData("Alliance", alliance());
-        telemetry.addData("Start pose", poseFromAuto ? "from auto" : "DEFAULT (auto didn't run)");
+        telemetry.addData("Start pose", poseFromAuto ? "from auto" : "DEFAULT (no recent auto for this alliance)");
+        telemetry.addData("Storage", "%d element(s) carried over", elements.size());
         telemetry.update();
     }
 
     @Override
     public void start() {
         started = true;
-        turret.relocalize(); // home the turret on the hall effect while we drive off
+        if (poseFromAuto && PoseStorage.hasTurretZero()) {
+            // Reuse auto's zero (the encoder kept counting). Homing from wherever auto left the
+            // turret could sweep into a hard stop.
+            turret.restoreZero(PoseStorage.getTurretZeroTicks());
+        } else {
+            turret.relocalize(); // home the turret on the hall effect while we drive off
+        }
         turret.restartTimer();
         loopTimer.reset();
         matchTimer.reset();
@@ -204,13 +224,18 @@ public abstract class TeleopBase extends OpMode {
 
         // ---------------- driver 1: drive + intake
         if (gamepad1.optionsWasPressed()) {
-            robot.follower.setHeading(driverHeading);
+            // "Whichever way the robot faces now is away from me." Only the driving frame changes:
+            // the odometry heading (which aims the turret) is left alone.
+            fieldCentricHeading = heading;
         }
         if (gamepad1.backWasPressed()) {
             fieldCentric = !fieldCentric;
         }
-        if (gamepad1.leftBumperWasPressed() && hiveVision.hasBotpose()) {
+        if (gamepad1.leftBumperWasPressed() && hiveVision.hasBotpose()
+                && Math.hypot(velocity.vx, velocity.vy) < RobotConfig.AUTO_RELOCALIZE_MAX_SPEED * 3) {
+            // (only while nearly stopped - the camera frame is ~40 ms old)
             robot.follower.setPose(new Pose(hiveVision.getBotposeX(), hiveVision.getBotposeY(), hiveVision.getBotposeHeading()));
+            drivetrain.unlock();
             gamepad1.rumble(200);
         }
 
@@ -218,10 +243,10 @@ public abstract class TeleopBase extends OpMode {
 
         // Storage: beam breaks update the queue; true = emergency outtake (G407 / G408).
         String headBefore = elements.peek();
-        int countBefore = elements.size();
+        int launchedBefore = storage.getLaunchedCount();
         boolean emergency = storage.checkBeamBreaks(allianceColor);
         // The storage exit beam is our shot counter: an element left into the launcher.
-        if (elements.size() < countBefore && !wantOuttake && !emergency) {
+        if (storage.getLaunchedCount() > launchedBefore) { // only the exit beam - jitter/outtake can't fake a shot
             if (hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds())) {
                 gamepad2.rumbleBlips(2); // our shot tipped it: now aiming at the other cell
             }
@@ -240,7 +265,8 @@ public abstract class TeleopBase extends OpMode {
             intakeMode = "outtake";
         } else {
             boolean full = gamepad1.right_trigger > 0.8 && notFull;
-            boolean slow = gamepad1.right_trigger > 0.3 && !full && notFull;
+            // jitter alone wiggles at slow power (and never when full - G407)
+            boolean slow = (gamepad1.right_trigger > 0.3 || gamepad1.dpad_down) && !full && notFull;
             intake.updateIntake(full, slow, gamepad1.dpad_down);
             intakeMode = gamepad1.dpad_down ? "jitter" : full ? "full" : slow ? "slow" : "off";
         }
@@ -303,7 +329,7 @@ public abstract class TeleopBase extends OpMode {
         if (elementAssist && elementVision.hasElement()) {
             parking = false;
             drivetrain.driveAiming(forward, strafe, Drivetrain.bearingTurn(elementVision.getTx()),
-                    heading, driverHeading, fieldCentric, gamepad1.right_bumper);
+                    heading, fieldCentricHeading, fieldCentric, gamepad1.right_bumper);
         } else if (gamepad1.b) {
             // Park assist: Pedro drives us into the LOADING ZONE (PARK = 5 pts). Release = manual.
             if (!parking) {
@@ -314,13 +340,13 @@ public abstract class TeleopBase extends OpMode {
             parking = false;
             // Turret-down fallback: point the chassis at the (shoot-on-the-move) aim heading.
             drivetrain.driveAiming(forward, strafe, Drivetrain.aimTurn(shooterConfig.getFieldAimHeading(), heading),
-                    heading, driverHeading, fieldCentric, gamepad1.right_bumper);
+                    heading, fieldCentricHeading, fieldCentric, gamepad1.right_bumper);
         } else if (parkingReleased()) {
             // just let go of B: fall through to manual next loop
         } else if (firing && RobotConfig.LOCK_POSITION_WHILE_FIRING && !Drivetrain.sticksActive(forward, strafe, turn)) {
             drivetrain.lockPosition();
         } else {
-            drivetrain.drive(forward, strafe, turn, heading, driverHeading, fieldCentric, gamepad1.right_bumper);
+            drivetrain.drive(forward, strafe, turn, heading, fieldCentricHeading, fieldCentric, gamepad1.right_bumper);
         }
 
         // ---------------- shooter
@@ -330,7 +356,9 @@ public abstract class TeleopBase extends OpMode {
             turret.updateTurret(shooterConfig.getTurretAngle() + turretTrim, velocity.omega);
         }
         // Manual turret / chassis aim: the driver is the judge of "on target".
-        boolean aimed = (manualTurret || gamepad1.a || turret.isOnTarget())
+        // (chassis aim assumes the turret is parked at 0 - not mid-homing-sweep)
+        boolean aimed = (manualTurret || (gamepad1.a && turret.getState() != Turret.TurretState.LOCALIZING)
+                || turret.isOnTarget())
                 && !hive.isSettling(matchTimer.seconds()); // don't launch into a swinging hive
 
         String next = elements.peek();
@@ -350,7 +378,7 @@ public abstract class TeleopBase extends OpMode {
             log.value(pose.x()).value(pose.y()).value(heading).value(velocity.vx).value(velocity.vy)
                     .value(shooterConfig.getDistanceToGoal()).value(launcher.getTargetVelocity())
                     .value(launcher.getCurrVelocity()).value(launcher.isReady())
-                    .value(turret.getAngle()).value(turret.getTargetAngle()).value(aimed)
+                    .value(turret.getAngle()).value(turret.getTargetAngle()).value(turret.isOnTarget())
                     .value(elements.size()).value(firing).value(shotsFired).value(voltage).value(loopMs)
                     .endRow();
         }
@@ -370,6 +398,9 @@ public abstract class TeleopBase extends OpMode {
                 launcher.isReady() ? "READY" : "");
         telemetry.addData("Turret", "%s  %.1f° → %.1f°  trim %.0f°", turret.getState(),
                 Math.toDegrees(turret.getAngle()), Math.toDegrees(turret.getTargetAngle()), Math.toDegrees(turretTrim));
+        if (turret.encoderLooksReversed()) {
+            telemetry.addLine("⚠ TURRET: encoder counts backwards - flip RobotConfig.TURRET_ENCODER_REVERSED");
+        }
         telemetry.addData("Hive", "aiming at %s cell  load %.1f/%.0f  tags %s  tips %d", hive.getUpCell(),
                 hive.getWeight(), HiveTracker.TIP_WEIGHT, hiveVision.hasTarget() ? "seen" : "-", hive.getTips());
         if (parking) {
@@ -445,6 +476,7 @@ public abstract class TeleopBase extends OpMode {
         double error = Math.hypot(hiveVision.getBotposeX() - pose.x(), hiveVision.getBotposeY() - pose.y());
         if (error > RobotConfig.AUTO_RELOCALIZE_MIN_ERROR) {
             robot.follower.setPose(new Pose(hiveVision.getBotposeX(), hiveVision.getBotposeY(), pose.heading()));
+            drivetrain.unlock();
             relocalizeTimer.reset();
         }
     }

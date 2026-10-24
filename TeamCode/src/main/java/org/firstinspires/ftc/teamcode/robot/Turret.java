@@ -40,6 +40,11 @@ public class Turret {
     private int homingDirection = 1;
     private boolean homingStarted = false;
     private int homingFullSweeps = 0;
+    private double stallCheckTicks = 0;
+    private double segmentStartTicks = 0;
+    private final ElapsedTime stallTimer = new ElapsedTime();
+    private final ElapsedTime segmentTimer = new ElapsedTime();
+    private boolean encoderReversedSuspected = false;
 
     public Turret(RobotHardware robot) {
         this.robot = robot;
@@ -94,6 +99,14 @@ public class Turret {
      */
     public void updateManual(double stick) {
         timer.reset();
+        if (turretState == TurretState.LOCALIZING) {
+            // Driver took over mid-search: restart the search cleanly when auto-aim resumes
+            // (otherwise its timer runs out and it fails), and take the magnet if we pass it.
+            homingStarted = false;
+            if (isHallActive()) {
+                forceZeroHere();
+            }
+        }
         if (isLocalized()) {
             angle = (readTicks() - zeroOffsetTicks) / RobotConfig.TURRET_TICKS_PER_RAD;
             lastAngle = angle;
@@ -118,6 +131,27 @@ public class Turret {
         zeroOffsetTicks = readTicks();
         lastAngle = 0;
         turretState = TurretState.AIMING;
+    }
+
+    /**
+     * Encoder ticks (raw, as read) at turret zero, to hand from auto to TeleOp through
+     * PoseStorage. The encoder keeps counting between OpModes, so TeleOp can reuse it instead
+     * of homing again - homing from wherever auto left the turret could sweep into a hard stop.
+     */
+    public double getZeroOffsetTicks() {
+        return zeroOffsetTicks;
+    }
+
+    /** Resume with a zero found earlier (see getZeroOffsetTicks). */
+    public void restoreZero(double zeroOffsetTicks) {
+        this.zeroOffsetTicks = zeroOffsetTicks;
+        lastAngle = (readTicks() - zeroOffsetTicks) / RobotConfig.TURRET_TICKS_PER_RAD;
+        turretState = TurretState.AIMING;
+    }
+
+    /** True if homing gave up because the encoder seemed to count the wrong way. */
+    public boolean encoderLooksReversed() {
+        return encoderReversedSuspected;
     }
 
     public void stop() {
@@ -212,6 +246,10 @@ public class Turret {
             homingDirection = 1;
             homingFullSweeps = 0;
             homingTimer.reset();
+            stallTimer.reset();
+            stallCheckTicks = ticks;
+            segmentStartTicks = ticks;
+            segmentTimer.reset();
         }
 
         if (hallActive) {
@@ -231,11 +269,33 @@ public class Turret {
         }
 
         double travelled = (ticks - homingStartTicks) / RobotConfig.TURRET_TICKS_PER_RAD;
-        if (homingDirection * travelled >= homingSweep) {
+
+        // Wrong way: powered for a while but the encoder counts against the power - the
+        // encoder direction is wrong, so stop now instead of driving one way until the timeout.
+        // (Measured from the start of THIS sweep - the cow path crosses back over the start.)
+        double segment = homingDirection * (ticks - segmentStartTicks) / RobotConfig.TURRET_TICKS_PER_RAD;
+        if (segment < -RobotConfig.TURRET_HOMING_WRONG_WAY) {
+            encoderReversedSuspected = true;
+            failHoming();
+            return;
+        }
+
+        // Stalled against something (a hard stop we didn't expect): treat it as this sweep's end.
+        // Only once the sweep is properly under way - right after reversing it barely moves.
+        boolean stalled = false;
+        if (segmentTimer.seconds() > 2 * RobotConfig.TURRET_STALL_TIME
+                && stallTimer.seconds() > RobotConfig.TURRET_STALL_TIME) {
+            stalled = Math.abs(ticks - stallCheckTicks) / RobotConfig.TURRET_TICKS_PER_RAD
+                    < RobotConfig.TURRET_STALL_ANGLE;
+            stallTimer.reset();
+            stallCheckTicks = ticks;
+        }
+
+        if (homingDirection * travelled >= homingSweep || stalled) {
             // Reached this sweep's end without finding zero: turn round and go twice as far,
             // but never further than the turret can physically travel.
-            if (homingSweep >= RobotConfig.TURRET_HOMING_MAX_SWEEP) {
-                homingFullSweeps++;
+            if (homingSweep >= RobotConfig.TURRET_HOMING_MAX_SWEEP || stalled) {
+                homingFullSweeps++; // this side is searched to its limit
                 if (homingFullSweeps >= 2) { // searched the whole range both ways
                     failHoming();
                     return;
@@ -243,6 +303,10 @@ public class Turret {
             }
             homingDirection = -homingDirection;
             homingSweep = Math.min(homingSweep * 2.0, RobotConfig.TURRET_HOMING_MAX_SWEEP);
+            segmentStartTicks = ticks;
+            segmentTimer.reset();
+            stallTimer.reset();
+            stallCheckTicks = ticks;
         }
         robot.turretServo.setPower(homingDirection * RobotConfig.TURRET_HOMING_POWER);
     }

@@ -60,7 +60,7 @@ public class ShotTableTuner extends OpMode {
     public void init() {
         telemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
         robot.init(hardwareMap);
-        robot.follower.setPose(PoseStorage.hasPose() ? PoseStorage.get()
+        robot.follower.setPose(PoseStorage.hasPose() ? PoseStorage.getPoseStoragePose()
                 : new Pose(START_X, START_Y, Math.toRadians(START_HEADING_DEG)));
         trigger.stopFiring();
     }

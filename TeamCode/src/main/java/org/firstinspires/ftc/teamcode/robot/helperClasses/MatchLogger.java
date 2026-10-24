@@ -28,6 +28,9 @@ public class MatchLogger {
     private final String path;
     private double lastLogTime = -1;
     private boolean rowOpen = false;
+    private double lastFlushTime = -1;
+    /** Push buffered rows to disk this often, so a crash or power cut loses at most ~1 s. */
+    public static double FLUSH_PERIOD = 1.0;
 
     /**
      * @param dir     folder for logs (AppUtil.ROBOT_DATA_DIR/matchlogs on the robot)
@@ -72,6 +75,10 @@ public class MatchLogger {
 
     public MatchLogger value(double v) {
         row.append(',');
+        if (Double.isNaN(v) || Double.isInfinite(v)) {
+            row.append("NaN"); // Math.round would turn these into a believable 0 / huge number
+            return this;
+        }
         // 3 decimals is plenty and keeps files small
         row.append(Math.round(v * 1000) / 1000.0);
         return this;
@@ -95,6 +102,10 @@ public class MatchLogger {
         try {
             writer.append(row);
             writer.newLine();
+            if (lastLogTime - lastFlushTime >= FLUSH_PERIOD) {
+                lastFlushTime = lastLogTime;
+                writer.flush();
+            }
         } catch (IOException e) {
             close();
         }

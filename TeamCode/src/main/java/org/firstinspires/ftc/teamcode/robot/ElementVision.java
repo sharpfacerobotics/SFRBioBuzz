@@ -47,7 +47,8 @@ public class ElementVision {
     public void update(Element wanted, Element never) {
         hasElement = false;
         LLResult result = robot.limelight.getLatestResult();
-        if (result == null || !result.isValid() || result.getPipelineIndex() != RobotConfig.ELEMENT_PIPELINE) {
+        if (result == null || result.getStaleness() > HiveVision.MAX_RESULT_AGE_MS
+                || !result.isValid() || result.getPipelineIndex() != RobotConfig.ELEMENT_PIPELINE) {
             return;
         }
 
@@ -59,7 +60,13 @@ public class ElementVision {
                 continue;
             }
             Element detectedType = parse(d.getClassName());
-            if ((wanted != null && detectedType != wanted) || detectedType == never) {
+            // Never chase something we can't identify - it could be opponent NECTAR (G408).
+            if (detectedType == Element.UNKNOWN
+                    || (wanted != null && detectedType != wanted) || detectedType == never) {
+                continue;
+            }
+            // At or above the horizon it can't be on the floor (and distance would be infinite).
+            if (RobotConfig.CAMERA_PITCH_DEG + d.getTargetYDegrees() >= -0.5) {
                 continue;
             }
             if (d.getTargetArea() > bestArea) {

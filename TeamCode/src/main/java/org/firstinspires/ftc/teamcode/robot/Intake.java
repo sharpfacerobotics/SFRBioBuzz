@@ -22,6 +22,7 @@ public class Intake {
 
     // Made once here, never inside the loop.
     private final ElapsedTime jitterTimer = new ElapsedTime();
+    private boolean jittering = false;
 
     public Intake(RobotHardware robot) {
         this.robot = robot;
@@ -29,12 +30,12 @@ public class Intake {
 
     /** CONTINUOUS. Spit out whatever is in the intake (opponent NECTAR, a 5th element). */
     public void emergencyOuttake() {
-        robot.intakeMotor.setPower(RobotConfig.OUTTAKE_POWER);
+        apply(RobotConfig.OUTTAKE_POWER);
     }
 
     /** SET. Raw intake power, [-1, 1] (negative = outtake). */
     public void setIntakePower(double power) {
-        robot.intakeMotor.setPower(power);
+        apply(power);
     }
 
     /**
@@ -54,12 +55,21 @@ public class Intake {
             power = 0;
         }
 
-        if (jitter) {
-            // Every other period, reverse. Uses the full power if nothing else was asked for.
-            double magnitude = power != 0 ? power : RobotConfig.INTAKE_POWER;
-            boolean reverse = ((int) (jitterTimer.seconds() / RobotConfig.INTAKE_JITTER_PERIOD)) % 2 == 1;
-            power = reverse ? -magnitude : magnitude;
+        if (jitter && !jittering) {
+            jitterTimer.reset(); // start every jitter on a forward phase
         }
+        jittering = jitter;
+        if (jitter && power != 0) {
+            // Every other period, reverse. Only wiggles at the power the OpMode allowed, so a
+            // full storage (power 0) never gets a 5th element pulled in by jitter (G407).
+            boolean reverse = ((int) (jitterTimer.seconds() / RobotConfig.INTAKE_JITTER_PERIOD)) % 2 == 1;
+            power = reverse ? -power : power;
+        }
+        apply(power);
+    }
+
+    private void apply(double power) {
+        robot.intakePowerCommand = power; // Storage reads this to know which way elements move
         robot.intakeMotor.setPower(power);
     }
 }

@@ -133,6 +133,9 @@ public class RobotConfig {
     /** G407: a robot may not CONTROL more than 4 SCORING ELEMENTS. */
     public static final int STORAGE_CAPACITY = 4;
     public static double STORAGE_DEBOUNCE_TIME = 0.12;          // seconds between counted elements
+    /** Emergency outtake runs at least this long, and gives up after the max (s). */
+    public static double EMERGENCY_MIN_OUTTAKE = 0.25;
+    public static double EMERGENCY_MAX_OUTTAKE = 1.5;
     // Hue windows in degrees [0, 360). POLLEN is yellow, NECTAR red or blue.
     // TODO(tune) under event lighting with SubsystemTest.
     public static double POLLEN_HUE_MIN = 35.0;
@@ -161,6 +164,8 @@ public class RobotConfig {
     public static double SHOT_DETECT_WINDOW = 0.15;             // seconds
     public static double NOMINAL_VOLTAGE  = 12.0;
     public static double HOOD_SETTLE_TIME = 0.15;               // servos have no feedback, so wait
+    /** Only a hood move bigger than this restarts the settle wait (small tracking moves don't). */
+    public static double HOOD_SETTLE_JUMP = 0.05;
     public static double HOOD_ANGLE_SERVO_2_OFFSET = 0.0;       // trim so both hood servos agree
     public static double HOOD_ANGLE_MIN = 0.0;
     public static double HOOD_ANGLE_MAX = 1.0;
@@ -191,9 +196,16 @@ public class RobotConfig {
     // Homing ("cow path" search for the hall effect zero)
     public static double TURRET_HOMING_POWER     = 0.25;
     public static double TURRET_HOMING_FIRST_SWEEP = Math.toRadians(20);
-    public static double TURRET_HOMING_MAX_SWEEP   = Math.toRadians(180); // keep inside the hard stops
+    /** Sweep up to the soft-limit half range; stall detection catches a hard stop sooner. */
+    public static double TURRET_HOMING_MAX_SWEEP   = Math.toRadians(190);
+    /** Homing: moving this far against the power means the encoder direction is wrong. */
+    public static double TURRET_HOMING_WRONG_WAY = Math.toRadians(5);
+    /** Homing: less than this movement over TURRET_STALL_TIME = stalled (end of travel). */
+    public static double TURRET_STALL_ANGLE = Math.toRadians(1);
+    public static double TURRET_STALL_TIME = 0.3;
     /** Give up homing after this long (e.g. encoder unplugged, so the sweep never ends). */
-    public static double TURRET_HOMING_TIMEOUT = 5.0;
+    /** The full search is ~800 deg of travel (~18 s at 45 deg/s); usually it finds zero in 1-2 s. */
+    public static double TURRET_HOMING_TIMEOUT = 20.0;
     /** Re-zero if the hall effect fires and we think we're further than this from zero. */
     public static double TURRET_RELOCALIZE_THRESHOLD = Math.toRadians(3);
 

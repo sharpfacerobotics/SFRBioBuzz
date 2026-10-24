@@ -26,6 +26,9 @@ public class HiveVision {
 
     /** Drop the average if the tag hasn't been seen for this long. */
     public static double STALE_TIME = 0.3;
+    /** Ignore Limelight results older than this (ms) - a frozen or unplugged camera keeps
+     *  returning its last "valid" frame. */
+    public static long MAX_RESULT_AGE_MS = 100;
     /** Only trust MegaTag2 while the robot is turning slower than this (rad/s). */
     public static double MAX_RELOCALIZE_OMEGA = 1.0;
     /**
@@ -44,6 +47,7 @@ public class HiveVision {
     private boolean hasTarget = false;
     private boolean seesOtherCell = false;
     private double tx = 0;
+    private long lastResultStamp = -1;
     private double ta = 0;
 
     private boolean hasBotpose = false;
@@ -76,7 +80,14 @@ public class HiveVision {
         seesOtherCell = false;
         hasBotpose = false;
         LLResult result = robot.limelight.getLatestResult();
-        if (result != null && result.isValid() && result.getPipelineIndex() == RobotConfig.HIVE_PIPELINE) {
+        boolean fresh = result != null && result.getStaleness() < MAX_RESULT_AGE_MS;
+        // The hub polls faster than the camera, so the same frame can come back twice:
+        // only average each frame once.
+        boolean newFrame = fresh && result.getControlHubTimeStamp() != lastResultStamp;
+        if (newFrame) {
+            lastResultStamp = result.getControlHubTimeStamp();
+        }
+        if (fresh && result.isValid() && result.getPipelineIndex() == RobotConfig.HIVE_PIPELINE) {
             List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
             for (int i = 0; i < tags.size(); i++) {
                 LLResultTypes.FiducialResult tag = tags.get(i);
@@ -96,7 +107,9 @@ public class HiveVision {
 
         if (hasTarget) {
             lastSeenTimer.reset();
-            addTa(ta);
+            if (newFrame) {
+                addTa(ta);
+            }
         } else if (lastSeenTimer.seconds() > STALE_TIME) {
             clearTa();
         }
@@ -154,7 +167,10 @@ public class HiveVision {
         double sin = Math.sin(FTC_TO_FIELD_ROTATION);
         botposeX = cos * ftcX - sin * ftcY + FieldGeometry.CENTER;
         botposeY = sin * ftcX + cos * ftcY + FieldGeometry.CENTER;
-        botposeHeading = pose.getOrientation().getYaw(AngleUnit.RADIANS) + FTC_TO_FIELD_ROTATION;
+        double h = pose.getOrientation().getYaw(AngleUnit.RADIANS) + FTC_TO_FIELD_ROTATION;
+        while (h > Math.PI) h -= 2 * Math.PI;
+        while (h <= -Math.PI) h += 2 * Math.PI;
+        botposeHeading = h;
         hasBotpose = true;
     }
 

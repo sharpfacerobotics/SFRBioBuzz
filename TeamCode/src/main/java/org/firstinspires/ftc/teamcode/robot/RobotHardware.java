@@ -58,6 +58,15 @@ public class RobotHardware {
     public Limelight3A limelight;
     public VoltageSensor voltageSensor;
 
+    /**
+     * Last power commanded to the intake (Intake writes it, Storage reads it to know the roller
+     * direction). Reading intakeMotor.getPower() instead would be an extra hub round trip.
+     */
+    public double intakePowerCommand = 0;
+
+    private final com.qualcomm.robotcore.util.ElapsedTime voltageTimer = new com.qualcomm.robotcore.util.ElapsedTime();
+    private double cachedVoltage = -1;
+
     private List<LynxModule> hubs;
 
     /** Full robot - use in comp TeleOp and autos. */
@@ -137,7 +146,12 @@ public class RobotHardware {
         }
     }
 
+    /** Battery voltage. Not part of the bulk read (~2 ms), so it's re-read at most every 0.25 s. */
     public double getVoltage() {
-        return voltageSensor.getVoltage();
+        if (cachedVoltage < 0 || voltageTimer.seconds() > 0.25) {
+            voltageTimer.reset();
+            cachedVoltage = voltageSensor.getVoltage();
+        }
+        return cachedVoltage;
     }
 }

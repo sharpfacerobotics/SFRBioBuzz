@@ -198,150 +198,158 @@ public abstract class AutoBase extends LinearOpMode {
         MatchLogger log = new MatchLogger(new File(AppUtil.ROBOT_DATA_DIR, "matchlogs"),
                 "auto_" + getClass().getSimpleName(), "x", "y", "heading", "step", "storage",
                 "flyTarget", "flyVel", "flyReady", "turretOnTarget", "shooting", "shotsTotal");
-        boolean red = alliance() == Alliance.RED;
-        double goalX = FieldGeometry.cellX(red);
-        HiveTracker hive = new HiveTracker(FieldGeometry.startingUpCell(red));
-        String allianceColor = red ? "RED" : "BLUE";
-        Queue<String> elements = storage.getElementQueue();
+        try {
+            boolean red = alliance() == Alliance.RED;
+            double goalX = FieldGeometry.cellX(red);
+            HiveTracker hive = new HiveTracker(FieldGeometry.startingUpCell(red));
+            String allianceColor = red ? "RED" : "BLUE";
+            Queue<String> elements = storage.getElementQueue();
 
-        Pose start = prepareRoutine();
+            Pose start = prepareRoutine();
 
-        robot.follower.setPose(start);
-        turret.forceZeroHere();
-        trigger.stopFiring();
-        hiveVision.activate();
+            robot.follower.setPose(start);
+            turret.forceZeroHere();
+            trigger.stopFiring();
+            hiveVision.activate();
 
-        while (opModeInInit()) {
-            if (gamepad1.dpadUpWasPressed()) {
-                startDelay = Math.min(startDelay + 0.5, RobotConfig.AUTO_MAX_START_DELAY);
-            }
-            if (gamepad1.dpadDownWasPressed()) {
-                startDelay = Math.max(startDelay - 0.5, 0);
-            }
-            if (gamepad1.dpadRightWasPressed()) {
-                preloadCount = Math.min(preloadCount + 1, RobotConfig.STORAGE_CAPACITY);
-            }
-            if (gamepad1.dpadLeftWasPressed()) {
-                preloadCount = Math.max(preloadCount - 1, 0);
-            }
-            telemetry.addData("Auto", "%s  %s", getClass().getSimpleName(), alliance());
-            telemetry.addData("Steps", steps.size());
-            telemetry.addData("Start delay (dpad up/down)", "%.1f s", startDelay);
-            telemetry.addData("Preloads (dpad left/right)", preloadCount);
-            telemetry.addLine("Turret must be facing straight forward!");
-            if (sideViolations > 0) {
-                telemetry.addData("⚠ G402", "%d path points on the OPPONENT's half - fix the poses", sideViolations);
-            }
-            telemetry.update();
-        }
-        if (isStopRequested()) {
-            return;
-        }
-
-        storage.preloadQueue(preloadCount, Storage.POLLEN); // G304: 4 POLLEN pre-loads
-        turret.restartTimer();
-        matchTimer.reset();
-        robot.follower.hold(start);
-        double voltage = robot.getVoltage();
-
-        while (opModeIsActive()) {
-            robot.clearBulkCache();
-            robot.follower.update();
-            Pose pose = robot.follower.pose();
-            Velocity velocity = robot.follower.velocity();
-            PoseStorage.save(pose); // every loop, in case auto gets cut off at 30 s
-            PoseStorage.saveHive(hive.getUpCell(), hive.getWeight());
-
-            if (voltageTimer.seconds() > 0.25) {
-                voltageTimer.reset();
-                voltage = robot.getVoltage();
-            }
-
-            // Wait out the start delay (flywheel + turret still spin up meanwhile).
-            if (!routineStarted && matchTimer.seconds() >= startDelay) {
-                routineStarted = true;
-                startStep(0);
-            }
-
-            Step step = routineStarted && stepIndex < steps.size() ? steps.get(stepIndex) : null;
-            boolean shooting = step != null && step.action == Action.SHOOT;
-            // Keep the rollers going briefly after a pickup so the last element gets all the way in.
-            boolean intaking = (step != null && step.action == Action.DRIVE_INTAKING)
-                    || (carrying && carryTimer.seconds() < RobotConfig.AUTO_INTAKE_CARRY);
-
-            // Aim at whichever of our cells is up; a tip (ours or our partner's) flips it.
-            FieldGeometry.Cell upCell = hive.getUpCell();
-            hiveVision.update(FieldGeometry.tagBase(red, upCell), FieldGeometry.tagBase(red, FieldGeometry.other(upCell)),
-                    pose.heading(), velocity.omega);
-            hive.update(hiveVision.hasTarget(), hiveVision.seesOtherCell(), matchTimer.seconds());
-            double goalY = FieldGeometry.cellY(hive.getUpCell());
-
-            // Storage: beam breaks update the queue; the exit beam counts shots out.
-            String headBefore = elements.peek();
-            int countBefore = elements.size();
-            boolean emergency = storage.checkBeamBreaks(allianceColor);
-            if (elements.size() < countBefore && !emergency) {
-                hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds());
-                shotsFired++; // running total so the 20 Hz log can't miss a shot
-            }
-            if (emergency) {
-                intake.emergencyOuttake(); // opponent NECTAR (G408) or a 5th element (G407)
-            } else {
-                intake.updateIntake(intaking && elements.size() < RobotConfig.STORAGE_CAPACITY, false, false);
-            }
-
-            shooterConfig.calculateShootingConfig(pose.x(), pose.y(), pose.heading(), velocity.vx, velocity.vy,
-                    goalX, goalY, hiveVision.getAverageTa());
-            turret.updateTurret(shooterConfig.getTurretAngle(), velocity.omega);
-
-            // Keep the flywheel at speed all auto so shots never wait on spin-up.
-            String next = elements.peek();
-            launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
-
-            if (shooting) {
-                // Hold fire while the hive swings after a tip - the 3rd pre-load tips it and
-                // the 4th must go into the OTHER cell once it has settled.
-                trigger.fire(launcher.isReady(), turret.isOnTarget() && !hive.isSettling(matchTimer.seconds()));
-            } else {
-                trigger.stopFiring();
-            }
-
-            if (step != null && isStepDone(step)) {
-                if (step.action == Action.SHOOT) {
-                    elements.clear(); // whatever the count says, we fired for the full window
+            while (opModeInInit()) {
+                if (gamepad1.dpadUpWasPressed()) {
+                    startDelay = Math.min(startDelay + 0.5, RobotConfig.AUTO_MAX_START_DELAY);
                 }
-                if (step.action == Action.DRIVE_INTAKING) {
-                    carrying = true;
-                    carryTimer.reset();
+                if (gamepad1.dpadDownWasPressed()) {
+                    startDelay = Math.max(startDelay - 0.5, 0);
                 }
-                startStep(stepIndex + 1);
+                if (gamepad1.dpadRightWasPressed()) {
+                    preloadCount = Math.min(preloadCount + 1, RobotConfig.STORAGE_CAPACITY);
+                }
+                if (gamepad1.dpadLeftWasPressed()) {
+                    preloadCount = Math.max(preloadCount - 1, 0);
+                }
+                telemetry.addData("Auto", "%s  %s", getClass().getSimpleName(), alliance());
+                telemetry.addData("Steps", steps.size());
+                telemetry.addData("Start delay (dpad up/down)", "%.1f s", startDelay);
+                telemetry.addData("Preloads (dpad left/right)", preloadCount);
+                telemetry.addLine("Turret must be facing straight forward!");
+                if (sideViolations > 0) {
+                    telemetry.addData("⚠ G402", "%d path points on the OPPONENT's half - fix the poses", sideViolations);
+                }
+                telemetry.update();
+            }
+            if (isStopRequested()) {
+                return;
             }
 
-            if (log.shouldLog(matchTimer.seconds())) {
-                log.value(pose.x()).value(pose.y()).value(pose.heading()).value(stepIndex)
-                        .value(elements.size()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
-                        .value(launcher.isReady()).value(turret.isOnTarget()).value(shooting).value(shotsFired).endRow();
+            storage.preloadQueue(preloadCount, Storage.POLLEN); // G304: 4 POLLEN pre-loads
+            turret.restartTimer();
+            matchTimer.reset();
+            robot.follower.hold(start);
+            double voltage = robot.getVoltage();
+
+            while (opModeIsActive()) {
+                robot.clearBulkCache();
+                robot.follower.update();
+                Pose pose = robot.follower.pose();
+                Velocity velocity = robot.follower.velocity();
+                PoseStorage.updatePoseStoragePose(pose); // every loop, in case auto gets cut off at 30 s
+
+                if (voltageTimer.seconds() > 0.25) {
+                    voltageTimer.reset();
+                    voltage = robot.getVoltage();
+                }
+
+                // Wait out the start delay (flywheel + turret still spin up meanwhile).
+                if (!routineStarted && matchTimer.seconds() >= startDelay) {
+                    routineStarted = true;
+                    startStep(0);
+                }
+
+                Step step = routineStarted && stepIndex < steps.size() ? steps.get(stepIndex) : null;
+                boolean shooting = step != null && step.action == Action.SHOOT;
+                // Keep the rollers going briefly after a pickup so the last element gets all the way in.
+                boolean intaking = (step != null && step.action == Action.DRIVE_INTAKING)
+                        || (carrying && carryTimer.seconds() < RobotConfig.AUTO_INTAKE_CARRY);
+
+                // Aim at whichever of our cells is up; a tip (ours or our partner's) flips it.
+                FieldGeometry.Cell upCell = hive.getUpCell();
+                hiveVision.update(FieldGeometry.tagBase(red, upCell), FieldGeometry.tagBase(red, FieldGeometry.other(upCell)),
+                        pose.heading(), velocity.omega);
+                hive.update(hiveVision.hasTarget(), hiveVision.seesOtherCell(), matchTimer.seconds());
+                double goalY = FieldGeometry.cellY(hive.getUpCell());
+
+                // Storage: beam breaks update the queue; the exit beam counts shots out.
+                String headBefore = elements.peek();
+                int launchedBefore = storage.getLaunchedCount();
+                boolean emergency = storage.checkBeamBreaks(allianceColor);
+                if (storage.getLaunchedCount() > launchedBefore) { // exit beam: one left into the launcher
+                    hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds());
+                    shotsFired++; // running total so the 20 Hz log can't miss a shot
+                }
+                if (emergency) {
+                    intake.emergencyOuttake(); // opponent NECTAR (G408) or a 5th element (G407)
+                } else {
+                    intake.updateIntake(intaking && elements.size() < RobotConfig.STORAGE_CAPACITY, false, false);
+                }
+
+                shooterConfig.calculateShootingConfig(pose.x(), pose.y(), pose.heading(), velocity.vx, velocity.vy,
+                        goalX, goalY, hiveVision.getAverageTa());
+                turret.updateTurret(shooterConfig.getTurretAngle(), velocity.omega);
+
+                // Keep the flywheel at speed all auto so shots never wait on spin-up.
+                String next = elements.peek();
+                launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
+
+                if (shooting) {
+                    // Hold fire while the hive swings after a tip - the 3rd pre-load tips it and
+                    // the 4th must go into the OTHER cell once it has settled.
+                    trigger.fire(launcher.isReady(), turret.isOnTarget() && !hive.isSettling(matchTimer.seconds()));
+                } else {
+                    trigger.stopFiring();
+                }
+
+                if (step != null && isStepDone(step)) {
+                    // (No clearing the count after a shoot step: if it timed out with elements still
+                    // inside, they ARE still inside - the exit beam keeps the count honest, G407.)
+                    if (step.action == Action.DRIVE_INTAKING) {
+                        carrying = true;
+                        carryTimer.reset();
+                    }
+                    startStep(stepIndex + 1);
+                }
+
+                if (log.shouldLog(matchTimer.seconds())) {
+                    log.value(pose.x()).value(pose.y()).value(pose.heading()).value(stepIndex)
+                            .value(elements.size()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
+                            .value(launcher.isReady()).value(turret.isOnTarget()).value(shooting).value(shotsFired).endRow();
+                }
+
+                // After this loop's shots/tips, so a tip on the very last loop still reaches TeleOp.
+                PoseStorage.updateMatchState(allianceColor, hive.getUpCell(), hive.getWeight(), turret.getZeroOffsetTicks());
+
+                fieldDrawing.draw(pose.x(), pose.y(), pose.heading(), shooterConfig.getFieldAimHeading(),
+                        shooterConfig.getDistanceToGoal(), goalX, goalY);
+
+                telemetry.addData("Step", "%d/%d %s", Math.min(stepIndex + 1, steps.size()), steps.size(),
+                        !routineStarted ? "start delay" : step == null ? "done" : step.label);
+                telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
+                telemetry.addData("Storage", elements.size());
+                telemetry.addData("Hive", "aiming at %s cell, tips seen %d", hive.getUpCell(), hive.getTips());
+                telemetry.addData("Flywheel", "%.0f / %.0f", launcher.getCurrVelocity(), launcher.getTargetVelocity());
+                telemetry.update();
             }
 
-            fieldDrawing.draw(pose.x(), pose.y(), pose.heading(), shooterConfig.getFieldAimHeading(),
-                    shooterConfig.getDistanceToGoal(), goalX, goalY);
-
-            telemetry.addData("Step", "%d/%d %s", Math.min(stepIndex + 1, steps.size()), steps.size(),
-                    !routineStarted ? "start delay" : step == null ? "done" : step.label);
-            telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
-            telemetry.addData("Storage", elements.size());
-            telemetry.addData("Hive", "aiming at %s cell, tips seen %d", hive.getUpCell(), hive.getTips());
-            telemetry.addData("Flywheel", "%.0f / %.0f", launcher.getCurrVelocity(), launcher.getTargetVelocity());
-            telemetry.update();
+            PoseStorage.updatePoseStoragePose(robot.follower.pose());
+            PoseStorage.updateMatchState(allianceColor, hive.getUpCell(), hive.getWeight(), turret.getZeroOffsetTicks());
+            PoseStorage.updateStoredElements(elements); // TeleOp starts with what's really inside
+            trigger.stopFiring();
+            intake.setIntakePower(0);
+            launcher.stop();
+            turret.stop();
+            robot.follower.stop();
+        } finally {
+            // Also on stop-during-init or an exception: close the log file, stop the camera.
+            log.close();
+            robot.limelight.stop();
         }
-
-        PoseStorage.save(robot.follower.pose());
-        log.close();
-        trigger.stopFiring();
-        intake.setIntakePower(0);
-        launcher.stop();
-        turret.stop();
-        robot.follower.stop();
     }
 
     private void startStep(int index) {
