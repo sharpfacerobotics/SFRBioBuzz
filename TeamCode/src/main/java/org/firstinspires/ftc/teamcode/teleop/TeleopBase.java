@@ -30,6 +30,7 @@ import org.firstinspires.ftc.teamcode.robot.helperClasses.HiveTracker;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.MatchLogger;
 
 import java.io.File;
+import java.util.Queue;
 
 import static com.pedropathing.api.Paths.line;
 
@@ -44,11 +45,12 @@ import static com.pedropathing.api.Paths.line;
  *   left stick   drive                       A            flywheel on/off
  *   right stick  turn                        right trig   FIRE (hold)
  *   right bump   slow mode                   X            auto-fire on/off
- *   right trig   intake                      B            manual turret on/off (right stick X)
+ *   right trig   intake (half = slow)        B            manual turret on/off (right stick X)
  *   left trig    outtake                     dpad L/R     turret trim
  *   A (hold)     aim chassis at hive         dpad down    clear trim
  *   B (hold)     auto-drive to LOADING ZONE  Y            re-home turret
  *   X (hold)     turn toward nearest element (ElementVision; drive forward into it)
+ *   dpad down (hold) intake jitter, to free a stuck element
  *   left bump    snap pose to Limelight      start        turret: call current spot zero
  *   options      reset field-centric heading back         reset storage count
  *   back         toggle field / robot centric left bump  "hive tipped" (flip target cell)
@@ -93,8 +95,10 @@ public abstract class TeleopBase extends OpMode {
     private Element opponentNectar;
     private Pose parkPose;
     private boolean parking = false;
-    private boolean rejecting = false;
-    private final ElapsedTime rejectTimer = new ElapsedTime();
+    private String allianceColor;
+    private Queue<String> elements;
+    private boolean emergencyWas = false;
+    private String intakeMode = "off";
     private boolean poseFromAuto;
     private boolean started = false;
     private boolean flywheelOn = false;
@@ -132,6 +136,8 @@ public abstract class TeleopBase extends OpMode {
         hive = PoseStorage.hasHive() ? new HiveTracker(PoseStorage.getHiveUpCell(), PoseStorage.getHiveWeight())
                 : new HiveTracker(FieldGeometry.startingUpCell(red));
         opponentNectar = RobotConfig.opponentNectar(alliance());
+        allianceColor = red ? "RED" : "BLUE";
+        elements = storage.getElementQueue();
         driverHeading = red ? RobotConfig.RED_DRIVER_HEADING : RobotConfig.BLUE_DRIVER_HEADING;
         parkPose = red ? new Pose(14, FieldGeometry.RED_LOADING_ZONE_Y, 0)
                 : new Pose(FieldGeometry.rotateX(14), FieldGeometry.rotateY(FieldGeometry.RED_LOADING_ZONE_Y), Math.PI);
@@ -208,21 +214,37 @@ public abstract class TeleopBase extends OpMode {
             gamepad1.rumble(200);
         }
 
-        boolean wantIntake = gamepad1.right_trigger > 0.3;
         boolean wantOuttake = gamepad1.left_trigger > 0.3;
-        // Opponent NECTAR (G408) or a 5th element (G407): spit it straight back out.
-        if (rejecting && rejectTimer.seconds() > RobotConfig.REJECT_TIME) {
-            rejecting = false;
+
+        // Storage: beam breaks update the queue; true = emergency outtake (G407 / G408).
+        String headBefore = elements.peek();
+        int countBefore = elements.size();
+        boolean emergency = storage.checkBeamBreaks(allianceColor);
+        // The storage exit beam is our shot counter: an element left into the launcher.
+        if (elements.size() < countBefore && !wantOuttake && !emergency) {
+            if (hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds())) {
+                gamepad2.rumbleBlips(2); // our shot tipped it: now aiming at the other cell
+            }
+            shotsFired++; // logged as a running total: a 1-loop flag would fall between 20 Hz log rows
         }
-        // An unjam runs the rollers backwards, which can push an element back out.
-        boolean reversing = wantOuttake || rejecting || intake.isUnjamming();
-        storage.update(wantIntake && !reversing, reversing, opponentNectar);
-        if (storage.shouldReject()) {
-            rejecting = true;
-            rejectTimer.reset();
-            gamepad1.rumble(150);
+
+        boolean notFull = elements.size() < RobotConfig.STORAGE_CAPACITY;
+        if (emergency) {
+            intake.emergencyOuttake();
+            intakeMode = "EMERGENCY OUTTAKE";
+            if (!emergencyWas) {
+                gamepad1.rumble(150);
+            }
+        } else if (wantOuttake) {
+            intake.setIntakePower(RobotConfig.OUTTAKE_POWER);
+            intakeMode = "outtake";
+        } else {
+            boolean full = gamepad1.right_trigger > 0.8 && notFull;
+            boolean slow = gamepad1.right_trigger > 0.3 && !full && notFull;
+            intake.updateIntake(full, slow, gamepad1.dpad_down);
+            intakeMode = gamepad1.dpad_down ? "jitter" : full ? "full" : slow ? "slow" : "off";
         }
-        intake.update(wantIntake && !rejecting, wantOuttake || rejecting, storage.isFull());
+        emergencyWas = emergency;
 
         // ---------------- driver 2: shooter
         if (gamepad2.aWasPressed()) {
@@ -244,7 +266,7 @@ public abstract class TeleopBase extends OpMode {
             turret.forceZeroHere(); // fallback if the hall sensor is dead: point it forward first
         }
         if (gamepad2.backWasPressed()) {
-            storage.clear();
+            elements.clear();
         }
         if (gamepad2.xWasPressed()) {
             autoFire = !autoFire;
@@ -256,7 +278,7 @@ public abstract class TeleopBase extends OpMode {
 
         shooterConfig.calculateShootingConfig(pose.x(), pose.y(), heading, velocity.vx, velocity.vy,
                 goalX, goalY, hiveVision.getAverageTa());
-        boolean loaded = !storage.isEmpty();
+        boolean loaded = !elements.isEmpty();
         boolean firing = gamepad2.right_trigger > 0.3
                 || (autoFire && loaded && shooterConfig.isInRange());
 
@@ -311,20 +333,13 @@ public abstract class TeleopBase extends OpMode {
         boolean aimed = (manualTurret || gamepad1.a || turret.isOnTarget())
                 && !hive.isSettling(matchTimer.seconds()); // don't launch into a swinging hive
 
-        Element next = storage.peekNext();
+        String next = elements.peek();
         boolean spinUp = flywheelOn || firing || (RobotConfig.AUTO_SPINUP_WHEN_LOADED && loaded);
         double targetVel = spinUp ? shooterConfig.getTargetVelocity() : RobotConfig.FLYWHEEL_IDLE_VELOCITY;
         launcher.update(targetVel, shooterConfig.getHoodAngle(next), next, voltage);
 
         if (firing) {
             trigger.fire(launcher.isReady(), aimed);
-            if (launcher.shotDetected()) {
-                if (hive.recordShot(next != null && next.isNectar(), matchTimer.seconds())) {
-                    gamepad2.rumbleBlips(2); // our shot tipped it: now aiming at the other cell
-                }
-                storage.removeNext();
-                shotsFired++; // logged as a running total: a 1-loop flag would fall between 20 Hz log rows
-            }
         } else {
             trigger.stopFiring();
         }
@@ -336,7 +351,7 @@ public abstract class TeleopBase extends OpMode {
                     .value(shooterConfig.getDistanceToGoal()).value(launcher.getTargetVelocity())
                     .value(launcher.getCurrVelocity()).value(launcher.isReady())
                     .value(turret.getAngle()).value(turret.getTargetAngle()).value(aimed)
-                    .value(storage.count()).value(firing).value(shotsFired).value(voltage).value(loopMs)
+                    .value(elements.size()).value(firing).value(shotsFired).value(voltage).value(loopMs)
                     .endRow();
         }
 
@@ -347,8 +362,9 @@ public abstract class TeleopBase extends OpMode {
         telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(heading));
         telemetry.addData("Drive", "%s%s", fieldCentric ? "field centric" : "robot centric",
                 drivetrain.isLocked() ? "  LOCKED" : "");
-        telemetry.addData("Storage", "%d  next=%s  last hue=%.0f", storage.count(), next, storage.getLastHue());
-        telemetry.addData("Intake", intake.getState());
+        telemetry.addData("Storage", "%d  next=%s  intake beam %s", elements.size(), next,
+                storage.anyIntakeBeamBroken() ? "BROKEN" : "-");
+        telemetry.addData("Intake", intakeMode);
         telemetry.addData("Goal dist", "%.1f in", shooterConfig.getDistanceToGoal());
         telemetry.addData("Flywheel", "%.0f / %.0f %s", launcher.getCurrVelocity(), launcher.getTargetVelocity(),
                 launcher.isReady() ? "READY" : "");
@@ -361,8 +377,7 @@ public abstract class TeleopBase extends OpMode {
         }
         telemetry.addData("Modes", "%s%s%s", autoFire ? "AUTO-FIRE " : "", manualTurret ? "MANUAL-TURRET " : "",
                 gamepad1.a ? "CHASSIS-AIM" : "");
-        telemetry.addData("Stats", "shots %d  intaken %d  last cycle %.1f s", shotsFired,
-                storage.getTotalIntaken(), lastCycleTime);
+        telemetry.addData("Stats", "shots %d  last cycle %.1f s", shotsFired, lastCycleTime);
         addHealthWarnings();
         loopMs = loopTimer.milliseconds();
         telemetry.addData("Loop", "%.0f ms", loopMs);
@@ -392,7 +407,7 @@ public abstract class TeleopBase extends OpMode {
 
     /** Cycle time = time between storage emptying out, i.e. one full collect-and-score loop. */
     private void updateStats() {
-        boolean empty = storage.isEmpty();
+        boolean empty = elements.isEmpty();
         if (empty && !wasEmpty) {
             double now = matchTimer.seconds();
             if (lastEmptyTime >= 0) {
@@ -436,7 +451,7 @@ public abstract class TeleopBase extends OpMode {
 
     /** Rumble and lights. Only sends commands on changes - they go over the network. */
     private void driverFeedback(boolean aimed) {
-        boolean full = storage.isFull();
+        boolean full = elements.size() >= RobotConfig.STORAGE_CAPACITY;
         if (full && !wasFull) {
             gamepad1.rumbleBlips(2);
         }

@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.ShotDetector;
 
 /**
@@ -41,7 +40,7 @@ public class Launcher {
     private double currVel1;
     private double voltage = RobotConfig.NOMINAL_VOLTAGE;
     private double hoodAnglePos = -1;
-    private Element hoodElement = null;
+    private String hoodElement = null;
 
     private boolean shotDetected = false;
 
@@ -56,10 +55,10 @@ public class Launcher {
      *
      * @param targetVel      ticks/s from ShooterConfig (0 to coast down)
      * @param hoodAngle      hood servo position for this element, from ShooterConfig
-     * @param next           next element from Storage.peekNext() (null = empty)
+     * @param next           next element: Storage.getElementQueue().peek() - "POLLEN" / "NECTAR" / null
      * @param batteryVoltage robot.getVoltage(), for PF voltage compensation
      */
-    public void update(double targetVel, double hoodAngle, Element next, double batteryVoltage) {
+    public void update(double targetVel, double hoodAngle, String next, double batteryVoltage) {
         if (batteryVoltage > 1) {
             voltage = batteryVoltage;
         }
@@ -190,12 +189,12 @@ public class Launcher {
         }
     }
 
-    private void setHoodRetraction(Element next) {
-        if (next == null || next == hoodElement) {
+    private void setHoodRetraction(String next) {
+        if (next == null || next.equals(hoodElement)) {
             return;
         }
         hoodElement = next;
-        if (next.isNectar()) { // NECTAR is 3.6 in, POLLEN 2.8 in
+        if ("NECTAR".equals(next)) { // NECTAR is 3.6 in, POLLEN 2.8 in
             robot.hoodGapServo1.setPosition(RobotConfig.HOOD_NECTAR_GAP_1);
             robot.hoodGapServo2.setPosition(RobotConfig.HOOD_NECTAR_GAP_2);
         } else {

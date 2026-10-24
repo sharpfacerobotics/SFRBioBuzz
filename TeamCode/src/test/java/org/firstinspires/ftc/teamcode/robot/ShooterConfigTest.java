@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.junit.Test;
 
 public class ShooterConfigTest {
@@ -41,8 +40,8 @@ public class ShooterConfigTest {
     @Test
     public void hoodDependsOnElement() {
         sc.calculateShootingConfig(72, 72, 0, 0, 0, 72, 120, 0);
-        assertNotEquals(sc.getHoodAngle(Element.POLLEN), sc.getHoodAngle(Element.RED_NECTAR), 1e-9);
-        assertEquals(sc.getHoodAngle(Element.POLLEN), sc.getHoodAngle(null), 1e-12); // empty -> pollen
+        assertNotEquals(sc.getHoodAngle(Storage.POLLEN), sc.getHoodAngle(Storage.NECTAR), 1e-9);
+        assertEquals(sc.getHoodAngle(Storage.POLLEN), sc.getHoodAngle(null), 1e-12); // empty -> pollen
     }
 
     @Test

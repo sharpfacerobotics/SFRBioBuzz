@@ -1,172 +1,151 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
-
 import java.util.ArrayDeque;
+import java.util.Queue;
 
 /**
  * Keeps track of which elements are in the robot and in what order. Owner: Vibhav.
  *
- * <p>A colour/distance sensor at the storage entrance sees each element come in and we
- * classify it by hue. Elements leave first-in-first-out through the launcher; the OpMode
- * calls {@link #removeNext()} when Launcher reports a shot.</p>
+ * <p>Glossary methods (Software Documentation, "Storage"):</p>
+ * <ul>
+ *   <li>{@link #checkBeamBreaks(String)}: UPDATE, returns boolean. Loop call. Updates the
+ *       queue; true = run {@code Intake.emergencyOuttake()}.</li>
+ *   <li>{@link #anyIntakeBeamBroken()}: STATUS, boolean.</li>
+ *   <li>{@link #getElementQueue()}: STATUS, {@code Queue<String>}. Elements in intake order,
+ *       "POLLEN" or "NECTAR". The Launcher uses {@code .peek()} for the next element.</li>
+ * </ul>
  *
- * <p>The launcher needs {@link #peekNext()} to pick the right hood angle/gap for the next
- * element.</p>
+ * <p>Sensors (names in RobotConfig):</p>
+ * <ul>
+ *   <li>Two beam breaks at the intake mouth. LOW breaks for any element; HIGH sits above a
+ *       POLLEN (2.8 in) but below a NECTAR (3.6 in), so it only breaks for NECTAR.</li>
+ *   <li>One beam break at the storage exit. An element leaving into the launcher clears it.</li>
+ *   <li>The intake colour sensor, read only when a NECTAR comes in, to tell red from blue.</li>
+ * </ul>
  *
- * <p>BIOBUZZ rules this enforces: never count past 4 (G407), and never keep the opponent's
- * NECTAR (G408) - it isn't counted and {@link #shouldReject()} tells the OpMode to spit it out.</p>
+ * <p>BIOBUZZ rules: never keep the opponent's NECTAR (G408), and never take a 5th element
+ * (G407). Both make checkBeamBreaks return true until the element is back out.</p>
  */
 public class Storage {
-    private final RobotHardware robot;
-    private DistanceSensor distanceSensor;
+    public static final String POLLEN = "POLLEN";
+    public static final String NECTAR = "NECTAR";
 
-    // ArrayDeque is allocated once; adding/removing enums doesn't allocate.
-    private final ArrayDeque<Element> elements = new ArrayDeque<>(RobotConfig.STORAGE_CAPACITY + 1);
+    private final RobotHardware robot;
+
+    // Allocated once; adding/removing String constants doesn't allocate.
+    private final ArrayDeque<String> queue = new ArrayDeque<>(RobotConfig.STORAGE_CAPACITY + 1);
     private final ElapsedTime debounceTimer = new ElapsedTime();
-    private boolean elementAtEntry = false;
-    private Element lastSeen = Element.UNKNOWN;
-    private double lastHue = 0;
-    private int totalIntaken = 0;
-    /** The element sitting at the entry was never counted (rejected, or we were full). */
-    private boolean entryUncounted = false;
-    private boolean rejectRequested = false;
+
+    private boolean intakeLowWas = false;
+    private boolean exitWas = false;
+    /** An element we must not keep is in the intake; stays true until the beams clear. */
+    private boolean emergency = false;
 
     public Storage(RobotHardware robot) {
         this.robot = robot;
     }
 
     /**
-     * Call once per loop. Reads the entry sensor and keeps the count in sync.
+     * UPDATE. Call once per loop.
      *
-     * @param intaking       intake is pulling in - a new element at the entry is counted
-     * @param outtaking      intake is spitting out - an element leaving the entry is uncounted
-     * @param opponentNectar RobotConfig.opponentNectar(alliance) - never counted, flagged to reject
+     * @param allianceColor "RED" or "BLUE". Opponent-coloured NECTAR is rejected (G408).
+     * @return true = emergency outtake needed (opponent NECTAR or a 5th element is in the intake)
      */
-    public void update(boolean intaking, boolean outtaking, Element opponentNectar) {
-        rejectRequested = false;
-        // The distance read is a slow I2C call (not in the bulk read). Elements can only
-        // cross the entry while the intake is moving, so skip it the rest of the time.
-        if (!intaking && !outtaking) {
-            return;
-        }
-        if (distanceSensor == null) {
-            // The REV colour sensor v3 is also a distance sensor.
-            distanceSensor = (DistanceSensor) robot.storageSensor;
-        }
-        boolean present = distanceSensor.getDistance(DistanceUnit.CM) < RobotConfig.STORAGE_PRESENT_DISTANCE_CM;
+    public boolean checkBeamBreaks(String allianceColor) {
+        boolean low = isBroken(robot.intakeBeamLow);
+        boolean high = isBroken(robot.intakeBeamHigh);
+        boolean exit = isBroken(robot.storageExitBeam);
+        // Negative intake power = rollers spitting out, so intake beam edges mean "leaving".
+        boolean outtaking = robot.intakeMotor.getPower() < 0;
 
-        if (outtaking) {
-            // Count it out when it clears the sensor on the way out (falling edge).
-            if (!present && elementAtEntry) {
-                if (!entryUncounted) {
-                    elements.pollLast(); // last in is first out of the intake
-                }
-                entryUncounted = false;
-            }
-        } else if (present && !elementAtEntry && debounceTimer.seconds() > RobotConfig.STORAGE_DEBOUNCE_TIME) {
-            // Count on the rising edge only, so one element sitting there counts once.
-            debounceTimer.reset();
-            lastSeen = classify(robot.storageSensor.getNormalizedColors());
-            if (lastSeen == opponentNectar) {
-                entryUncounted = true;
-                rejectRequested = true;
-            } else if (isFull()) {
-                entryUncounted = true; // a 5th element: G407 - the OpMode should back it out
-                rejectRequested = true;
-            } else {
-                entryUncounted = false;
-                elements.addLast(lastSeen);
-                totalIntaken++;
-            }
+        // The colour sensor is a slow I2C read, so only read it when a NECTAR is coming in.
+        String nectarColor = null;
+        if (low && high && !intakeLowWas && !outtaking) {
+            nectarColor = readNectarColor();
         }
-        elementAtEntry = present;
-    }
-
-    /** Raw entry distance in cm, for SubsystemTest. Slow I2C read - don't call every loop in comp. */
-    public double readEntryDistanceCm() {
-        if (distanceSensor == null) {
-            distanceSensor = (DistanceSensor) robot.storageSensor;
-        }
-        return distanceSensor.getDistance(DistanceUnit.CM);
-    }
-
-    /** Classify whatever is at the entry right now, for SubsystemTest. */
-    public Element readEntryColor() {
-        return classify(robot.storageSensor.getNormalizedColors());
+        return process(low, high, exit, outtaking, nectarColor, allianceColor, debounceTimer.seconds());
     }
 
     /**
-     * True for one loop when something just came in that we must not keep: opponent NECTAR
-     * (G408) or a 5th element (G407). Run the intake backwards for REJECT_TIME.
+     * The queue logic, kept separate from the hardware reads so it can be unit tested.
+     *
+     * @param nectarColor "RED" / "BLUE" / null (not read this loop or unclear)
+     * @param now         seconds, for debouncing
      */
-    public boolean shouldReject() {
-        return rejectRequested;
+    boolean process(boolean low, boolean high, boolean exit, boolean outtaking,
+                    String nectarColor, String allianceColor, double now) {
+        if (!outtaking && low && !intakeLowWas && now > RobotConfig.STORAGE_DEBOUNCE_TIME) {
+            debounceTimer.reset();
+            // Rising edge: an element is entering.
+            boolean isNectar = high;
+            if (isNectar && nectarColor != null && !nectarColor.equals(allianceColor)) {
+                emergency = true; // G408: opponent NECTAR
+            } else if (queue.size() >= RobotConfig.STORAGE_CAPACITY) {
+                emergency = true; // G407: a 5th element
+            } else {
+                queue.add(isNectar ? NECTAR : POLLEN);
+            }
+        } else if (outtaking && !low && intakeLowWas && !emergency) {
+            // Falling edge while spitting out: a counted element left through the intake.
+            queue.pollLast(); // last in is first out of the intake
+        }
+
+        // The rejected element is gone once both intake beams are clear.
+        if (emergency && !low && !high) {
+            emergency = false;
+        }
+
+        // An element leaving the exit beam has gone into the launcher.
+        if (exitWas && !exit) {
+            queue.poll();
+        }
+
+        intakeLowWas = low;
+        exitWas = exit;
+        return emergency;
     }
 
-    /** Next element to be launched, or null if empty. */
-    public Element peekNext() {
-        return elements.peekFirst();
+    /** STATUS. True if any INTAKE beam is broken. */
+    public boolean anyIntakeBeamBroken() {
+        return isBroken(robot.intakeBeamLow) || isBroken(robot.intakeBeamHigh);
     }
 
-    /** Call when an element leaves through the launcher. */
-    public void removeNext() {
-        elements.pollFirst();
+    /**
+     * STATUS. Stored elements in intake order ("POLLEN" / "NECTAR"). This is the live queue:
+     * {@code .peek()} is the next element to launch, {@code .size()} the count.
+     */
+    public Queue<String> getElementQueue() {
+        return queue;
     }
 
-    /** For autos: the robot starts holding preloads the entry sensor never saw. */
-    public void preload(int count, Element type) {
-        elements.clear();
+    /**
+     * INIT (auto only). The robot starts holding pre-loads that never crossed the intake beams
+     * (G304: 4 POLLEN).
+     */
+    public void preloadQueue(int count, String element) {
+        queue.clear();
         for (int i = 0; i < count && i < RobotConfig.STORAGE_CAPACITY; i++) {
-            elements.addLast(type);
+            queue.add(element);
         }
     }
 
-    /** Driver override if the count ever gets out of sync. */
-    public void clear() {
-        elements.clear();
+    /** "RED", "BLUE", or null if the colour sensor can't tell. Slow I2C read. */
+    public String readNectarColor() {
+        NormalizedRGBA c = robot.intakeColorSensor.getNormalizedColors();
+        return nectarColorFromHue(hue(c.red, c.green, c.blue));
     }
 
-    public int count() {
-        return elements.size();
-    }
-
-    public boolean isFull() {
-        return elements.size() >= RobotConfig.STORAGE_CAPACITY;
-    }
-
-    public boolean isEmpty() {
-        return elements.isEmpty();
-    }
-
-    /** Elements picked up this OpMode (for stats). */
-    public int getTotalIntaken() {
-        return totalIntaken;
-    }
-
-    public Element getLastSeen() {
-        return lastSeen;
-    }
-
-    public double getLastHue() {
-        return lastHue;
-    }
-
-    private Element classify(NormalizedRGBA color) {
-        double hue = hue(color.red, color.green, color.blue);
-        if (hue >= 0) {
-            lastHue = hue;
-        }
-        return classifyHue(hue);
+    /** Beam break sensors read LOW (false) when the beam is broken. */
+    private static boolean isBroken(DigitalChannel beam) {
+        return !beam.getState();
     }
 
     /** Hue in degrees [0, 360), or -1 if the colour is too grey/dark to tell. */
-    static double hue(double r, double g, double b) {
+    public static double hue(double r, double g, double b) {
         double max = Math.max(r, Math.max(g, b));
         double min = Math.min(r, Math.min(g, b));
         double delta = max - min;
@@ -184,20 +163,18 @@ public class Storage {
         return hue < 0 ? hue + 360.0 : hue;
     }
 
-    static Element classifyHue(double hue) {
+    /** "RED" / "BLUE" NECTAR from hue, or null. */
+    static String nectarColorFromHue(double hue) {
         if (hue < 0) {
-            return Element.UNKNOWN;
-        }
-        if (hue >= RobotConfig.POLLEN_HUE_MIN && hue <= RobotConfig.POLLEN_HUE_MAX) {
-            return Element.POLLEN;
+            return null;
         }
         if (hue >= RobotConfig.BLUE_NECTAR_HUE_MIN && hue <= RobotConfig.BLUE_NECTAR_HUE_MAX) {
-            return Element.BLUE_NECTAR;
+            return "BLUE";
         }
         // red wraps around 0 degrees
         if (hue >= RobotConfig.RED_NECTAR_HUE_MIN || hue <= RobotConfig.RED_NECTAR_HUE_MAX) {
-            return Element.RED_NECTAR;
+            return "RED";
         }
-        return Element.UNKNOWN;
+        return null;
     }
 }

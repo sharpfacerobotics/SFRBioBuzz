@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.InterpLUT;
 
 /**
@@ -112,8 +111,8 @@ public class ShooterConfig {
     }
 
     /** Hood angle for the element about to be shot (null/UNKNOWN use pollen). */
-    public double getHoodAngle(Element next) {
-        return next != null && next.isNectar() ? nectarAngle : pollenAngle;
+    public double getHoodAngle(String next) {
+        return "NECTAR".equals(next) ? nectarAngle : pollenAngle;
     }
 
     /** Close enough (and far enough) to shoot - the distance table only covers this band. */

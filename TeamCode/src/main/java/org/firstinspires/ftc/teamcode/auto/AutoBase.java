@@ -15,7 +15,6 @@ import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.PoseStorage;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig.Alliance;
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
 import org.firstinspires.ftc.teamcode.robot.Storage;
@@ -29,6 +28,7 @@ import org.firstinspires.ftc.teamcode.robot.helperClasses.MatchLogger;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Queue;
 
 import static com.pedropathing.api.Paths.curve;
 import static com.pedropathing.api.Paths.line;
@@ -182,8 +182,6 @@ public abstract class AutoBase extends LinearOpMode {
     private final ElapsedTime voltageTimer = new ElapsedTime();
     private final ElapsedTime matchTimer = new ElapsedTime();
     private final ElapsedTime carryTimer = new ElapsedTime();
-    private final ElapsedTime rejectTimer = new ElapsedTime();
-    private boolean rejecting = false;
     private int shotsFired = 0;
     private int stepIndex = 0;
     private boolean pathDone = false;
@@ -203,7 +201,8 @@ public abstract class AutoBase extends LinearOpMode {
         boolean red = alliance() == Alliance.RED;
         double goalX = FieldGeometry.cellX(red);
         HiveTracker hive = new HiveTracker(FieldGeometry.startingUpCell(red));
-        Element opponentNectar = RobotConfig.opponentNectar(alliance());
+        String allianceColor = red ? "RED" : "BLUE";
+        Queue<String> elements = storage.getElementQueue();
 
         Pose start = prepareRoutine();
 
@@ -239,7 +238,7 @@ public abstract class AutoBase extends LinearOpMode {
             return;
         }
 
-        storage.preload(preloadCount, Element.POLLEN); // G304: 4 POLLEN pre-loads
+        storage.preloadQueue(preloadCount, Storage.POLLEN); // G304: 4 POLLEN pre-loads
         turret.restartTimer();
         matchTimer.reset();
         robot.follower.hold(start);
@@ -277,41 +276,39 @@ public abstract class AutoBase extends LinearOpMode {
             hive.update(hiveVision.hasTarget(), hiveVision.seesOtherCell(), matchTimer.seconds());
             double goalY = FieldGeometry.cellY(hive.getUpCell());
 
-            // Spit out opponent NECTAR (G408) or a 5th element (G407).
-            if (rejecting && rejectTimer.seconds() > RobotConfig.REJECT_TIME) {
-                rejecting = false;
+            // Storage: beam breaks update the queue; the exit beam counts shots out.
+            String headBefore = elements.peek();
+            int countBefore = elements.size();
+            boolean emergency = storage.checkBeamBreaks(allianceColor);
+            if (elements.size() < countBefore && !emergency) {
+                hive.recordShot(Storage.NECTAR.equals(headBefore), matchTimer.seconds());
+                shotsFired++; // running total so the 20 Hz log can't miss a shot
             }
-            storage.update(intaking && !rejecting, rejecting, opponentNectar);
-            if (storage.shouldReject()) {
-                rejecting = true;
-                rejectTimer.reset();
+            if (emergency) {
+                intake.emergencyOuttake(); // opponent NECTAR (G408) or a 5th element (G407)
+            } else {
+                intake.updateIntake(intaking && elements.size() < RobotConfig.STORAGE_CAPACITY, false, false);
             }
-            intake.update(intaking && !rejecting, rejecting, storage.isFull());
 
             shooterConfig.calculateShootingConfig(pose.x(), pose.y(), pose.heading(), velocity.vx, velocity.vy,
                     goalX, goalY, hiveVision.getAverageTa());
             turret.updateTurret(shooterConfig.getTurretAngle(), velocity.omega);
 
             // Keep the flywheel at speed all auto so shots never wait on spin-up.
-            Element next = storage.peekNext();
+            String next = elements.peek();
             launcher.update(shooterConfig.getTargetVelocity(), shooterConfig.getHoodAngle(next), next, voltage);
 
             if (shooting) {
                 // Hold fire while the hive swings after a tip - the 3rd pre-load tips it and
                 // the 4th must go into the OTHER cell once it has settled.
                 trigger.fire(launcher.isReady(), turret.isOnTarget() && !hive.isSettling(matchTimer.seconds()));
-                if (launcher.shotDetected()) {
-                    hive.recordShot(next != null && next.isNectar(), matchTimer.seconds());
-                    storage.removeNext();
-                    shotsFired++; // running total so the 20 Hz log can't miss a shot
-                }
             } else {
                 trigger.stopFiring();
             }
 
             if (step != null && isStepDone(step)) {
                 if (step.action == Action.SHOOT) {
-                    storage.clear(); // whatever the count says, we fired for the full window
+                    elements.clear(); // whatever the count says, we fired for the full window
                 }
                 if (step.action == Action.DRIVE_INTAKING) {
                     carrying = true;
@@ -322,7 +319,7 @@ public abstract class AutoBase extends LinearOpMode {
 
             if (log.shouldLog(matchTimer.seconds())) {
                 log.value(pose.x()).value(pose.y()).value(pose.heading()).value(stepIndex)
-                        .value(storage.count()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
+                        .value(elements.size()).value(launcher.getTargetVelocity()).value(launcher.getCurrVelocity())
                         .value(launcher.isReady()).value(turret.isOnTarget()).value(shooting).value(shotsFired).endRow();
             }
 
@@ -332,7 +329,7 @@ public abstract class AutoBase extends LinearOpMode {
             telemetry.addData("Step", "%d/%d %s", Math.min(stepIndex + 1, steps.size()), steps.size(),
                     !routineStarted ? "start delay" : step == null ? "done" : step.label);
             telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
-            telemetry.addData("Storage", storage.count());
+            telemetry.addData("Storage", elements.size());
             telemetry.addData("Hive", "aiming at %s cell, tips seen %d", hive.getUpCell(), hive.getTips());
             telemetry.addData("Flywheel", "%.0f / %.0f", launcher.getCurrVelocity(), launcher.getTargetVelocity());
             telemetry.update();
@@ -341,7 +338,7 @@ public abstract class AutoBase extends LinearOpMode {
         PoseStorage.save(robot.follower.pose());
         log.close();
         trigger.stopFiring();
-        intake.stop();
+        intake.setIntakePower(0);
         launcher.stop();
         turret.stop();
         robot.follower.stop();
@@ -374,9 +371,10 @@ public abstract class AutoBase extends LinearOpMode {
                     stepTimer.reset(); // now time the dwell
                     return false;
                 }
-                return pathDone && (t > RobotConfig.AUTO_INTAKE_DWELL || storage.isFull());
+                return pathDone && (t > RobotConfig.AUTO_INTAKE_DWELL
+                        || storage.getElementQueue().size() >= RobotConfig.STORAGE_CAPACITY);
             case SHOOT:
-                return storage.isEmpty() || t > RobotConfig.AUTO_SHOOT_TIMEOUT + HiveTracker.SETTLE_TIME;
+                return storage.getElementQueue().isEmpty() || t > RobotConfig.AUTO_SHOOT_TIMEOUT + HiveTracker.SETTLE_TIME;
             case PAUSE:
             default:
                 return t > step.seconds;

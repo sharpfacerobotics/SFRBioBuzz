@@ -33,7 +33,10 @@ public class RobotHardware {
 
     // Intake + storage
     public DcMotorEx intakeMotor;
-    public NormalizedColorSensor storageSensor;
+    public NormalizedColorSensor intakeColorSensor;
+    public DigitalChannel intakeBeamLow;
+    public DigitalChannel intakeBeamHigh;
+    public DigitalChannel storageExitBeam;
 
     // Launcher
     public DcMotorEx launchMotor1;
@@ -65,7 +68,10 @@ public class RobotHardware {
         intakeMotor = hardwareMap.get(DcMotorEx.class, RobotConfig.INTAKE_MOTOR);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        storageSensor = hardwareMap.get(NormalizedColorSensor.class, RobotConfig.STORAGE_SENSOR);
+        intakeColorSensor = hardwareMap.get(NormalizedColorSensor.class, RobotConfig.INTAKE_COLOR_SENSOR);
+        intakeBeamLow = initBeam(hardwareMap, RobotConfig.INTAKE_BEAM_LOW);
+        intakeBeamHigh = initBeam(hardwareMap, RobotConfig.INTAKE_BEAM_HIGH);
+        storageExitBeam = initBeam(hardwareMap, RobotConfig.STORAGE_EXIT_BEAM);
 
         initLauncherMotor(hardwareMap);
         hoodAngleServo1 = hardwareMap.get(Servo.class, RobotConfig.HOOD_ANGLE_SERVO_1);
@@ -91,6 +97,12 @@ public class RobotHardware {
         limelight.start();
 
         voltageSensor = hardwareMap.get(VoltageSensor.class, RobotConfig.VOLTAGE_SENSOR);
+    }
+
+    private DigitalChannel initBeam(HardwareMap hardwareMap, String name) {
+        DigitalChannel beam = hardwareMap.get(DigitalChannel.class, name);
+        beam.setMode(DigitalChannel.Mode.INPUT);
+        return beam;
     }
 
     /** Launcher motor only - for the flywheel test/tuning OpModes on the shooter bench. */

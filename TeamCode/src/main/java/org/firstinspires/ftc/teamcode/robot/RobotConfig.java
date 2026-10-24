@@ -59,7 +59,13 @@ public class RobotConfig {
     public static final String TURRET_HALL        = "turret_hall";
     public static final String TRIGGER_MOTOR      = "trigger_motor";
     public static final String GATE_SERVO         = "gate_servo";
-    public static final String STORAGE_SENSOR     = "storage_color";
+    public static final String INTAKE_COLOR_SENSOR = "intake_color";
+    /** Beam break at the intake mouth that any element breaks. */
+    public static final String INTAKE_BEAM_LOW    = "intake_beam_low";
+    /** Beam break ~8 cm up: above a POLLEN (7.1 cm), below a NECTAR (9.1 cm). */
+    public static final String INTAKE_BEAM_HIGH   = "intake_beam_high";
+    /** Beam break where elements leave storage into the launcher. */
+    public static final String STORAGE_EXIT_BEAM  = "storage_exit_beam";
     public static final String LIMELIGHT          = "limelight";
     public static final String VOLTAGE_SENSOR     = "Control Hub";
 
@@ -118,18 +124,14 @@ public class RobotConfig {
 
     public static double INTAKE_POWER         = 0.8;
     public static double OUTTAKE_POWER        = -0.6;
-    public static boolean INTAKE_JAM_DETECTION = true;
-    public static double INTAKE_JAM_CURRENT   = 6.0;   // amps TODO(tune)
-    public static double INTAKE_JAM_TIME      = 0.25;  // seconds above jam current before we call it a jam
-    public static double INTAKE_UNJAM_TIME    = 0.2;   // seconds to run backwards
-    /** getCurrent() is a slow hub call, so only poll it this often. */
-    public static double INTAKE_CURRENT_POLL  = 0.05;
+    public static double INTAKE_SLOW_POWER    = 0.4;
+    /** updateIntake(jitter): flip direction this often (s) to free a stuck element. */
+    public static double INTAKE_JITTER_PERIOD = 0.15;
 
     // ------------------------------------------------------------------ storage
 
     /** G407: a robot may not CONTROL more than 4 SCORING ELEMENTS. */
     public static final int STORAGE_CAPACITY = 4;
-    public static double STORAGE_PRESENT_DISTANCE_CM = 4.0;     // closer than this = element at entry
     public static double STORAGE_DEBOUNCE_TIME = 0.12;          // seconds between counted elements
     // Hue windows in degrees [0, 360). POLLEN is yellow, NECTAR red or blue.
     // TODO(tune) under event lighting with SubsystemTest.
@@ -140,8 +142,6 @@ public class RobotConfig {
     /** Red wraps around 0: anything >= MIN or <= MAX. */
     public static double RED_NECTAR_HUE_MIN = 335.0;
     public static double RED_NECTAR_HUE_MAX = 20.0;
-    /** How long to run the intake backwards to spit out opponent NECTAR (G408). */
-    public static double REJECT_TIME = 0.4;
     public static double STORAGE_MIN_SATURATION = 0.25;
 
     // ------------------------------------------------------------------ trigger / gate

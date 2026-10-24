@@ -88,6 +88,22 @@ One loop of `TeleopBase` / `AutoBase`:
 5. trigger fires only if `launcher.isReady() && turret.isOnTarget()`
 6. a velocity dip on the flywheel (`launcher.shotDetected()`) removes one element from storage
 
+## Methods glossary (Storage / Intake)
+
+Storage and Intake follow the team Software Documentation glossary exactly:
+
+| File | Method | Type | Use |
+|---|---|---|---|
+| Storage | `checkBeamBreaks(String allianceColor)` | UPDATE, boolean | loop call; updates the queue; true = emergency outtake (opponent NECTAR G408 / 5th element G407) |
+| Storage | `anyIntakeBeamBroken()` | STATUS, boolean | any intake beam broken |
+| Storage | `getElementQueue()` | STATUS, `Queue<String>` | `"POLLEN"` / `"NECTAR"` in intake order; `.peek()` = next to launch |
+| Intake | `emergencyOuttake()` | CONTINUOUS | call while `checkBeamBreaks` is true |
+| Intake | `setIntakePower(double)` | SET | raw power |
+| Intake | `updateIntake(runFull, runSlow, jitter)` | CONTINUOUS | normal intaking |
+
+The storage exit beam counts each element leaving into the launcher, so the queue stays right
+without Storage ever calling the Launcher.
+
 ## Coding protocol
 
 From the team software doc:
@@ -133,7 +149,10 @@ Names must match `RobotConfig` exactly:
 | Drive motors | goBILDA motor | `front_left_drive`, `back_left_drive`, `front_right_drive`, `back_right_drive` |
 | Odometry | goBILDA Pinpoint | `pinpoint` |
 | Intake | motor | `intake_motor` |
-| Storage entry sensor | REV Color Sensor V3 | `storage_color` |
+| Intake beam, low (any element) | beam break (digital) | `intake_beam_low` |
+| Intake beam, high (~8 cm: NECTAR only) | beam break (digital) | `intake_beam_high` |
+| Storage exit beam (into launcher) | beam break (digital) | `storage_exit_beam` |
+| Intake colour (red vs blue NECTAR) | REV Color Sensor V3 | `intake_color` |
 | Flywheel | motor | `launch_motor` |
 | Hood angle | servo ×2 | `hood_angle_servo_1`, `hood_angle_servo_2` |
 | Hood gap | servo ×2 | `hood_gap_servo_1`, `hood_gap_servo_2` |
@@ -157,7 +176,8 @@ The shooter test OpModes (`ShooterTestPanels`, `FlywheelPFTuning*`) call
 | Left stick | drive | A | flywheel on/off |
 | Right stick | turn | Right trigger (hold) | **fire** |
 | Right bumper | slow mode | X | auto-fire on/off |
-| Right trigger | intake | B | manual turret on/off (right stick X) |
+| Right trigger | intake (halfway = slow) | B | manual turret on/off (right stick X) |
+| D-pad down (hold) | intake jitter (free a stuck element) | | |
 | Left trigger | outtake | D-pad left/right | turret trim ±1° |
 | A (hold) | aim chassis at hive | D-pad down | clear trim |
 | B (hold) | **park assist:** drive into the LOADING ZONE | Y | re-home turret |
@@ -226,7 +246,7 @@ after each pickup so the last element gets all the way in.
 
 | OpMode | Use it to |
 |---|---|
-| `SubsystemTest` | run each mechanism by hand; check motor directions, turret encoder direction, element hues |
+| `SubsystemTest` | run each mechanism by hand; check motor directions, turret encoder direction, beam breaks, the storage queue and NECTAR colour |
 | `TurretTuner` | homes, then holds a target or steps between two; tune `TURRET_KP/KD/KS` live in Panels |
 | `ShotTableTuner` | at each distance, adjust velocity and hood in Panels until shots score, then press A to log the row |
 | `FlywheelPFTuning*`, `ShooterTest*` | flywheel only, on the shooter bench |

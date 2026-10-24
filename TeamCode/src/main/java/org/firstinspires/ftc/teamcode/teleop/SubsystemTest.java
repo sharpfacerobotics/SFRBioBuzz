@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.robot.Drivetrain;
 import org.firstinspires.ftc.teamcode.robot.ElementVision;
@@ -15,7 +17,6 @@ import org.firstinspires.ftc.teamcode.robot.HiveVision;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.Storage;
 import org.firstinspires.ftc.teamcode.robot.Turret;
@@ -26,7 +27,7 @@ import org.firstinspires.ftc.teamcode.robot.Turret;
  *
  * <pre>
  * sticks        drive (robot centric, slow)
- * right/left trigger  intake / outtake
+ * right/left trigger  intake / outtake    right stick button (hold)  intake jitter
  * A (hold)      trigger feeder
  * B             gate open/closed
  * X             flywheel on/off at TEST_VELOCITY
@@ -34,6 +35,10 @@ import org.firstinspires.ftc.teamcode.robot.Turret;
  * dpad up/down  hood angle
  * bumpers       turret raw power left/right (NO soft limits - be careful)
  * left stick button  Limelight pipeline: hive tags / element detector
+ * back          clear the storage queue
+ *
+ * Storage counting check: feed elements in by hand and watch the queue. The high beam should
+ * break for NECTAR only; red NECTAR in should read "RED".
  * </pre>
  */
 @Configurable
@@ -54,7 +59,7 @@ public class SubsystemTest extends OpMode {
 
     private boolean gateOpen = false;
     private boolean flywheelOn = false;
-    private Element hoodElement = Element.POLLEN;
+    private String hoodElement = Storage.POLLEN;
     private double hoodAngle = 0.4;
 
     @Override
@@ -74,7 +79,15 @@ public class SubsystemTest extends OpMode {
         drivetrain.drive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x,
                 0, 0, false, true);
 
-        intake.update(gamepad1.right_trigger > 0.3, gamepad1.left_trigger > 0.3, false);
+        boolean emergency = storage.checkBeamBreaks("RED"); // RED: blue NECTAR should trigger emergency
+        if (gamepad1.left_trigger > 0.3) {
+            intake.setIntakePower(RobotConfig.OUTTAKE_POWER);
+        } else {
+            intake.updateIntake(gamepad1.right_trigger > 0.3, false, gamepad1.right_stick_button);
+        }
+        if (gamepad1.backWasPressed()) {
+            storage.getElementQueue().clear();
+        }
         robot.triggerMotor.setPower(gamepad1.a ? RobotConfig.TRIGGER_POWER : 0);
         if (gamepad1.bWasPressed()) {
             gateOpen = !gateOpen;
@@ -85,7 +98,7 @@ public class SubsystemTest extends OpMode {
             flywheelOn = !flywheelOn;
         }
         if (gamepad1.yWasPressed()) {
-            hoodElement = hoodElement == Element.POLLEN ? Element.RED_NECTAR : Element.POLLEN;
+            hoodElement = Storage.POLLEN.equals(hoodElement) ? Storage.NECTAR : Storage.POLLEN;
         }
         if (gamepad1.dpadUpWasPressed()) {
             hoodAngle = Range.clip(hoodAngle + 0.05, RobotConfig.HOOD_ANGLE_MIN, RobotConfig.HOOD_ANGLE_MAX);
@@ -114,9 +127,14 @@ public class SubsystemTest extends OpMode {
 
         Pose pose = robot.follower.pose();
         telemetry.addData("Pinpoint pose", "x %.1f  y %.1f  h %.1f°", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
-        telemetry.addData("Intake", "%s  %.2f A", intake.getState(), robot.intakeMotor.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Storage sensor", "%.1f cm  sees %s  hue %.0f",
-                storage.readEntryDistanceCm(), storage.readEntryColor(), storage.getLastHue());
+        telemetry.addData("Intake", "power %.2f  %.2f A", robot.intakeMotor.getPower(),
+                robot.intakeMotor.getCurrent(CurrentUnit.AMPS));
+        telemetry.addData("Beams", "intake low %s  high %s  exit %s",
+                robot.intakeBeamLow.getState() ? "-" : "BROKEN", robot.intakeBeamHigh.getState() ? "-" : "BROKEN",
+                robot.storageExitBeam.getState() ? "-" : "BROKEN");
+        NormalizedRGBA c = robot.intakeColorSensor.getNormalizedColors();
+        telemetry.addData("Colour", "hue %.0f  nectar=%s", Storage.hue(c.red, c.green, c.blue), storage.readNectarColor());
+        telemetry.addData("Queue", "%s%s", storage.getElementQueue(), emergency ? "  EMERGENCY (would outtake)" : "");
         telemetry.addData("Gate", gateOpen ? "OPEN" : "closed");
         telemetry.addData("Flywheel", "%.0f / %.0f ticks/s", launcher.getCurrVelocity(), flywheelOn ? TEST_VELOCITY : 0);
         telemetry.addData("Hood", "angle %.2f  gap %s", hoodAngle, hoodElement);

@@ -13,9 +13,9 @@ import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Launcher;
 import org.firstinspires.ftc.teamcode.robot.PoseStorage;
 import org.firstinspires.ftc.teamcode.robot.RobotConfig;
-import org.firstinspires.ftc.teamcode.robot.RobotConfig.Element;
 import org.firstinspires.ftc.teamcode.robot.RobotHardware;
 import org.firstinspires.ftc.teamcode.robot.ShooterConfig;
+import org.firstinspires.ftc.teamcode.robot.Storage;
 import org.firstinspires.ftc.teamcode.robot.Trigger;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 import org.firstinspires.ftc.teamcode.robot.helperClasses.FieldGeometry;
@@ -53,7 +53,7 @@ public class ShotTableTuner extends OpMode {
     private final Turret turret = new Turret(robot);
     private final Trigger trigger = new Trigger(robot);
 
-    private Element element = Element.POLLEN;
+    private String element = Storage.POLLEN;
     private int rowCount = 0;
 
     @Override
@@ -83,10 +83,10 @@ public class ShotTableTuner extends OpMode {
 
         drivetrain.drive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x,
                 pose.heading(), 0, false, true);
-        intake.update(gamepad1.left_trigger > 0.3, false, false);
+        intake.updateIntake(gamepad1.left_trigger > 0.3, false, false);
 
         if (gamepad1.yWasPressed()) {
-            element = element == Element.POLLEN ? Element.RED_NECTAR : Element.POLLEN;
+            element = Storage.POLLEN.equals(element) ? Storage.NECTAR : Storage.POLLEN;
         }
         if (gamepad1.startWasPressed()) {
             turret.forceZeroHere();

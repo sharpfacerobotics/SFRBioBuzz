@@ -2,94 +2,64 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
 /**
  * Intake roller. Owner: Vibhav.
  *
- * <p>Call {@link #update} once per loop. It stops on its own when storage is full and
- * runs backwards for a moment if it detects a jam (motor current stays high).</p>
+ * <p>Glossary methods (Software Documentation, "Intake"):</p>
+ * <ul>
+ *   <li>{@link #emergencyOuttake()}: CONTINUOUS. Call while {@code Storage.checkBeamBreaks()}
+ *       returns true.</li>
+ *   <li>{@link #setIntakePower(double)}: SET. Call once with gamepad or other input.</li>
+ *   <li>{@link #updateIntake(boolean, boolean, boolean)}: CONTINUOUS. Runs full / slow, with
+ *       jitter (a quick forward-back wiggle) to free a stuck element if needed.</li>
+ * </ul>
+ *
+ * <p>The OpMode decides when not to intake (e.g. storage already holds 4, G407) and passes
+ * that in. Intake never reads another subsystem.</p>
  */
 public class Intake {
     private final RobotHardware robot;
 
-    private enum State { STOPPED, INTAKING, OUTTAKING, UNJAMMING }
-    private State state = State.STOPPED;
-
     // Made once here, never inside the loop.
-    private final ElapsedTime jamTimer = new ElapsedTime();
-    private final ElapsedTime unjamTimer = new ElapsedTime();
-    private final ElapsedTime currentPollTimer = new ElapsedTime();
-    private boolean overCurrent = false;
+    private final ElapsedTime jitterTimer = new ElapsedTime();
 
     public Intake(RobotHardware robot) {
         this.robot = robot;
     }
 
+    /** CONTINUOUS. Spit out whatever is in the intake (opponent NECTAR, a 5th element). */
+    public void emergencyOuttake() {
+        robot.intakeMotor.setPower(RobotConfig.OUTTAKE_POWER);
+    }
+
+    /** SET. Raw intake power, [-1, 1] (negative = outtake). */
+    public void setIntakePower(double power) {
+        robot.intakeMotor.setPower(power);
+    }
+
     /**
-     * @param wantIntake  driver (or auto) wants to pick elements up
-     * @param wantOuttake driver wants to spit elements out (wins over intake)
-     * @param storageFull from Storage.isFull() - stops intaking so we don't over-possess
+     * CONTINUOUS. Loop call.
+     *
+     * @param runFull intake at INTAKE_POWER
+     * @param runSlow intake at INTAKE_SLOW_POWER (lining up, or nearly full)
+     * @param jitter  alternate in and out every INTAKE_JITTER_PERIOD to free a stuck element
      */
-    public void update(boolean wantIntake, boolean wantOuttake, boolean storageFull) {
-        if (state == State.UNJAMMING) {
-            if (unjamTimer.seconds() < RobotConfig.INTAKE_UNJAM_TIME) {
-                robot.intakeMotor.setPower(RobotConfig.OUTTAKE_POWER);
-                return;
-            }
-            jamTimer.reset();
-        }
-
-        if (wantOuttake) {
-            state = State.OUTTAKING;
-            robot.intakeMotor.setPower(RobotConfig.OUTTAKE_POWER);
-        } else if (wantIntake && !storageFull) {
-            state = State.INTAKING;
-            robot.intakeMotor.setPower(RobotConfig.INTAKE_POWER);
-            checkForJam();
+    public void updateIntake(boolean runFull, boolean runSlow, boolean jitter) {
+        double power;
+        if (runFull) {
+            power = RobotConfig.INTAKE_POWER;
+        } else if (runSlow) {
+            power = RobotConfig.INTAKE_SLOW_POWER;
         } else {
-            stop();
+            power = 0;
         }
-    }
 
-    public void runIntake() {
-        update(true, false, false);
-    }
-
-    public void reverse() {
-        update(false, true, false);
-    }
-
-    public void stop() {
-        state = State.STOPPED;
-        robot.intakeMotor.setPower(0);
-        jamTimer.reset();
-    }
-
-    public boolean isUnjamming() {
-        return state == State.UNJAMMING;
-    }
-
-    public String getState() {
-        return state.name();
-    }
-
-    private void checkForJam() {
-        if (!RobotConfig.INTAKE_JAM_DETECTION) {
-            return;
+        if (jitter) {
+            // Every other period, reverse. Uses the full power if nothing else was asked for.
+            double magnitude = power != 0 ? power : RobotConfig.INTAKE_POWER;
+            boolean reverse = ((int) (jitterTimer.seconds() / RobotConfig.INTAKE_JITTER_PERIOD)) % 2 == 1;
+            power = reverse ? -magnitude : magnitude;
         }
-        // getCurrent() isn't part of the bulk read, so don't call it every loop.
-        if (currentPollTimer.seconds() >= RobotConfig.INTAKE_CURRENT_POLL) {
-            currentPollTimer.reset();
-            overCurrent = robot.intakeMotor.getCurrent(CurrentUnit.AMPS) > RobotConfig.INTAKE_JAM_CURRENT;
-        }
-        if (!overCurrent) {
-            jamTimer.reset();
-        } else if (jamTimer.seconds() > RobotConfig.INTAKE_JAM_TIME) {
-            state = State.UNJAMMING;
-            overCurrent = false;
-            unjamTimer.reset();
-            robot.intakeMotor.setPower(RobotConfig.OUTTAKE_POWER);
-        }
+        robot.intakeMotor.setPower(power);
     }
 }
