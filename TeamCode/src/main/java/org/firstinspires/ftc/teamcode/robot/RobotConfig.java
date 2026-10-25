@@ -6,6 +6,13 @@ public class RobotConfig {
     public static final String TURRET_SERVO = "turret_servo";
     public static final String TURRET_ENCODER = "turret_encoder";
     public static final String TURRET_HALL = "turret_hall";
+    public static final String HOOD_ANGLE_SERVO = "hood_angle_servo";  // how high the ball goes
+    public static final String HOOD_GAP_SERVO = "hood_gap_servo";      // gap between base and shooter
+    public static final String FRONT_LEFT_DRIVE = "front_left_drive";
+    public static final String BACK_LEFT_DRIVE = "back_left_drive";
+    public static final String FRONT_RIGHT_DRIVE = "front_right_drive";
+    public static final String BACK_RIGHT_DRIVE = "back_right_drive";
+    public static final String PINPOINT = "pinpoint";
 
     // Limelight AprilTags (manual 9.9: 36h11, 3.25 in, under each HIVE cell)
     public static final int HIVE_PIPELINE = 0;
