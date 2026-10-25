@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -39,7 +41,12 @@ public class RobotHardware {
     public Servo hoodGapServo1;
     public Servo hoodGapServo2;
     //public GoBildaPinpointDriver pinpoint;
-    //public Limelight3A limelight;
+    public Limelight3A limelight;
+
+    // Turret
+    public CRServo turretServo;
+    public DcMotorEx turretEncoder;
+    public DigitalChannel turretHallEffect;
     //public VoltageSensor myControlHubVoltageSensor;
     //public IMU imu;
 
@@ -86,5 +93,17 @@ public class RobotHardware {
         hoodGapServo1 = hardwareMap.get(Servo.class, "hood_gap_servo_1");
         hoodGapServo2 = hardwareMap.get(Servo.class, "hood_gap_servo_2");
         */
+    }
+
+    // Kept out of init() so OpModes that only spin the flywheel don't need these in the config
+    public void initVision(HardwareMap hardwareMap) {
+        limelight = hardwareMap.get(Limelight3A.class, RobotConfig.LIMELIGHT);
+    }
+
+    public void initTurret(HardwareMap hardwareMap) {
+        turretServo = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO);
+        turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
+        turretHallEffect = hardwareMap.get(DigitalChannel.class, RobotConfig.TURRET_HALL);
+        turretHallEffect.setMode(DigitalChannel.Mode.INPUT);
     }
 }

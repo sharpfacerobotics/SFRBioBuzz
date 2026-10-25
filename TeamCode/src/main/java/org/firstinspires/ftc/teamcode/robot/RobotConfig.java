@@ -1,6 +1,18 @@
 package org.firstinspires.ftc.teamcode.robot;
 public class RobotConfig {
 
+    // Hardware config names
+    public static final String LIMELIGHT = "limelight";
+    public static final String TURRET_SERVO = "turret_servo";
+    public static final String TURRET_ENCODER = "turret_encoder";
+    public static final String TURRET_HALL = "turret_hall";
+
+    // Limelight AprilTags (manual 9.9: 36h11, 3.25 in, under each HIVE cell)
+    public static final int HIVE_PIPELINE = 0;
+    public static final int RED_FIRST_TAG = 30;   // red cells: 30-37
+    public static final int BLUE_FIRST_TAG = 38;  // blue cells: 38-45
+    public static final int TAGS_PER_ALLIANCE = 8;
+
     // Timing constants (seconds)
     public static final double FIRE_TIME  = 0.3;
 

@@ -59,6 +59,20 @@ public class Launcher {
         //setVelocityPFVol();
     }
 
+    /** Open-loop power, for before the velocity table exists. */
+    public void setLauncherPower(double power) {
+        currVel1 = robot.launchMotor1.getVelocity();
+        targetVel = 0;
+        robot.launchMotor1.setPower(Math.max(-1.0, Math.min(1.0, power)));
+    }
+
+    /** Coast down. (setLauncher(0) would drive the wheel backwards through the P term.) */
+    public void stop() {
+        targetVel = 0;
+        robot.launchMotor1.setPower(0);
+        currVel1 = robot.launchMotor1.getVelocity();
+    }
+
     private void setVelocityNormal() {
         robot.launchMotor1.setVelocity(targetVel);
     }

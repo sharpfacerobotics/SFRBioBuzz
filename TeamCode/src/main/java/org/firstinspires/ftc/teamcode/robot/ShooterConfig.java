@@ -32,6 +32,18 @@ public class ShooterConfig {
         }
         return new InterpLUT(x, y);
     }
+    /** Flywheel velocity (ticks/s) for this distance (in), or NaN until the table has data. */
+    public static double velocityForDistance(double inches) {
+        return distToVel == null ? Double.NaN : distToVel.get(inches);
+    }
+
+    /** Stand-in until the table has data: power on a straight line between the RobotConfig limits. */
+    public static double fallbackPowerForDistance(double inches) {
+        double t = (inches - RobotConfig.MIN_DISTANCE) / (RobotConfig.MAX_DISTANCE - RobotConfig.MIN_DISTANCE);
+        t = Math.max(0.0, Math.min(1.0, t));
+        return RobotConfig.MIN_LAUNCH_POWER + t * (RobotConfig.MAX_LAUNCH_POWER - RobotConfig.MIN_LAUNCH_POWER);
+    }
+
     public void calculateShootingConfig(double averageTa, double[] dist, double[] robotTranslationalVelocity, double targetLLHeading, double currRobotHeading) {
         //use the InterpLUT class to get the shooter velocity from averageTa and dist, then AVERAGE the two.
         currentRobotHeading = currRobotHeading;

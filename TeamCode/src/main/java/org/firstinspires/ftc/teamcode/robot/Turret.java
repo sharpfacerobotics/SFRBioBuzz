@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -7,11 +8,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @Configurable
 public class Turret {
     private final RobotHardware robot;
-    public static double kP = 0.0001;
-    public static double kD = 0.0000;
-    public static double kF = 0.0;
+    // Power per radian of error (kD per rad/s); kS kicks through static friction
+    public static double kP = 1.2;
+    public static double kD = 0.05;
+    public static double kS = 0.04;
+    // TODO(measure): encoder ticks per turret radian (8192 CPR through-bore at 5:1 assumed)
+    public static double TICKS_PER_RAD = 8192.0 * 5.0 / (2.0 * Math.PI);
+    public static boolean ENCODER_REVERSED = false;
+    // Soft limits, radians from straight forward (+ = left). Keep inside what the wiring allows.
+    public static double MIN_ANGLE = -Math.PI / 2;
+    public static double MAX_ANGLE = Math.PI / 2;
+    public static double ANGLE_TOLERANCE = Math.toRadians(1.5);
     private double lastError = 0.0;
     private double power = 0.0;
+    private double targetAngle = 0.0;
     private final ElapsedTime timer = new ElapsedTime();
     private double goalHeading = 0.0;
     private enum TurretState {
@@ -23,60 +33,81 @@ public class Turret {
     public Turret (RobotHardware robot) {
         this.robot = robot;
     }
-    /*
-    private void aim(double deltaTime) {
-        int transformedTargetPosition = targetHeadingToTargetPos(goalHeading); //smth like that
-        double currPos = robot.turretEncoder.getCurrentPosition();
-        double tickError = transformedTargetPosition - currPos;
-        double headingError = goalHeading - ShooterConfig.currentRobotHeading;
-        double Pterm = kP * tickError;
-        double Dterm = 0;
-        double Fterm = kF * headingError;
-        if (deltaTime > 0) {
-            Dterm = kD * (tickError - lastError) / deltaTime;
-        }
-        if (Math.abs(tickError) < RobotConfig.TURRET_TICK_TOLERANCE) {
-            power = 0;
-        } else {
-            power = Range.clip(Pterm + Dterm + Fterm, -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER);
-        }
 
-        if (power > 0 && Math.abs(currPos - RobotConfig.MAX_TURRET_TICKS) < RobotConfig.TURRET_LIMIT_TICK_TOLERANCE) {
-            emergencyUnWind(true);
-            return;
-        } else if (power < 0 && Math.abs(currPos - RobotConfig.MIN_TURRET_TICKS) < RobotConfig.TURRET_LIMIT_TICK_TOLERANCE) {
-            emergencyUnWind(false);
-            return;
-        }
-        robot.turretServo.setPower(power);
-        lastError = tickError;
-
+    /** Point the turret straight forward first: this position becomes angle 0. */
+    public void zeroHere() {
+        robot.turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lastError = 0.0;
+        targetAngle = 0.0;
+        turretState = TurretState.AIMING;
+        timer.reset();
     }
 
-     */
-    public void localizeTurret() {
-        //use the Cow Path Problem algorithm to find the hall effect zero point
-    }
-    /*
-    public void updateTurret() {
+    /** Drive toward this angle (radians from forward, + = left), clipped to the soft limits. */
+    public void aimAt(double angle) {
         double deltaTime = timer.seconds();
         timer.reset();
-        updateGoalHeading();
-        if (turretState == TurretState.LOCALIZING) {
-            localizeTurret();
-            return;
-        }
-        // put inside aim -> emergencyUnWindIfNeeded();
-        relocalizeRotationIfLimitHit();
-        if (turretState != TurretState.UNWINDING) {
-            aim(deltaTime);
+        targetAngle = Range.clip(angle, MIN_ANGLE, MAX_ANGLE);
+        double error = targetAngle - getAngle();
+        double derivative = deltaTime > 0 ? (error - lastError) / deltaTime : 0.0;
+        lastError = error;
+        if (Math.abs(error) < ANGLE_TOLERANCE) {
+            setPowerWithinLimits(0.0);
+        } else {
+            setPowerWithinLimits(kP * error + kD * derivative + Math.signum(error) * kS);
         }
     }
-    */
 
-    private void updateGoalHeading() {
-        // elementVelocity is [x, y, ...]; heading is measured from +x like the robot pose
-        goalHeading = Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]);
+    /** Open-loop power (+ = left), still stopped at the soft limits. */
+    public void setManualPower(double manualPower) {
+        lastError = 0.0;
+        timer.reset();
+        setPowerWithinLimits(manualPower);
+    }
+
+    private void setPowerWithinLimits(double requested) {
+        double angle = getAngle();
+        power = Range.clip(requested, -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER);
+        if ((angle >= MAX_ANGLE && power > 0) || (angle <= MIN_ANGLE && power < 0)) {
+            power = 0.0;
+        }
+        robot.turretServo.setPower(power);
+    }
+
+    public void stop() {
+        power = 0.0;
+        robot.turretServo.setPower(0.0);
+    }
+
+    public double getAngle() {
+        double ticks = robot.turretEncoder.getCurrentPosition();
+        return (ENCODER_REVERSED ? -ticks : ticks) / TICKS_PER_RAD;
+    }
+
+    public double getTargetAngle() {
+        return targetAngle;
+    }
+
+    public double getError() {
+        return targetAngle - getAngle();
+    }
+
+    public double getPower() {
+        return power;
+    }
+
+    public boolean isZeroed() {
+        return turretState != TurretState.LOCALIZING;
+    }
+
+    public boolean isHallTriggered() {
+        // REV magnetic limit switches read false when the magnet is present
+        return !robot.turretHallEffect.getState();
+    }
+
+    public void localizeTurret() {
+        //use the Cow Path Problem algorithm to find the hall effect zero point
     }
 
     public void restartTimer() {
@@ -104,6 +135,12 @@ public class Turret {
         //unwind in the other direction until back to safety zone
         // if in saftey zone, update unwinding
     }
+
+    private void updateGoalHeading() {
+        // elementVelocity is [x, y, ...]; heading is measured from +x like the robot pose
+        goalHeading = Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]);
+    }
+
     public boolean goodTurretConfig() {
         //IMPORTANT: DO NOT USE limelight ta, since later will have shoot on the move
         // compare current heading to the target heading in ShooterConfig
