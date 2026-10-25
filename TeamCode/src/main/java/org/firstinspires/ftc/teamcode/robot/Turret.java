@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @Configurable
 public class Turret {
@@ -12,7 +13,7 @@ public class Turret {
     private double lastError = 0.0;
     private double power = 0.0;
     private final ElapsedTime timer = new ElapsedTime();
-    private double goalHeading = Math.atan2(ShooterConfig.elementVelocity[0], ShooterConfig.elementVelocity[1]);
+    private double goalHeading = 0.0;
     private enum TurretState {
         LOCALIZING,
         AIMING,
@@ -34,7 +35,7 @@ public class Turret {
         if (deltaTime > 0) {
             Dterm = kD * (tickError - lastError) / deltaTime;
         }
-        if (tickError < RobotConfig.TURRET_TICK_TOLERANCE) {
+        if (Math.abs(tickError) < RobotConfig.TURRET_TICK_TOLERANCE) {
             power = 0;
         } else {
             power = Range.clip(Pterm + Dterm + Fterm, -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER);
@@ -60,6 +61,7 @@ public class Turret {
     public void updateTurret() {
         double deltaTime = timer.seconds();
         timer.reset();
+        updateGoalHeading();
         if (turretState == TurretState.LOCALIZING) {
             localizeTurret();
             return;
@@ -71,6 +73,11 @@ public class Turret {
         }
     }
     */
+
+    private void updateGoalHeading() {
+        // elementVelocity is [x, y, ...]; heading is measured from +x like the robot pose
+        goalHeading = Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]);
+    }
 
     public void restartTimer() {
         timer.reset();
@@ -100,7 +107,8 @@ public class Turret {
     public boolean goodTurretConfig() {
         //IMPORTANT: DO NOT USE limelight ta, since later will have shoot on the move
         // compare current heading to the target heading in ShooterConfig
-        return Math.abs(ShooterConfig.currentRobotHeading - goalHeading) < RobotConfig.TURRET_HEADING_TOLERANCE;
+        updateGoalHeading();
+        return Math.abs(AngleUnit.normalizeRadians(ShooterConfig.currentRobotHeading - goalHeading)) < RobotConfig.TURRET_HEADING_TOLERANCE;
     }
 
 }

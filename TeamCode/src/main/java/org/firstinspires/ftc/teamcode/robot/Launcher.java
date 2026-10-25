@@ -113,9 +113,11 @@ public class Launcher {
     }
 
     public boolean goodShooterConfig() {
-        boolean hoodRetracted = Math.abs((robot.hoodGapServo1.getPosition() + robot.hoodGapServo2.getPosition())/2 - hoodRetractionPos) < RobotConfig.hoodRetractionTolerance;
+        boolean hoodRetracted = Math.abs(robot.hoodGapServo1.getPosition() - hoodRetractionPos1) < RobotConfig.hoodRetractionTolerance
+                && Math.abs(robot.hoodGapServo2.getPosition() - hoodRetractionPos2) < RobotConfig.hoodRetractionTolerance;
         boolean flywheelSpunUp = Math.abs(targetVel - (currVel1 + currVel2)/2) < RobotConfig.flywheelVelocityTolerance;
-        boolean hoodAngleSet = Math.abs((robot.hoodAngleServo1.getPosition() + robot.hoodAngleServo2.getPosition())/2 - hoodRetractionPos) < RobotConfig.hoodAngleTolerance;
+        boolean hoodAngleSet = Math.abs(robot.hoodAngleServo1.getPosition() - hoodAnglePos1) < RobotConfig.hoodAngleTolerance
+                && Math.abs(robot.hoodAngleServo2.getPosition() - hoodAnglePos2) < RobotConfig.hoodAngleTolerance;
         return hoodRetracted && flywheelSpunUp && hoodAngleSet;
     }
 
