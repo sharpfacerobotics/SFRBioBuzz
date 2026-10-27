@@ -1,14 +1,16 @@
+/*
 package org.firstinspires.ftc.teamcode.auto;
 
+import com.pedropathing.ivy.Scheduler;
+
 import static com.pedropathing.ivy.Scheduler.schedule;
-import static com.pedropathing.ivy.commands.Commands.conditional;
 import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
-import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 import static com.pedropathing.ivy.groups.Groups.race;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+
 import static com.pedropathing.api.Paths.*;
 import com.pedropathing.paths.Path;
 
@@ -54,10 +56,13 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
     // Autonomous routine incorporating paths, parallel actions, and waits
     public Command autoRoutine() {
         return sequential(
-                // Path 1: Shoot while intaking during path, then wait 500 ms
+                startShootCommand(),
+                // Path 1:  intaking during path, then wait 500 ms
+
                 parallel(
-                        follow(follower, path1()),
-                        parallel(shootCommand(), intakeCommand())
+                        follow(follower, path_StartFlower()),
+                        intakeCommand(),
+                        deployFlowerRampCommand()
                 ),
                 waitMs(500),
 
@@ -80,7 +85,7 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
                         parallel(
                                 keepFlowerRampDownCommand(),
                                 intakeCommand(),
-                                shootCommand()
+                                startShootCommand()
                         ),
                         waitMs(1000)
                 ),
@@ -140,44 +145,36 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
         }
     }
 
-    public Path path1() {
-        return line(start, path1).linear(start, path1);
+    public Path path_StartFlower() {
+        return line(start, flowerIntake).linear(start, flowerIntake);
+    }
+    public Path path_FlowerStart() {
+        return line(flowerIntake, start).tangent();
     }
 
-    public Path path2() {
-        return Paths.line(point2Start, point2).linear(point2Start, point2);
+    public Path path_PrePark(Pose currPose) {
+        return line(currPose, pre_park).linear(currPose, pre_park);
     }
 
-    public Path path3() {
-        return Paths.curve(point2, point3Control1, point3).tangent();
+    public Path path_Park() {
+        return line(pre_park, park).tangent();
     }
 
-    public Path path4() {
-        return Paths.line(point3, point4).tangent();
-    }
-
-    public Path path5() {
-        return Paths.line(point5Start, point5).linear(point5Start, point5);
-    }
-
-    public Path path6() {
-        return Paths.curve(point5, point6Control1, point6).tangent();
-    }
-
-    public Path path7() {
-        return Paths.curve(point6, point7Control1, point7).tangent();
-    }
-
-    public Path path8() {
-        return Paths.line(point7, point8).reverseTangent();
-    }
 
     /* ========================================================================
        SUBSYSTEM COMMAND PLACEHOLDERS
        Replace the telemetry lines with your actual motor/servo controls.
-       ======================================================================== */
+       ========================================================================
 
-    private Command shootCommand() {
+    private Command startShootCommand() {
+        return Command.build()
+                .setStart(() -> pid.setTarget(target))
+                .setExecute(() -> armMotor.setPower(pid.calculate(armMotor.getCurrentPosition())))
+                .setDone(() -> Math.abs(target - armMotor.getCurrentPosition()) < 10)
+                .setEnd(endCondition -> armMotor.setPower(0))
+                .requiring(armMotor);
+    }
+    private Command endShootCommand() {
         return instant(() -> {
             telemetry.addLine("Action: Shooting...");
         });
@@ -195,21 +192,11 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
         });
     }
 
-    private Command keepFlowerRampDownCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Holding flower ramp down...");
-        });
-    }
 
-    private Command restoreFlowerRampCommand() {
+    private Command retractFlowerRampCommand() {
         return instant(() -> {
             telemetry.addLine("Action: Bringing flower ramp back up...");
         });
     }
 
-    private Command shooterOnCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Keeping shooter on...");
-        });
-    }
-}
+} */
