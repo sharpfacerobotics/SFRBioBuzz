@@ -14,10 +14,11 @@ public class FlywheelPFTuningGamepad extends OpMode {
     public static double velocity = 0;
     private RobotHardware robot = new RobotHardware();
     private Launcher launcher = new Launcher(robot);
-    private final double[] stepSizes = {0.0001, 0.001, 0.01, 0.1};
+    private final double[] stepSizesP = {0.00001, 0.0001, 0.001};
+    private final double[] stepSizesF = {0.00001, 0.0001, 0.001};
 
-    private ValueTuner tunerP = new ValueTuner(0.0, "Tuning P", "D-Pad R/L/A", stepSizes);
-    private ValueTuner tunerF = new ValueTuner(0.0, "Tuning F", "D-Pad U/D/B", stepSizes);
+    private ValueTuner tunerP = new ValueTuner(Launcher.kP, "Tuning P", "D-Pad R/L/A", stepSizesP);
+    private ValueTuner tunerF = new ValueTuner(Launcher.kF, "Tuning F", "D-Pad U/D/B", stepSizesF);
     private final double[] stepSizesVel = {1000, 100, 10, 1};
     private ValueTuner tunerVelocity = new ValueTuner(0.0, "Tuning Velocity", "X/Y/LeftBumper", stepSizesVel);
     @Override
@@ -27,7 +28,7 @@ public class FlywheelPFTuningGamepad extends OpMode {
 
     @Override
     public void loop() {
-        // 1. Update P Tuner (Right increases, Left decreases, B cycles step size)
+        // 1. Update P Tuner (Right increases, Left decreases, A cycles step size)
         tunerP.update(
                 gamepad1.dpadRightWasPressed(),
                 gamepad1.dpadLeftWasPressed(),

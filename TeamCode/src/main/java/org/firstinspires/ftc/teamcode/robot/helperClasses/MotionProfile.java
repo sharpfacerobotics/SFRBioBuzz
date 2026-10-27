@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot.helperClasses;
 
-
-//MUST BE FIXED 
 public class MotionProfile {
+
     public static class State {
         public double position;
         public double velocity;
@@ -19,13 +18,17 @@ public class MotionProfile {
     private final double goal;
     private final double maxV;
     private final double maxA;
-
+    // Starting speed along the direction of travel, clamped to [0, maxV]
     private final double currV;
     private final double direction;
+
     private final double accelTime;
     private final double cruiseTime;
+    private final double decelTime;
     private final double totalTime;
     private final double peakV;
+    private final double accelDist;
+    private final double cruiseDist;
 
     public MotionProfile(
             double start,
@@ -33,84 +36,60 @@ public class MotionProfile {
             double currV,
             double maxV,
             double maxA) {
-
+        if (maxV <= 0 || maxA <= 0) {
+            throw new IllegalArgumentException("maxV and maxA must be positive.");
+        }
         this.start = start;
         this.goal = goal;
-        this.currV = currV;
         this.maxV = maxV;
         this.maxA = maxA;
 
         direction = Math.signum(goal - start);
-        currV = currV * direction;
+        this.currV = Math.max(0, Math.min(maxV, currV * direction));
+
         double distance = Math.abs(goal - start);
+        double v0 = this.currV;
 
-        // Distance needed to accelerate then decelerate
-        double accelDistance = (maxV * maxV - currV * currV) / maxA;
+        // Distance to speed up from v0 to maxV, then slow from maxV to 0
+        double fullProfileDistance = (2 * maxV * maxV - v0 * v0) / (2 * maxA);
 
-        if (distance < accelDistance) {
+        if (distance < fullProfileDistance) {
             // Triangle profile: never reaches max velocity
-            peakV = Math.sqrt((currV * currV) / 2 + distance * maxA);
-            accelTime = (peakV - currV) / maxA;
-            cruiseTime = 0;
+            peakV = Math.max(v0, Math.sqrt(maxA * distance + v0 * v0 / 2));
         } else {
             // Trapezoid profile
             peakV = maxV;
-            accelTime = (maxV - currV) / maxA;
-
-            double accelDecelDistance =
-                    (maxV * maxV - currV * currV) / maxA;
-
-            cruiseTime =
-                    (distance - accelDecelDistance) / peakV;
         }
-
-        totalTime = 2 * accelTime + cruiseTime;
+        accelTime = (peakV - v0) / maxA;
+        decelTime = peakV / maxA;
+        accelDist = (peakV * peakV - v0 * v0) / (2 * maxA);
+        double decelDist = peakV * peakV / (2 * maxA);
+        cruiseDist = Math.max(0, distance - accelDist - decelDist);
+        cruiseTime = peakV > 0 ? cruiseDist / peakV : 0;
+        totalTime = accelTime + cruiseTime + decelTime;
     }
 
     public State get(double t) {
-
         if (t < accelTime) {
             // Accelerating
-            double a = maxA;
-            double v = currV + a * t;
-            double x = currV * t + 0.5 * a * t * t;
-
-            return transform(x, v, a);
+            double v = currV + maxA * t;
+            double x = currV * t + 0.5 * maxA * t * t;
+            return transform(x, v, maxA);
         }
 
         if (t < accelTime + cruiseTime) {
             // Constant velocity
-            double cruiseT = t - accelTime;
-
-            double accelDist =
-                    currV * accelTime + 0.5 * maxA * accelTime * accelTime;
-
-            double x =
-                    accelDist + peakV * cruiseT;
-
+            double x = accelDist + peakV * (t - accelTime);
             return transform(x, peakV, 0);
         }
 
         if (t < totalTime) {
             // Decelerating
-            double decelT =
-                    t - accelTime - cruiseTime;
-
-            double accelDist =
-                    currV * accelTime + 0.5 * maxA * accelTime * accelTime;
-
-            double cruiseDist =
-                    peakV * cruiseTime;
-
-            double x =
-                    accelDist
-                            + cruiseDist
-                            + peakV * decelT
-                            - 0.5 * maxA * decelT * decelT;
-
-            double v =
-                    peakV - maxA * decelT;
-
+            double decelT = t - accelTime - cruiseTime;
+            double x = accelDist + cruiseDist
+                    + peakV * decelT
+                    - 0.5 * maxA * decelT * decelT;
+            double v = peakV - maxA * decelT;
             return transform(x, v, -maxA);
         }
 

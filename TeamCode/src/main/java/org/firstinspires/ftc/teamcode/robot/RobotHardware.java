@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -34,12 +36,17 @@ public class RobotHardware {
 
     // Sensors
     public DcMotorEx launchMotor1;
-    public Servo hoodAngleServo1;
-    public Servo hoodAngleServo2;
-    public Servo hoodGapServo1;
-    public Servo hoodGapServo2;
+    public VoltageSensor voltageSensor;
+    // Hood: one servo sets how high the ball goes, the other the gap between base and shooter
+    public Servo hoodAngleServo;
+    public Servo hoodGapServo;
     //public GoBildaPinpointDriver pinpoint;
-    //public Limelight3A limelight;
+    public Limelight3A limelight;
+
+    // Turret
+    public CRServo turretServo;
+    public DcMotorEx turretEncoder;
+    public DigitalChannel turretHallEffect;
     //public VoltageSensor myControlHubVoltageSensor;
     //public IMU imu;
 
@@ -80,11 +87,23 @@ public class RobotHardware {
         launchMotor1     = hardwareMap.get(DcMotorEx.class, "launch_motor");
         launchMotor1.setDirection(DcMotorEx.Direction.REVERSE);
         launchMotor1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        /*
-        hoodAngleServo1 = hardwareMap.get(Servo.class, "hood_angle_servo_1");
-        hoodAngleServo2 = hardwareMap.get(Servo.class, "hood_angle_servo_2");
-        hoodGapServo1 = hardwareMap.get(Servo.class, "hood_gap_servo_1");
-        hoodGapServo2 = hardwareMap.get(Servo.class, "hood_gap_servo_2");
-        */
+        voltageSensor = hardwareMap.voltageSensor.iterator().next();
+    }
+
+    // Kept out of init() so OpModes that only spin the flywheel don't need these in the config
+    public void initVision(HardwareMap hardwareMap) {
+        limelight = hardwareMap.get(Limelight3A.class, RobotConfig.LIMELIGHT);
+    }
+
+    public void initHood(HardwareMap hardwareMap) {
+        hoodAngleServo = hardwareMap.get(Servo.class, RobotConfig.HOOD_ANGLE_SERVO);
+        hoodGapServo = hardwareMap.get(Servo.class, RobotConfig.HOOD_GAP_SERVO);
+    }
+
+    public void initTurret(HardwareMap hardwareMap) {
+        turretServo = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO);
+        turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
+        turretHallEffect = hardwareMap.get(DigitalChannel.class, RobotConfig.TURRET_HALL);
+        turretHallEffect.setMode(DigitalChannel.Mode.INPUT);
     }
 }

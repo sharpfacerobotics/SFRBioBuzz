@@ -107,6 +107,12 @@ public class ParallelAutoOutsideBase extends LinearOpMode {
     public void runOpMode() {
         Scheduler.reset();
         follower = Constants.create(hardwareMap);
+        if (follower == null) {
+            telemetry.addLine("Constants.create() returned null - set up Pedro constants first");
+            telemetry.update();
+            waitForStart();
+            return;
+        }
         follower.setPose(start);
         follower.update();
 
