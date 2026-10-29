@@ -17,5 +17,11 @@ public class RobotConfig {
     public static final double MAX_TURRET_TICKS = 100;
     public static final double MIN_TURRET_TICKS = -100;
 
+    // Trigger / gate -- TODO tune on the robot
+    public static final double TRIGGER_POWER   = 1.0;   // feed power once the shot is good
+    public static final double GATE_OPEN_POS   = 0.6;   // gate servo position, open
+    public static final double GATE_CLOSED_POS = 0.2;   // gate servo position, closed
+    public static final double GATE_OPEN_TIME  = 0.15;  // seconds for the gate to swing open before feeding
+
 
 }
