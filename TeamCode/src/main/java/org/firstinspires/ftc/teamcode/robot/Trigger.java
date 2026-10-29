@@ -8,10 +8,10 @@ public class Trigger {
     private RobotHardware robot;
 
     // public static + @Configurable -> tune live from Panels (same as Launcher/Turret)
-    public static double triggerPower = 1.0;    // feed power once the shot is good
-    public static double gateOpenPos = 0.6;     // servo position when gate is open
-    public static double gateClosedPos = 0.2;   // servo position when gate is closed
-    public static double gateOpenTime = 0.15;   // seconds for the gate to physically swing open before feeding
+ //   public static double triggerPower = 1.0;    // feed power once the shot is good
+   // public static double gateOpenPos = 0.6;     // servo position when gate is open
+    //public static double gateClosedPos = 0.2;   // servo position when gate is closed
+    //public static double gateOpenTime = 0.15;   // seconds for the gate to physically swing open before feeding
 
     private boolean gateOpen = false;
     private final ElapsedTime gateTimer = new ElapsedTime(); // made once, NOT inside the loop
