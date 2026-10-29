@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.auto;
 
+
 import static com.pedropathing.api.Paths.*;
 import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
@@ -10,21 +11,24 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.*;
-import static com.pedropathing.ivy.groups.Groups.sequential;
-import static com.pedropathing.ivy.groups.Groups.parallel;
-import static com.pedropathing.ivy.groups.Groups.race;
+import static com.pedropathing.ivy.groups.Groups.*; // sequential, parallel, race, deadline, ...
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+
 import org.firstinspires.ftc.teamcode.pedro.Constants;
+
 
 @Autonomous(name = "AutoPath", group = "Autonomous")
 public class ParallelAutoOutsideBase extends LinearOpMode {
 
+
     private Follower follower;
 
+
     private final PoseFactory poseFactory = PoseFactory.degrees();
+
 
     private final Pose start = poseFactory.of(31.5677, 8.5936, 180);
     private final Pose path1 = poseFactory.of(7.9534, 8.5448, 180);
@@ -41,28 +45,48 @@ public class ParallelAutoOutsideBase extends LinearOpMode {
     private final Pose point7Control1 = poseFactory.of(16.3675, 1.419, 0);
     private final Pose point8 = poseFactory.of(12.1213, 95.0784, -61.0834);
 
+
+    // ------------------------------------------------------------------------
+    // Requirements: any object can be a requirement. Swap each of these for
+    // the real motor / servo / subsystem object once your hardware is wired in.
+    // Two commands that share a requirement can't run at the same time.
+    // ------------------------------------------------------------------------
+    private static final Object SHOOTER = new Object();
+    private static final Object INTAKE = new Object();
+    private static final Object RAMP = new Object();
+
+
     // Autonomous routine incorporating paths, parallel actions, and waits
+    //
+    // "X during path"  -> deadline(follow(...), X): X runs until the path ends,
+    //                     then X is cancelled (and its setEnd turns it off).
+    // "wait while X"   -> parallel(X, waitMs(...)) for one-shot X, or
+    //                     race(X, waitMs(...)) for continuous X.
     public Command autoRoutine() {
         return sequential(
                 // Path 1: Shoot while intaking during path, then wait 500 ms
-                parallel(
+                deadline(
                         follow(follower, path1()),
-                        parallel(shootCommand(), intakeCommand())
+                        shootCommand(),
+                        intakeCommand()
                 ),
                 waitMs(500),
 
+
                 // Path 2: Intake running during path, 0 ms wait
-                parallel(
+                deadline(
                         follow(follower, path2()),
                         intakeCommand()
                 ),
 
+
                 // Path 3: Wait 1000 ms while deploying flower ramp
                 follow(follower, path3()),
-                race(
+                parallel(
                         deployFlowerRampCommand(),
                         waitMs(1000)
                 ),
+
 
                 // Path 4: Keep flower ramp down, run intake, 1000 ms wait while shooting everything intook
                 follow(follower, path4()),
@@ -75,33 +99,39 @@ public class ParallelAutoOutsideBase extends LinearOpMode {
                         waitMs(1000)
                 ),
 
+
                 // Path 5: Run intake during path with no wait
-                parallel(
+                deadline(
                         follow(follower, path5()),
                         intakeCommand()
                 ),
 
+
                 // Path 6: Bring flower ramp back up during a 400 ms wait
                 follow(follower, path6()),
-                race(
+                parallel(
                         restoreFlowerRampCommand(),
                         waitMs(400)
                 ),
 
+
                 // Path 7: Run intake and keep shooter on during path, plus 500 ms wait
-                parallel(
+                deadline(
                         follow(follower, path7()),
-                        parallel(intakeCommand(), shooterOnCommand())
+                        intakeCommand(),
+                        shooterOnCommand()
                 ),
                 waitMs(500),
 
+
                 // Path 8: Run intake during path and nothing else
-                parallel(
+                deadline(
                         follow(follower, path8()),
                         intakeCommand()
                 )
         );
     }
+
 
     @Override
     public void runOpMode() {
@@ -110,96 +140,172 @@ public class ParallelAutoOutsideBase extends LinearOpMode {
         follower.setPose(start);
         follower.update();
 
+
         waitForStart();
         schedule(autoRoutine());
+
 
         while (opModeIsActive()) {
             follower.update();
             Scheduler.execute();
 
+
             telemetry.addData("x", follower.pose().x());
             telemetry.addData("y", follower.pose().y());
             telemetry.addData("heading", follower.pose().heading());
+
 
             if (follower.currentPath() != null) {
                 telemetry.addData("Current path distance remaining", follower.distanceToEndpoint());
                 telemetry.addData("Path number", follower.pathIndex());
             }
 
+
             telemetry.update();
         }
     }
+
 
     public Path path1() {
         return Paths.line(start, path1).linear(start, path1);
     }
 
+
     public Path path2() {
         return Paths.line(point2Start, point2).linear(point2Start, point2);
     }
+
 
     public Path path3() {
         return Paths.curve(point2, point3Control1, point3).tangent();
     }
 
+
     public Path path4() {
         return Paths.line(point3, point4).tangent();
     }
+
 
     public Path path5() {
         return Paths.line(point5Start, point5).linear(point5Start, point5);
     }
 
+
     public Path path6() {
         return Paths.curve(point5, point6Control1, point6).tangent();
     }
+
 
     public Path path7() {
         return Paths.curve(point6, point7Control1, point7).tangent();
     }
 
+
     public Path path8() {
         return Paths.line(point7, point8).reverseTangent();
     }
 
+
     /* ========================================================================
-       SUBSYSTEM COMMAND PLACEHOLDERS
-       Replace the telemetry lines with your actual motor/servo controls.
+       SUBSYSTEM COMMANDS (Ivy Command Builder API)
+
+       Three templates are used below:
+
+       CONTINUOUS  - runs until something else ends it (race / deadline / until).
+                     setStart   -> turn the mechanism on
+                     setExecute -> optional per-loop logic (PID, etc.)
+                     setDone    -> () -> false  (never finishes on its own)
+                     setEnd     -> turn the mechanism off (runs when cancelled)
+
+       ONE-SHOT    - sets a state once and finishes right away (e.g. a servo move).
+                     setStart   -> set the position / state
+                     setDone    -> () -> true
+
+       HOLD        - like CONTINUOUS, but leaves the mechanism where it is when
+                     cancelled, so there is no setEnd.
+
+       Replace the TODO comments with your motor/servo code.
        ======================================================================== */
 
+
+    /** CONTINUOUS: shooter runs until the surrounding race()/deadline() cancels it. */
     private Command shootCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Shooting...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: spin up shooter flywheel(s)
+                })
+                .setExecute(() -> {
+                    // TODO: per-loop shooter logic (velocity PID, feeding, etc.)
+                })
+                .setDone(() -> false)
+                .setEnd(endCondition -> {
+                    // TODO: stop shooter flywheel(s)
+                })
+                .requiring(SHOOTER);
     }
 
+
+    /** CONTINUOUS: intake runs until the surrounding race()/deadline() cancels it. */
     private Command intakeCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Running intake...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: intakeMotor.setPower(1.0);
+                })
+                .setDone(() -> false)
+                .setEnd(endCondition -> {
+                    // TODO: intakeMotor.setPower(0);
+                })
+                .requiring(INTAKE);
     }
 
+
+    /** ONE-SHOT: move the ramp servo to its deployed (down) position. */
     private Command deployFlowerRampCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Deploying flower ramp...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: rampServo.setPosition(RAMP_DEPLOYED);
+                })
+                .setDone(() -> true)
+                .requiring(RAMP);
     }
 
+
+    /** HOLD: keep the ramp down for as long as the command runs; ramp stays down afterward. */
     private Command keepFlowerRampDownCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Holding flower ramp down...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: rampServo.setPosition(RAMP_DEPLOYED);
+                })
+                .setExecute(() -> {
+                    // TODO: only needed if the ramp is motor-driven (hold position with PID)
+                })
+                .setDone(() -> false)
+                .requiring(RAMP);
     }
 
+
+    /** ONE-SHOT: move the ramp servo back to its stowed (up) position. */
     private Command restoreFlowerRampCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Bringing flower ramp back up...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: rampServo.setPosition(RAMP_STOWED);
+                })
+                .setDone(() -> true)
+                .requiring(RAMP);
     }
 
+
+    /**
+     * ONE-SHOT: spin the shooter up and leave it running. There is no setEnd on
+     * purpose, so the shooter stays on after the command finishes (until the
+     * OpMode ends, or until another command that requires SHOOTER stops it).
+     */
     private Command shooterOnCommand() {
-        return instant(() -> {
-            telemetry.addLine("Action: Keeping shooter on...");
-        });
+        return Command.build()
+                .setStart(() -> {
+                    // TODO: shooterMotor.setPower(SHOOTER_POWER);
+                })
+                .setDone(() -> true)
+                .requiring(SHOOTER);
     }
 }
