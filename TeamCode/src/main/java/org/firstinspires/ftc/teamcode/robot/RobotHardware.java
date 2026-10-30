@@ -20,8 +20,10 @@ public class RobotHardware {
     // Drivetrain
     //public DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
 
-    // Intake / Claw
-    //public DcMotor intakeMotor;
+    // Intake
+    public DcMotorEx intakeMotor;
+    public Servo flowerRampServo;
+    public double intakePowerCommand = 0; // last intake power, so Storage knows which way elements move
 
     /* Launcher CHANGE FOR BIOBUZZ
 
@@ -86,5 +88,12 @@ public class RobotHardware {
         hoodGapServo1 = hardwareMap.get(Servo.class, "hood_gap_servo_1");
         hoodGapServo2 = hardwareMap.get(Servo.class, "hood_gap_servo_2");
         */
+    }
+
+    // Kept out of init() so OpModes that only use the launcher don't need these in the config
+    public void initIntake(HardwareMap hardwareMap) {
+        intakeMotor = hardwareMap.get(DcMotorEx.class, RobotConfig.INTAKE_MOTOR);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        flowerRampServo = hardwareMap.get(Servo.class, RobotConfig.FLOWER_RAMP_SERVO);
     }
 }
