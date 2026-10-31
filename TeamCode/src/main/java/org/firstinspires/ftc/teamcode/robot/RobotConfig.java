@@ -24,6 +24,29 @@ public class RobotConfig {
     public static final double GATE_CLOSED_POS = 0.2;   // gate servo position, closed
     public static final double GATE_OPEN_TIME  = 0.15;  // seconds for the gate to swing open before feeding
 
+    // Hardware config names -- TODO(config): match these to the robot's configuration
+    public static final String LAUNCH_MOTOR       = "launch_motor";
+    public static final String HOOD_ANGLE_SERVO   = "hood_angle_servo";
+    public static final String HOOD_GAP_SERVO_1   = "hood_gap_servo_1";
+    public static final String HOOD_GAP_SERVO_2   = "hood_gap_servo_2";
+    public static final String PRE_SHOOTER_BEAM   = "pre_shooter_beam";
+    public static final String TRIGGER_MOTOR      = "trigger_motor";
+    public static final String GATE_SERVO         = "gate_servo";
+    public static final String TURRET_SERVO       = "turret_servo";
+    public static final String TURRET_ENCODER     = "turret_encoder";
+    public static final String FRONT_LEFT_DRIVE   = "front_left_drive";
+    public static final String BACK_LEFT_DRIVE    = "back_left_drive";
+    public static final String FRONT_RIGHT_DRIVE  = "front_right_drive";
+    public static final String BACK_RIGHT_DRIVE   = "back_right_drive";
+    public static final String PINPOINT           = "pinpoint";
+    public static final String LIMELIGHT          = "limelight";
+
+    // Limelight AprilTags (manual 9.9: 36h11, 3.25 in, under each HIVE cell)
+    public static final int HIVE_PIPELINE = 0;
+    public static final int RED_FIRST_TAG = 30;   // red cells: 30-37
+    public static final int BLUE_FIRST_TAG = 38;  // blue cells: 38-45
+    public static final int TAGS_PER_ALLIANCE = 8;
+
     // Intake / storage hardware config names
     public static final String INTAKE_MOTOR        = "intake_motor";
     public static final String FLOWER_RAMP_SERVO   = "flower_ramp_servo";

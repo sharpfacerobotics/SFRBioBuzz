@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -20,7 +21,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class RobotHardware {
 
     // Drivetrain
-    //public DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
+    public DcMotorEx frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
+
+    // Launcher / feeder
+    public VoltageSensor voltageSensor;
+    public DigitalChannel preShooterBeamBreak;
+    public Servo hoodAngleServo;
+    public DcMotorEx triggerMotor;
+    public Servo gateServo;
+
+    // Turret / vision
+    public CRServo turretServo;
+    public DcMotorEx turretEncoder;
+    public Limelight3A limelight;
 
     // Intake
     public DcMotorEx intakeMotor;
@@ -91,9 +104,16 @@ public class RobotHardware {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         */
-        launchMotor1     = hardwareMap.get(DcMotorEx.class, "launch_motor");
+        launchMotor1     = hardwareMap.get(DcMotorEx.class, RobotConfig.LAUNCH_MOTOR);
         launchMotor1.setDirection(DcMotorEx.Direction.REVERSE);
         launchMotor1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        // Launcher reads all of these every setLauncher() call
+        voltageSensor = hardwareMap.voltageSensor.iterator().next();
+        preShooterBeamBreak = hardwareMap.get(DigitalChannel.class, RobotConfig.PRE_SHOOTER_BEAM);
+        preShooterBeamBreak.setMode(DigitalChannel.Mode.INPUT);
+        hoodAngleServo = hardwareMap.get(Servo.class, RobotConfig.HOOD_ANGLE_SERVO);
+        hoodGapServo1 = hardwareMap.get(Servo.class, RobotConfig.HOOD_GAP_SERVO_1);
+        hoodGapServo2 = hardwareMap.get(Servo.class, RobotConfig.HOOD_GAP_SERVO_2);
         /*
         hoodAngleServo1 = hardwareMap.get(Servo.class, "hood_angle_servo_1");
         hoodAngleServo2 = hardwareMap.get(Servo.class, "hood_angle_servo_2");
@@ -124,5 +144,32 @@ public class RobotHardware {
         DigitalChannel beam = hardwareMap.get(DigitalChannel.class, name);
         beam.setMode(DigitalChannel.Mode.INPUT);
         return beam;
+    }
+
+    // Kept out of init() so OpModes that don't drive don't need the motors in the config
+    public void initDrive(HardwareMap hardwareMap) {
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, RobotConfig.FRONT_LEFT_DRIVE);
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, RobotConfig.BACK_LEFT_DRIVE);
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, RobotConfig.FRONT_RIGHT_DRIVE);
+        backRightDrive = hardwareMap.get(DcMotorEx.class, RobotConfig.BACK_RIGHT_DRIVE);
+        frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+    }
+
+    public void initTrigger(HardwareMap hardwareMap) {
+        triggerMotor = hardwareMap.get(DcMotorEx.class, RobotConfig.TRIGGER_MOTOR);
+        triggerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        gateServo = hardwareMap.get(Servo.class, RobotConfig.GATE_SERVO);
+    }
+
+    public void initTurret(HardwareMap hardwareMap) {
+        turretServo = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO);
+        turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
+    }
+
+    public void initVision(HardwareMap hardwareMap) {
+        limelight = hardwareMap.get(Limelight3A.class, RobotConfig.LIMELIGHT);
     }
 }

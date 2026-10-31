@@ -30,16 +30,16 @@ public class Trigger {
         openGate(inGoodRange);
 
         // only push elements once the gate has had time to fully open
-        if (inGoodRange && gateOpen && gateTimer.seconds() >= gateOpenTime) {
-            robot.triggerMotor.setPower(triggerPower);
+        if (inGoodRange && gateOpen && gateTimer.seconds() >= RobotConfig.GATE_OPEN_TIME) {
+            setFeederPower(RobotConfig.TRIGGER_POWER);
         } else {
-            robot.triggerMotor.setPower(0);
+            setFeederPower(0);
         }
     }
 
     // call when the driver lets go of the fire button (and once in init)
     public void stopFiring() {
-        robot.triggerMotor.setPower(0);
+        setFeederPower(0);
         closeGate();
     }
 
@@ -51,7 +51,7 @@ public class Trigger {
     private void openGate(boolean inGoodRange) {
         if (inGoodRange) {
             if (!gateOpen) {
-                robot.gateServo.setPosition(gateOpenPos);
+                robot.gateServo.setPosition(RobotConfig.GATE_OPEN_POS);
                 gateOpen = true;
                 gateTimer.reset(); // start counting how long it's been open
             }
@@ -61,7 +61,13 @@ public class Trigger {
     }
 
     private void closeGate() {
-        robot.gateServo.setPosition(gateClosedPos);
+        robot.gateServo.setPosition(RobotConfig.GATE_CLOSED_POS);
         gateOpen = false;
+    }
+
+    // Storage reads shooterFeederPowerCommand to count elements leaving into the shooter
+    private void setFeederPower(double power) {
+        robot.shooterFeederPowerCommand = power;
+        robot.triggerMotor.setPower(power);
     }
 }
