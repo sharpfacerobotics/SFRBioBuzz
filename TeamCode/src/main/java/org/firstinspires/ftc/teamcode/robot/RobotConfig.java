@@ -28,9 +28,13 @@ public class RobotConfig {
     public static final String INTAKE_MOTOR        = "intake_motor";
     public static final String FLOWER_RAMP_SERVO   = "flower_ramp_servo";
     public static final String INTAKE_COLOR_SENSOR = "intake_color";
-    public static final String INTAKE_BEAM_LOW     = "intake_beam_low";   // any element breaks it
-    public static final String INTAKE_BEAM_HIGH    = "intake_beam_high";  // ~8 cm up: above POLLEN, below NECTAR
-    public static final String STORAGE_EXIT_BEAM   = "storage_exit_beam"; // elements leaving into the launcher
+    // Beam pairs: LOW is broken by any element, HIGH (~8 cm up) only by NECTAR
+    public static final String INTAKE_MOUTH_BEAM_LOW  = "intake_mouth_beam_low";  // intake mouth
+    public static final String INTAKE_MOUTH_BEAM_HIGH = "intake_mouth_beam_high";
+    public static final String INTAKE_QUEUE_BEAM_LOW  = "intake_queue_beam_low";  // inner station: counts elements
+    public static final String INTAKE_QUEUE_BEAM_HIGH = "intake_queue_beam_high";
+    public static final String STORAGE_EXIT_BEAM_LOW  = "storage_exit_beam_low";  // leaving into the shooter
+    public static final String STORAGE_EXIT_BEAM_HIGH = "storage_exit_beam_high";
 
     // Intake -- TODO tune on the robot
     public static double INTAKE_POWER         = 0.8;
@@ -56,6 +60,21 @@ public class RobotConfig {
     public static double RED_NECTAR_HUE_MIN = 335.0;
     public static double RED_NECTAR_HUE_MAX = 20.0;
     public static double STORAGE_MIN_SATURATION = 0.25;
+    // Normalized r + g + b at or below this is too dark to call a colour -- TODO tune
+    public static double STORAGE_MIN_RGB_SUM = 0.05;
+
+    /** Storage only rejects elements once the outtake times are set to real values. */
+    public static boolean emergencyConfigured() {
+        return Double.isFinite(EMERGENCY_MIN_OUTTAKE) && Double.isFinite(EMERGENCY_MAX_OUTTAKE)
+                && EMERGENCY_MIN_OUTTAKE >= 0 && EMERGENCY_MAX_OUTTAKE > 0;
+    }
+
+    /** Storage only reads NECTAR colour once the hue windows and brightness floor are set. */
+    public static boolean colourConfigured() {
+        return Double.isFinite(RED_NECTAR_HUE_MIN) && Double.isFinite(RED_NECTAR_HUE_MAX)
+                && Double.isFinite(BLUE_NECTAR_HUE_MIN) && Double.isFinite(BLUE_NECTAR_HUE_MAX)
+                && Double.isFinite(STORAGE_MIN_RGB_SUM);
+    }
 
 
 }
