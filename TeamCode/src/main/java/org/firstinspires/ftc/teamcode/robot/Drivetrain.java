@@ -123,12 +123,12 @@ public class Drivetrain {
         double[] Hive2 = {0.0, 0.0};
 
         if (allianceColor.equals("red")){
-            Hive1 = new double[] {58.746, 24.076}; // close red shoot
-            Hive2 = new double[] {58.746, 115.815};
+            Hive1 = new double[] {58, 60}; // close red shoot
+            Hive2 = new double[] {58, 84};
         }
         else{
-            Hive1 = new double[] {82.754, 24.076}; // replace with blue hive coordinates
-            Hive2 = new double[] {82.754, 115.815};
+            Hive1 = new double[] {84, 58}; // replace with blue hive coordinates
+            Hive2 = new double[] {84, 84};
         }
         double[] vector1 = {Hive1[0] - currentPose.x(), Hive1[1] - currentPose.y()};
         double[] vector2 = {Hive2[0] - currentPose.x(), Hive2[1] - currentPose.y()};

@@ -40,6 +40,7 @@ public class RobotHardware {
     public TouchSensor turretHallEffect;
     public DcMotor triggerMotor;
     public DigitalChannel preShooterBeamBreak;
+    public Servo turretServo;
     public CRServo turretServo1;
     public CRServo turretServo2;
     public TouchSensor hallEffectSensor;
@@ -70,7 +71,7 @@ public class RobotHardware {
         initLaunchMotor(hardwareMap);
         initIntakeTransferTrigger(hardwareMap);
         initHood(hardwareMap);
-        initTurret(hardwareMap);
+        //initTurret(hardwareMap);
     }
 
     // Kept out of init() so OpModes that only spin the flywheel don't need these in the config
@@ -84,7 +85,7 @@ public class RobotHardware {
         frontRightMotor = hardwareMap.get(DcMotor.class, RobotConfig.FRONT_RIGHT_MOTOR_NAME);
         backRightMotor  = hardwareMap.get(DcMotor.class, RobotConfig.BACK_RIGHT_MOTOR_NAME);
         intakeMotor     = hardwareMap.get(DcMotor.class, "intake_motor");
-        //pinpoint        = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint        = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         // --- Directions ---
         frontLeftMotor.setDirection(DcMotor.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
@@ -114,8 +115,9 @@ public class RobotHardware {
     }
 
     public void initTurret(HardwareMap hardwareMap) {
-        turretServo1 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_1);
-        turretServo2 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_2);
+        //turretServo1 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_1);
+        //turretServo2 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_2);
+        turretServo = hardwareMap.get(Servo.class, RobotConfig.TURRET_SERVO_NAME_1);
         //turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
         //turretHallEffect = hardwareMap.get(TouchSensor.class, RobotConfig.TURRET_HALL);
         //preShooterBeamBreak = hardwareMap.get(DigitalChannel.class, RobotConfig.PRE_SHOOTER_BEAM_BREAK);

@@ -41,7 +41,13 @@ public class ShooterTestPanels extends OpMode {
 
     @Override
     public void loop() {
-        launcher.setLauncher(velocity);
+        if (gamepad1.aWasPressed()) {
+            launcher.setLauncher(velocity);
+        } else {
+            launcher.setLauncher(0);
+        }
+        launcher.setHoodRetraction(selectedElement);
+        launcher.setHoodAngle(selectedElement);
         panelsTelemetry.addData("Target Velocity", velocity);
 
         panelsTelemetry.update();
