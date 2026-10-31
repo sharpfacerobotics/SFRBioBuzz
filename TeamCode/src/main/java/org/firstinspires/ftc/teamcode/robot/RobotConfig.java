@@ -111,6 +111,87 @@ public class RobotConfig {
     public static final double MAX_TURRET_TICKS = 5000;
     public static final double MIN_TURRET_TICKS = -5000;
 
+    // Trigger / gate -- TODO tune on the robot
+    public static final double TRIGGER_POWER   = 1.0;   // feed power once the shot is good
+    public static final double GATE_OPEN_POS   = 0.6;   // gate servo position, open
+    public static final double GATE_CLOSED_POS = 0.2;   // gate servo position, closed
+    public static final double GATE_OPEN_TIME  = 0.15;  // seconds for the gate to swing open before feeding
+
+    // Hardware config names -- TODO(config): match these to the robot's configuration
+    public static final String LAUNCH_MOTOR       = "launch_motor";
+    public static final String HOOD_ANGLE_SERVO   = "hood_angle_servo";
+    public static final String HOOD_GAP_SERVO_1   = "hood_gap_servo_1";
+    public static final String HOOD_GAP_SERVO_2   = "hood_gap_servo_2";
+    public static final String PRE_SHOOTER_BEAM   = "pre_shooter_beam";
+    public static final String TRIGGER_MOTOR      = "trigger_motor";
+    public static final String GATE_SERVO         = "gate_servo";
+    public static final String TURRET_SERVO       = "turret_servo";
+    public static final String TURRET_ENCODER     = "turret_encoder";
+    public static final String FRONT_LEFT_DRIVE   = "front_left_drive";
+    public static final String BACK_LEFT_DRIVE    = "back_left_drive";
+    public static final String FRONT_RIGHT_DRIVE  = "front_right_drive";
+    public static final String BACK_RIGHT_DRIVE   = "back_right_drive";
+    public static final String PINPOINT           = "pinpoint";
+    public static final String LIMELIGHT          = "limelight";
+
+    // Limelight AprilTags (manual 9.9: 36h11, 3.25 in, under each HIVE cell)
+    public static final int HIVE_PIPELINE = 0;
+    public static final int RED_FIRST_TAG = 30;   // red cells: 30-37
+    public static final int BLUE_FIRST_TAG = 38;  // blue cells: 38-45
+    public static final int TAGS_PER_ALLIANCE = 8;
+
+    // Intake / storage hardware config names
+    public static final String INTAKE_MOTOR        = "intake_motor";
+    public static final String FLOWER_RAMP_SERVO   = "flower_ramp_servo";
+    public static final String INTAKE_COLOR_SENSOR = "intake_color";
+    // Beam pairs: LOW is broken by any element, HIGH (~8 cm up) only by NECTAR
+    public static final String INTAKE_MOUTH_BEAM_LOW  = "intake_mouth_beam_low";  // intake mouth
+    public static final String INTAKE_MOUTH_BEAM_HIGH = "intake_mouth_beam_high";
+    public static final String INTAKE_QUEUE_BEAM_LOW  = "intake_queue_beam_low";  // inner station: counts elements
+    public static final String INTAKE_QUEUE_BEAM_HIGH = "intake_queue_beam_high";
+    public static final String STORAGE_EXIT_BEAM_LOW  = "storage_exit_beam_low";  // leaving into the shooter
+    public static final String STORAGE_EXIT_BEAM_HIGH = "storage_exit_beam_high";
+
+    // Intake -- TODO tune on the robot
+    public static double INTAKE_POWER         = 0.8;
+    public static double OUTTAKE_POWER        = -0.6;
+    public static double INTAKE_SLOW_POWER    = 0.4;
+    public static double INTAKE_JITTER_PERIOD = 0.15;  // updateIntake(jitter): flip direction this often (s)
+
+    // Flower ramp servo positions -- TODO tune on the robot
+    public static double FLOWER_RAMP_LOWERED   = 0.8;
+    public static double FLOWER_RAMP_RETRACTED = 0.2;
+
+    // Storage
+    public static final int STORAGE_CAPACITY = 4;      // G407: may not CONTROL more than 4 SCORING ELEMENTS
+    public static double STORAGE_DEBOUNCE_TIME = 0.12; // seconds between counted elements
+    public static double EMERGENCY_MIN_OUTTAKE = 0.25; // emergency outtake runs at least this long (s)
+    public static double EMERGENCY_MAX_OUTTAKE = 1.5;  // and gives up after this (s)
+    // Hue windows in degrees [0, 360). POLLEN is yellow, NECTAR red or blue. TODO tune under event lighting
+    public static double POLLEN_HUE_MIN = 35.0;
+    public static double POLLEN_HUE_MAX = 75.0;
+    public static double BLUE_NECTAR_HUE_MIN = 190.0;
+    public static double BLUE_NECTAR_HUE_MAX = 255.0;
+    // Red wraps around 0: anything >= MIN or <= MAX
+    public static double RED_NECTAR_HUE_MIN = 335.0;
+    public static double RED_NECTAR_HUE_MAX = 20.0;
+    public static double STORAGE_MIN_SATURATION = 0.25;
+    // Normalized r + g + b at or below this is too dark to call a colour -- TODO tune
+    public static double STORAGE_MIN_RGB_SUM = 0.05;
+
+    /** Storage only rejects elements once the outtake times are set to real values. */
+    public static boolean emergencyConfigured() {
+        return Double.isFinite(EMERGENCY_MIN_OUTTAKE) && Double.isFinite(EMERGENCY_MAX_OUTTAKE)
+                && EMERGENCY_MIN_OUTTAKE >= 0 && EMERGENCY_MAX_OUTTAKE > 0;
+    }
+
+    /** Storage only reads NECTAR colour once the hue windows and brightness floor are set. */
+    public static boolean colourConfigured() {
+        return Double.isFinite(RED_NECTAR_HUE_MIN) && Double.isFinite(RED_NECTAR_HUE_MAX)
+                && Double.isFinite(BLUE_NECTAR_HUE_MIN) && Double.isFinite(BLUE_NECTAR_HUE_MAX)
+                && Double.isFinite(STORAGE_MIN_RGB_SUM);
+    }
+
 
     public static final double TURRET_GEAR_TICKS = 1000; //PLACEHOLDER
     public static final double SERVO_GEAR_TICKS = 350; //PLACEHOLDER
