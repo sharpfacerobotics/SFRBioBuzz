@@ -24,10 +24,10 @@ import org.firstinspires.ftc.teamcode.robot.RobotConfig;
 public class Constants {
 
     public static MecanumConfig drivetrainConfig = new MecanumConfig(c -> {
-        c.frontLeftName.set(RobotConfig.FRONT_LEFT_DRIVE);
-        c.frontRightName.set(RobotConfig.FRONT_RIGHT_DRIVE);
-        c.backLeftName.set(RobotConfig.BACK_LEFT_DRIVE);
-        c.backRightName.set(RobotConfig.BACK_RIGHT_DRIVE);
+        c.frontLeftName.set(RobotConfig.FRONT_LEFT_MOTOR_NAME);
+        c.frontRightName.set(RobotConfig.FRONT_RIGHT_MOTOR_NAME);
+        c.backLeftName.set(RobotConfig.BACK_LEFT_MOTOR_NAME);
+        c.backRightName.set(RobotConfig.BACK_RIGHT_MOTOR_NAME);
         c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.frontRightDirection.set(DcMotorSimple.Direction.FORWARD);

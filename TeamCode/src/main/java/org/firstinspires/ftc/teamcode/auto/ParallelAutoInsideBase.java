@@ -1,81 +1,68 @@
-/*
-package org.firstinspires.ftc.teamcode.auto;
-
-import com.pedropathing.ivy.Scheduler;
-
-import static com.pedropathing.ivy.Scheduler.schedule;
-import static com.pedropathing.ivy.commands.Commands.instant;
-import static com.pedropathing.ivy.commands.Commands.waitMs;
-import static com.pedropathing.ivy.groups.Groups.parallel;
-import static com.pedropathing.ivy.groups.Groups.race;
-import static com.pedropathing.ivy.groups.Groups.sequential;
-import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+/*package org.firstinspires.ftc.teamcode.auto;
 
 import static com.pedropathing.api.Paths.*;
-import com.pedropathing.paths.Path;
-
-import com.pedropathing.follower.Follower;
-
-import org.firstinspires.ftc.teamcode.pedro.Constants;
-import org.firstinspires.ftc.teamcode.robot.Drivetrain;
-import org.firstinspires.ftc.teamcode.robot.ElementVision;
-import org.firstinspires.ftc.teamcode.robot.HiveVision;
-import org.firstinspires.ftc.teamcode.robot.Intake;
-import org.firstinspires.ftc.teamcode.robot.Launcher;
-import org.firstinspires.ftc.teamcode.robot.RobotHardware;
-import org.firstinspires.ftc.teamcode.robot.Storage;
-import org.firstinspires.ftc.teamcode.robot.Trigger;
-import org.firstinspires.ftc.teamcode.robot.Turret;
-
+import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
-import com.pedropathing.ivy.Command;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Pose;
-
+import com.pedropathing.paths.Path;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.Scheduler;
+import static com.pedropathing.ivy.Scheduler.schedule;
+import static com.pedropathing.ivy.commands.Commands.*;
+import static com.pedropathing.ivy.groups.Groups.sequential;
+import static com.pedropathing.ivy.groups.Groups.parallel;
+import static com.pedropathing.ivy.groups.Groups.race;
+import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-public abstract class ParallelAutoInsideBase extends LinearOpMode {
+import org.firstinspires.ftc.teamcode.pedro.Constants;
+
+@Autonomous(name = "AutoPath", group = "Autonomous")
+public class ParallelAutoOutsideBase extends LinearOpMode {
+
+    protected allianceColor;
+
     private Follower follower;
-    private RobotHardware robot = new RobotHardware();
-    private Drivetrain drivetrain = new Drivetrain(robot);
-    private Intake intake = new Intake(robot);
-    private Launcher launcher = new Launcher(robot);
-    private Turret turret = new Turret(robot);
-    private ElementVision elementVision = new ElementVision(robot);
-    private HiveVision hiveVision = new HiveVision(robot);
-    private Turret turret = new Turret(robot);
-    private Storage storage = new Storage(robot);
-    private Trigger trigger = new Trigger(robot);
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
-    //estos son random doodoo points
-    protected final Pose start = poseFactory.of(31.5677, 8.5936, 180);
-    protected final Pose flowerIntake = poseFactory.of(7.9534, 8.5448, 180);
-    protected final Pose park = poseFactory.of(7.9534, 8.5448, 180);
-    protected final Pose pre_park = poseFactory.of(31.3937, 81.6325, 180);
+
+    private final Pose start = poseFactory.of(31.5677, 8.5936, 180);
+    private final Pose path1 = poseFactory.of(7.9534, 8.5448, 180);
+    private final Pose point2Start = poseFactory.of(7.9534, 8.5448, 180);
+    private final Pose point2 = poseFactory.of(31.3937, 81.6325, 180);
+    private final Pose point3 = poseFactory.of(47.7761, 121.431, 86.1928);
+    private final Pose point3Control1 = poseFactory.of(47.5187, 116.5197, 0);
+    private final Pose point4 = poseFactory.of(47.097, 129.0541, 95.0907);
+    private final Pose point5Start = poseFactory.of(47.097, 129.0541, 90);
+    private final Pose point5 = poseFactory.of(36.5373, 112.1269, 90);
+    private final Pose point6 = poseFactory.of(17.2332, 47.0877, -174.6763);
+    private final Pose point6Control1 = poseFactory.of(34.847, 48.4096, 0);
+    private final Pose point7 = poseFactory.of(58.6493, 10.8507, 12.2797);
+    private final Pose point7Control1 = poseFactory.of(16.3675, 1.419, 0);
+    private final Pose point8 = poseFactory.of(12.1213, 95.0784, -61.0834);
 
     // Autonomous routine incorporating paths, parallel actions, and waits
     public Command autoRoutine() {
         return sequential(
-                startShootCommand(),
-                // Path 1:  intaking during path, then wait 500 ms
-
+                // Path 1: Shoot while intaking during path, then wait 500 ms
                 parallel(
-                        follow(follower, path_StartFlower()),
-                        intakeCommand(),
-                        deployFlowerRampCommand()
+                        follow(follower, path1()),
+                        parallel(beginFire(), beginIntake())
                 ),
                 waitMs(500),
 
                 // Path 2: Intake running during path, 0 ms wait
                 parallel(
                         follow(follower, path2()),
-                        intakeCommand()
+                        beginIntake()
                 ),
 
                 // Path 3: Wait 1000 ms while deploying flower ramp
                 follow(follower, path3()),
                 race(
-                        deployFlowerRampCommand(),
+                        deployFlowerRamp(),
                         waitMs(1000)
                 ),
 
@@ -83,9 +70,8 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
                 follow(follower, path4()),
                 race(
                         parallel(
-                                keepFlowerRampDownCommand(),
-                                intakeCommand(),
-                                startShootCommand()
+                                beginIntake(),
+                                shootCommand()
                         ),
                         waitMs(1000)
                 ),
@@ -125,10 +111,31 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
         follower.setPose(start);
         follower.update();
 
+        hardwareMap.init(HardwareMap hardwareMap);
+        turret.localizeTurret();
+
+
         waitForStart();
         schedule(autoRoutine());
 
         while (opModeIsActive()) {
+
+            storage.checkBeamBreaks(allianceColor);
+            double[] dist = drivetrain.getPedroDistanceToHive(follower.getCurrentPose(), allianceColor);
+
+            hiveVision.updateRead(allianceColor);
+
+            double averageTa = hiveVision.getAverageTa();
+            double targetHeading = hiveVision.getTargetHeading();
+            double robotHeading = drivetrain.getRobotHeading();
+            double[] robotTranslationalVelocity = drivetrain.getRobotTranslationalVelocity();
+
+            shooterConfig.calculateShootingConfig(averageTa, dist, robotTranslationalVelocity, targetHeading, robotHeading);
+
+            launcher.setLauncher(storage.getElementQueue());
+
+            turret.updateTurret();
+
             follower.update();
             Scheduler.execute();
 
@@ -145,58 +152,83 @@ public abstract class ParallelAutoInsideBase extends LinearOpMode {
         }
     }
 
-    public Path path_StartFlower() {
-        return line(start, flowerIntake).linear(start, flowerIntake);
-    }
-    public Path path_FlowerStart() {
-        return line(flowerIntake, start).tangent();
+    public Path path1() {
+        return Paths.line(start, path1).linear(start, path1);
     }
 
-    public Path path_PrePark(Pose currPose) {
-        return line(currPose, pre_park).linear(currPose, pre_park);
+    public Path path2() {
+        return Paths.line(point2Start, point2).linear(point2Start, point2);
     }
 
-    public Path path_Park() {
-        return line(pre_park, park).tangent();
+    public Path path3() {
+        return Paths.curve(point2, point3Control1, point3).tangent();
     }
 
-
-    /* ========================================================================
-       SUBSYSTEM COMMAND PLACEHOLDERS
-       Replace the telemetry lines with your actual motor/servo controls.
-       ========================================================================
-
-    private Command startShootCommand() {
-        return Command.build()
-                .setStart(() -> pid.setTarget(target))
-                .setExecute(() -> armMotor.setPower(pid.calculate(armMotor.getCurrentPosition())))
-                .setDone(() -> Math.abs(target - armMotor.getCurrentPosition()) < 10)
-                .setEnd(endCondition -> armMotor.setPower(0))
-                .requiring(armMotor);
+    public Path path4() {
+        return Paths.line(point3, point4).tangent();
     }
-    private Command endShootCommand() {
+
+    public Path path5() {
+        return Paths.line(point5Start, point5).linear(point5Start, point5);
+    }
+
+    public Path path6() {
+        return Paths.curve(point5, point6Control1, point6).tangent();
+    }
+
+    public Path path7() {
+        return Paths.curve(point6, point7Control1, point7).tangent();
+    }
+
+    public Path path8() {
+        return Paths.line(point7, point8).reverseTangent();
+    }
+
+   // ========================================================================
+    //   SUBSYSTEM COMMAND PLACEHOLDERS
+     //  Replace the telemetry lines with your actual motor/servo controls.
+     //  ========================================================================
+
+    private Command beginFire() {
         return instant(() -> {
-            telemetry.addLine("Action: Shooting...");
+            trigger.fire(launcher.goodShooterConfig(), turret.goodTurretConfig())
         });
     }
 
-    private Command intakeCommand() {
+    private Command endFire() {
         return instant(() -> {
-            telemetry.addLine("Action: Running intake...");
+            trigger.stopFiring()
         });
     }
 
-    private Command deployFlowerRampCommand() {
+    private Command beginIntake() {
         return instant(() -> {
-            telemetry.addLine("Action: Deploying flower ramp...");
+            intake.setIntakePower(1.0)
         });
     }
 
-
-    private Command retractFlowerRampCommand() {
+    private Command endIntake() {
         return instant(() -> {
-            telemetry.addLine("Action: Bringing flower ramp back up...");
+            intake.setIntakePower(0.0)
         });
     }
 
-} */
+    private Command outtake() {
+        return instant(() -> {
+            instant -> intake.emergencyOuttake()
+        });
+    }
+
+    private Command deployFlowerRamp() {
+        return instant(() -> {
+            intake.deployFlowerRamp()
+        });
+    }
+
+    private Command retractFlowerRamp() {
+        return instant(() -> {
+            intake.retractFlowerRamp()
+        });
+    }
+}
+ */
