@@ -1,3 +1,4 @@
+/*
 package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -15,8 +16,7 @@ import java.util.Queue;
  * Tracks the single-file storage path. Public method signatures are unchanged.
  * Mouth beams request rejection; only the INNER pair adds/removes stored elements.
  * Both shooter beams are at one station and form one occupied/clear signal.
- * Call robot.initStorage(hardwareMap) before using it.
- */
+ 
 public class Storage {
     public static final String POLLEN = "POLLEN";
     public static final String NECTAR = "NECTAR";
@@ -49,7 +49,7 @@ public class Storage {
      * UPDATE: once per robot loop, after robot.beginLoop().
      * true requests emergency reverse; false releases that request.
      * The caller owns motor commands, including resuming intake after a timeout.
-     */
+     
     public boolean checkBeamBreaks(String allianceColor) {
         requireAlliance(allianceColor);
         // With MANUAL caching, these six reads use one bulk snapshot per hub.
@@ -80,7 +80,7 @@ public class Storage {
                 colourAttempted, colour, allianceColor, clock.seconds());
     }
 
-    /** Hardware-independent transition function; package access for regression tests. */
+    /** Hardware-independent transition function; package access for regression tests. 
     boolean process(boolean mouthLow, boolean mouthHigh, boolean innerLow, boolean innerHigh,
                     boolean exitLow, boolean exitHigh, double intakePower, double feederPower,
                     boolean colourAttempted, String nectarColour, String allianceColor,
@@ -180,23 +180,23 @@ public class Storage {
         rejectionSawMouth = mouth;
     }
 
-    /** STATUS: confirmed forward departures from storage into the shooter, not scored shots. */
+    /** STATUS: confirmed forward departures from storage into the shooter, not scored shots. 
     public int getLaunchedCount() {
         return launchedCount;
     }
 
-    /** STATUS: either mouth beam OR either inner intake beam is broken. */
+    /** STATUS: either mouth beam OR either inner intake beam is broken. 
     public boolean anyIntakeBeamBroken() {
         return isBroken(robot.intakeMouthBeamLow) || isBroken(robot.intakeMouthBeamHigh)
                 || isBroken(robot.intakeQueueBeamLow) || isBroken(robot.intakeQueueBeamHigh);
     }
 
-    /** STATUS: live, read-only FIFO view. peek()/size() allocate nothing. */
+    /** STATUS: live, read-only FIFO view. peek()/size() allocate nothing. 
     public Queue<String> getElementQueue() {
         return queueView;
     }
 
-    /** INIT: replaces preload contents and resets passage/rejection/exit-count state. */
+    /** INIT: replaces preload contents and resets passage/rejection/exit-count state. 
     public void preloadQueue(int count, String element) {
         if (count < 0 || count > RobotConfig.STORAGE_CAPACITY) {
             throw new IllegalArgumentException("Preload count must be 0.." + RobotConfig.STORAGE_CAPACITY);
@@ -216,7 +216,7 @@ public class Storage {
         clock.reset();
     }
 
-    /** One I2C color read. RED / BLUE / null; uncalibrated settings return null. */
+    /** One I2C color read. RED / BLUE / null; uncalibrated settings return null. 
     public String readNectarColor() {
         if (!RobotConfig.colourConfigured()) return null;
         NormalizedRGBA c = robot.intakeColorSensor.getNormalizedColors();
@@ -229,7 +229,7 @@ public class Storage {
         return !beam.getState();
     }
 
-    /** Hue [0, 360), or -1 for invalid/grey/insufficiently saturated input. */
+    /** Hue [0, 360), or -1 for invalid/grey/insufficiently saturated input. 
     public static double hue(double r, double g, double b) {
         if (!Double.isFinite(r) || !Double.isFinite(g) || !Double.isFinite(b)
                 || r < 0 || g < 0 || b < 0) return -1;
@@ -286,3 +286,5 @@ public class Storage {
         }
     }
 }
+
+*/

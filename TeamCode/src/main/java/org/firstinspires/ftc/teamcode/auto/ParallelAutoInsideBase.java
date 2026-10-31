@@ -1,8 +1,7 @@
-package org.firstinspires.ftc.teamcode.auto;
+/*package org.firstinspires.ftc.teamcode.auto;
 
 import static com.pedropathing.api.Paths.*;
 import com.pedropathing.api.Paths;
-
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Pose;
@@ -11,7 +10,9 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.*;
-import static com.pedropathing.ivy.groups.Groups.*; // sequential, parallel, race, deadline, ...
+import static com.pedropathing.ivy.groups.Groups.sequential;
+import static com.pedropathing.ivy.groups.Groups.parallel;
+import static com.pedropathing.ivy.groups.Groups.race;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -19,69 +20,87 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 @Autonomous(name = "AutoPath", group = "Autonomous")
-public class ParallelAutoInsideBase extends LinearOpMode {
+public class ParallelAutoOutsideBase extends LinearOpMode {
+
+    protected allianceColor;
 
     private Follower follower;
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
-    private final Pose start = poseFactory.of(56, 8, 180);
-    private final Pose path1 = poseFactory.of(7.8853, 7.3208, 180);
-    private final Pose point2Start = poseFactory.of(7.8853, 7.3208, 180);
-    private final Pose point2 = poseFactory.of(7.9162, 16.1214, 180);
-    private final Pose point3 = poseFactory.of(14.3302, 16.0788, 179.6191);
-    private final Pose point4 = poseFactory.of(58.9936, 128.1268, 95.6276);
-    private final Pose point4Control1 = poseFactory.of(71.6189, 0, 0);
-    private final Pose point5 = poseFactory.of(32.3863, 8.1959, 179.0806);
-    private final Pose point5Control1 = poseFactory.of(70.4761, 7.5846, 0);
-    private final Pose point6 = poseFactory.of(58.1638, 7.6864, 178.8678);
-    private final Pose point7Start = poseFactory.of(58.1638, 7.6864, 180);
-    private final Pose point7 = poseFactory.of(58.863, 119.014, 180);
-    private final Pose point8 = poseFactory.of(19.4744, 118.566, -179.3483);
+    private final Pose start = poseFactory.of(31.5677, 8.5936, 180);
+    private final Pose path1 = poseFactory.of(7.9534, 8.5448, 180);
+    private final Pose point2Start = poseFactory.of(7.9534, 8.5448, 180);
+    private final Pose point2 = poseFactory.of(31.3937, 81.6325, 180);
+    private final Pose point3 = poseFactory.of(47.7761, 121.431, 86.1928);
+    private final Pose point3Control1 = poseFactory.of(47.5187, 116.5197, 0);
+    private final Pose point4 = poseFactory.of(47.097, 129.0541, 95.0907);
+    private final Pose point5Start = poseFactory.of(47.097, 129.0541, 90);
+    private final Pose point5 = poseFactory.of(36.5373, 112.1269, 90);
+    private final Pose point6 = poseFactory.of(17.2332, 47.0877, -174.6763);
+    private final Pose point6Control1 = poseFactory.of(34.847, 48.4096, 0);
+    private final Pose point7 = poseFactory.of(58.6493, 10.8507, 12.2797);
+    private final Pose point7Control1 = poseFactory.of(16.3675, 1.419, 0);
+    private final Pose point8 = poseFactory.of(12.1213, 95.0784, -61.0834);
 
-    // ------------------------------------------------------------------------
-    // Requirements: any object can be a requirement. Swap each of these for
-    // the real motor / servo / subsystem object once your hardware is wired in.
-    // Two commands that share a requirement can't run at the same time.
-    // ------------------------------------------------------------------------
-    private static final Object SHOOTER = new Object();
-    private static final Object INTAKE = new Object();
-
-    // Timing (ms)
-    private static final long PRELOAD_SHOT_MS = 1000;   // before path 1: wait + shoot
-    private static final long PATH_4_WAIT_MS = 1000;    // after path 4: wait + shoot
-
-    // Autonomous routine
-    //
-    // The whole sequence is the "deadline" of an outer deadline(), with
-    // intakeCommand() as the other member. That means the intake starts
-    // immediately and runs through every path, wait, and shot.
-    //
-    // The last step, shootCommand(), has no timeout and never finishes, so
-    // the shooter (and intake) simply run until the auto period ends.
+    // Autonomous routine incorporating paths, parallel actions, and waits
     public Command autoRoutine() {
-        return deadline(
-                sequential(
-                        // Before path 1: wait 1000 ms, shooting
-                        race(shootCommand(), waitMs(PRELOAD_SHOT_MS)),
-
+        return sequential(
+                // Path 1: Shoot while intaking during path, then wait 500 ms
+                parallel(
                         follow(follower, path1()),
-                        follow(follower, path2()),
-                        follow(follower, path3()),
-                        follow(follower, path4()),
-
-                        // After path 4: wait 1000 ms, shooting
-                        race(shootCommand(), waitMs(PATH_4_WAIT_MS)),
-
-                        follow(follower, path5()),
-                        follow(follower, path6()),
-                        follow(follower, path7()),
-                        follow(follower, path8()),
-
-                        // After path 8: shoot continuously until the end of auto
-                        shootCommand()
+                        parallel(beginFire(), beginIntake())
                 ),
-                intakeCommand()
+                waitMs(500),
+
+                // Path 2: Intake running during path, 0 ms wait
+                parallel(
+                        follow(follower, path2()),
+                        beginIntake()
+                ),
+
+                // Path 3: Wait 1000 ms while deploying flower ramp
+                follow(follower, path3()),
+                race(
+                        deployFlowerRamp(),
+                        waitMs(1000)
+                ),
+
+                // Path 4: Keep flower ramp down, run intake, 1000 ms wait while shooting everything intook
+                follow(follower, path4()),
+                race(
+                        parallel(
+                                beginIntake(),
+                                shootCommand()
+                        ),
+                        waitMs(1000)
+                ),
+
+                // Path 5: Run intake during path with no wait
+                parallel(
+                        follow(follower, path5()),
+                        intakeCommand()
+                ),
+
+                // Path 6: Bring flower ramp back up during a 400 ms wait
+                follow(follower, path6()),
+                race(
+                        restoreFlowerRampCommand(),
+                        waitMs(400)
+                ),
+
+                // Path 7: Run intake and keep shooter on during path, plus 500 ms wait
+                parallel(
+                        follow(follower, path7()),
+                        parallel(intakeCommand(), shooterOnCommand())
+                ),
+                waitMs(500),
+
+                // Path 8: Run intake during path and nothing else
+                parallel(
+                        follow(follower, path8()),
+                        intakeCommand()
+                )
         );
     }
 
@@ -92,10 +111,31 @@ public class ParallelAutoInsideBase extends LinearOpMode {
         follower.setPose(start);
         follower.update();
 
+        hardwareMap.init(HardwareMap hardwareMap);
+        turret.localizeTurret();
+
+
         waitForStart();
         schedule(autoRoutine());
 
         while (opModeIsActive()) {
+
+            storage.checkBeamBreaks(allianceColor);
+            double[] dist = drivetrain.getPedroDistanceToHive(follower.getCurrentPose(), allianceColor);
+
+            hiveVision.updateRead(allianceColor);
+
+            double averageTa = hiveVision.getAverageTa();
+            double targetHeading = hiveVision.getTargetHeading();
+            double robotHeading = drivetrain.getRobotHeading();
+            double[] robotTranslationalVelocity = drivetrain.getRobotTranslationalVelocity();
+
+            shooterConfig.calculateShootingConfig(averageTa, dist, robotTranslationalVelocity, targetHeading, robotHeading);
+
+            launcher.setLauncher(storage.getElementQueue());
+
+            turret.updateTurret();
+
             follower.update();
             Scheduler.execute();
 
@@ -121,67 +161,74 @@ public class ParallelAutoInsideBase extends LinearOpMode {
     }
 
     public Path path3() {
-        return Paths.line(point2, point3).reverseTangent();
+        return Paths.curve(point2, point3Control1, point3).tangent();
     }
 
     public Path path4() {
-        return Paths.curve(point3, point4Control1, point4).tangent();
+        return Paths.line(point3, point4).tangent();
     }
 
     public Path path5() {
-        return Paths.curve(point4, point5Control1, point5).tangent();
+        return Paths.line(point5Start, point5).linear(point5Start, point5);
     }
 
     public Path path6() {
-        return Paths.line(point5, point6).reverseTangent();
+        return Paths.curve(point5, point6Control1, point6).tangent();
     }
 
     public Path path7() {
-        return Paths.line(point7Start, point7).linear(point7Start, point7);
+        return Paths.curve(point6, point7Control1, point7).tangent();
     }
 
     public Path path8() {
-        return Paths.line(point7, point8).tangent();
+        return Paths.line(point7, point8).reverseTangent();
     }
 
-    /* ========================================================================
-       SUBSYSTEM COMMANDS (Ivy Command Builder API)
+   // ========================================================================
+    //   SUBSYSTEM COMMAND PLACEHOLDERS
+     //  Replace the telemetry lines with your actual motor/servo controls.
+     //  ========================================================================
 
-       CONTINUOUS  - runs until something else ends it (race / deadline / until).
-                     setStart   -> turn the mechanism on
-                     setExecute -> optional per-loop logic (PID, etc.)
-                     setDone    -> () -> false  (never finishes on its own)
-                     setEnd     -> turn the mechanism off (runs when cancelled)
-
-       Replace the TODO comments with your motor/servo code.
-       ======================================================================== */
-
-    /** CONTINUOUS: intake runs until the surrounding deadline() cancels it. */
-    private Command intakeCommand() {
-        return Command.build()
-                .setStart(() -> {
-                    // TODO: intakeMotor.setPower(1.0);
-                })
-                .setDone(() -> false)
-                .setEnd(endCondition -> {
-                    // TODO: intakeMotor.setPower(0);
-                })
-                .requiring(INTAKE);
+    private Command beginFire() {
+        return instant(() -> {
+            trigger.fire(launcher.goodShooterConfig(), turret.goodTurretConfig())
+        });
     }
 
-    /** CONTINUOUS: shooter runs until a surrounding race() cancels it (or the auto ends). */
-    private Command shootCommand() {
-        return Command.build()
-                .setStart(() -> {
-                    // TODO: spin up shooter flywheel(s)
-                })
-                .setExecute(() -> {
-                    // TODO: per-loop shooter logic (velocity PID, feeding, etc.)
-                })
-                .setDone(() -> false)
-                .setEnd(endCondition -> {
-                    // TODO: stop shooter flywheel(s)
-                })
-                .requiring(SHOOTER);
+    private Command endFire() {
+        return instant(() -> {
+            trigger.stopFiring()
+        });
+    }
+
+    private Command beginIntake() {
+        return instant(() -> {
+            intake.setIntakePower(1.0)
+        });
+    }
+
+    private Command endIntake() {
+        return instant(() -> {
+            intake.setIntakePower(0.0)
+        });
+    }
+
+    private Command outtake() {
+        return instant(() -> {
+            instant -> intake.emergencyOuttake()
+        });
+    }
+
+    private Command deployFlowerRamp() {
+        return instant(() -> {
+            intake.deployFlowerRamp()
+        });
+    }
+
+    private Command retractFlowerRamp() {
+        return instant(() -> {
+            intake.retractFlowerRamp()
+        });
     }
 }
+ */

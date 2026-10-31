@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
- * Intake roller and flower ramp. Call robot.initIntake(hardwareMap) before using it.
  *
  * <ul>
  *   <li>{@link #emergencyOuttake()}: CONTINUOUS. Call while Storage.checkBeamBreaks() returns true.</li>

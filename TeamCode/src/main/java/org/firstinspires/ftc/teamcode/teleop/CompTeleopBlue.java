@@ -29,17 +29,41 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.RobotHardware;
+import org.firstinspires.ftc.teamcode.robot.Trigger;
+
+@Configurable
 @TeleOp(name="CompTeleopBlue", group="OpMode")
 public class CompTeleopBlue extends OpMode {
+    public static double intakePower = 0.0;
+    private RobotHardware robot = new RobotHardware();
+    private Intake intake = new Intake(robot);
+    private Trigger trigger =  new Trigger(robot);
     @Override
     public void init() {
+        robot.init(hardwareMap);
         telemetry.addData("Status", "Initialized");
     }
     @Override
     public void loop() {
         telemetry.addData("Status", "Running");
+        if (gamepad1.a) {
+            intakePower = 0.5;
+            trigger.runTrigger(0.5);
+        } else if (gamepad1.b) {
+            intakePower = 1;
+            trigger.runTrigger(1.00);
+        }
+        else {
+            intakePower = 0.0;
+            trigger.stopFiring();
+        }
+        intake.setIntakePower(intakePower);
+
     }
 }
