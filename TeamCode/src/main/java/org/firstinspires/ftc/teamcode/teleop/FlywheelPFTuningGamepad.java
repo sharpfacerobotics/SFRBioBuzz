@@ -53,10 +53,17 @@ public class FlywheelPFTuningGamepad extends OpMode {
 
         // remember to switch to PF mode before tuning
         launcher.setLauncher(tunerVelocity.getValue());
+        velocity = tunerVelocity.getValue();
         // 4. Print formatted telemetry for each tuner instance
         tunerP.printTelemetry(telemetry);
         tunerF.printTelemetry(telemetry);
         tunerVelocity.printTelemetry(telemetry);
+        telemetry.addData("Target Velocity", velocity);
+        telemetry.addData(
+                "Current Velocity",
+                launcher.getCurrVelocity()
+        );
+        telemetry.addData("Error:", velocity - launcher.getCurrVelocity());
         telemetry.update();
 
     }

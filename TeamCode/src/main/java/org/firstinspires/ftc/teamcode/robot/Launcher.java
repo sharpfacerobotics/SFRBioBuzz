@@ -1,33 +1,51 @@
 package org.firstinspires.ftc.teamcode.robot;
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
 import java.util.Queue;
 
 @Configurable
 public class Launcher {
-    public static double kP = 0.00006;
-    public static double kF = 0.0006;
+    public static double kF = 0.00045;
+    public static double kP = 0.0123; // these contants gotta move to RobotConfig, but they're not done being tuned yet
+    public static boolean usePF = true;
+    public static double nominalVoltage = 12.0;
+    private double currVoltage;
+    private boolean preShooterBeamBreakBroken = false;
+    private boolean preShooterBeamBreakWasBroken = false;
+    private ElapsedTime preShooterBeamBreakLagTimer = new ElapsedTime();
     private RobotHardware robot;
-    public Launcher(RobotHardware robot) {
-        this.robot = robot;
-    }
+    public static double BASE_FLYWHEEL_RVEL = 1200;
     private double targetVel;
     private double currVel1;
     public static double hoodRetractionPos1;
     public static double hoodRetractionPos2;
-    public static double hoodAnglePos1;
-    public static double hoodAnglePos2;
+    public static double hoodAnglePos;
 
+
+    private enum FlywheelState {
+        IDLE,
+        PF_CONTROLLED,
+        NO_TOLERANCE,
+        LINGERING_STRICT
+    }
+    private FlywheelState flywheelState = FlywheelState.IDLE;
+
+    public Launcher(RobotHardware robot) {
+        this.robot = robot;
+    }
+    //comp method
     /*
-    comp method
     public void setLauncher(Queue<String> q) {
         String next = q.peek();
-        double vx = ShooterConfig.elementVelocity[0];
-        double vy = ShooterConfig.elementVelocity[1];
+        double vx = ShooterConfig.elementConfig[0];
+        double vy = ShooterConfig.elementConfig[1];
 
         targetVel = Math.hypot(vx, vy);
 
         currVel1 = robot.launchMotor1.getVelocity();
-        currVel2 = robot.launchMotor2.getVelocity();
         setHoodRetraction(next);
         setHoodAngle(next);
         setVelocityNormal();
@@ -35,27 +53,101 @@ public class Launcher {
         //setVelocityPFPow();
         //setVelocityPFVol();
     }
-    */
-    //testing
+
+     */
+    //testing method
     public void setLauncher(double targetVel, Queue<String> q) {
+        currVoltage = robot.voltageSensor.getVoltage();
+        preShooterBeamBreakBroken = !robot.preShooterBeamBreak.getState();
+
+        switch (flywheelState) {
+            case IDLE:
+                // if intake beam breaks broken
+                // change to pf controlled
+                break;
+            case PF_CONTROLLED:
+                if (preShooterBeamBreakBroken) {
+                    flywheelState = FlywheelState.NO_TOLERANCE;
+                }
+                break;
+            case NO_TOLERANCE:
+                if (!preShooterBeamBreakBroken && preShooterBeamBreakWasBroken) {
+                    flywheelState = FlywheelState.LINGERING_STRICT;
+                }
+                preShooterBeamBreakLagTimer.reset();
+                break;
+            case LINGERING_STRICT:
+                if (preShooterBeamBreakLagTimer.seconds() > 0.2) {
+                    preShooterBeamBreakLagTimer.reset();
+                    flywheelState = FlywheelState.IDLE;
+                }
+                break;
+            default:
+                flywheelState = FlywheelState.PF_CONTROLLED;
+        }
+
+        preShooterBeamBreakWasBroken = preShooterBeamBreakBroken;
+
+
+
         currVel1 = robot.launchMotor1.getVelocity();
         this.targetVel = targetVel;
         //setHoodRetraction(Queue<String> q);
         //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
+        //setVelocityNormal();
         //setVelocityBang();
-        //setVelocityPFPow();
+        setVelocityPF();
         //setVelocityPFVol();
     }
     //testing method
     public void setLauncher(double targetVel) {
+        currVoltage = robot.voltageSensor.getVoltage();
+        preShooterBeamBreakBroken = !robot.preShooterBeamBreak.getState();
+
+        switch (flywheelState) {
+            case IDLE:
+                // if intake beam breaks broken
+                // change to pf controlled
+                break;
+            case PF_CONTROLLED:
+                if (preShooterBeamBreakBroken) {
+                    flywheelState = FlywheelState.NO_TOLERANCE;
+                }
+                break;
+            case NO_TOLERANCE:
+                if (!preShooterBeamBreakBroken && preShooterBeamBreakWasBroken) {
+                    flywheelState = FlywheelState.LINGERING_STRICT;
+                }
+                preShooterBeamBreakLagTimer.reset();
+                break;
+            case LINGERING_STRICT:
+                if (preShooterBeamBreakLagTimer.seconds() > 0.2) {
+                    preShooterBeamBreakLagTimer.reset();
+                    flywheelState = FlywheelState.IDLE;
+                }
+                break;
+            default:
+                flywheelState = FlywheelState.PF_CONTROLLED;
+        }
+
+        preShooterBeamBreakWasBroken = preShooterBeamBreakBroken;
+
+
         currVel1 = robot.launchMotor1.getVelocity();
         this.targetVel = targetVel;
+        hoodAnglePos = robot.hoodAngleServo.getPosition();
+        hoodRetractionPos1 = robot.hoodGapServo1.getPosition();
+        hoodRetractionPos2 = robot.hoodGapServo2.getPosition();
         //setHoodRetraction(Queue<String> q);
         //setHoodAngle(Queue<String> q);
-        setVelocityNormal();
+        //setVelocityNormal();
         //setVelocityBang();
-        //setVelocityPFPow();
+        if (usePF) {
+            robot.launchMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            setVelocityPF();
+        } else {
+            setVelocityNormal();
+        }
         //setVelocityPFVol();
     }
 
@@ -71,10 +163,20 @@ public class Launcher {
         }
     }
     private void setVelocityPF() {
-        double pow1 = kF * targetVel + kP * (targetVel - currVel1);
-        pow1 = Math.max(-1.0, Math.min(1.0, pow1));
-
-        robot.launchMotor1.setPower(pow1);
+        double pow1;
+        if (flywheelState == FlywheelState.IDLE) {
+            pow1 = kF * BASE_FLYWHEEL_RVEL + kP * (BASE_FLYWHEEL_RVEL - currVel1);
+        } else if (flywheelState == FlywheelState.PF_CONTROLLED){
+            pow1 = kF * targetVel + kP * (targetVel - currVel1);
+        } else if (flywheelState == FlywheelState.NO_TOLERANCE || flywheelState == FlywheelState.LINGERING_STRICT) {
+            pow1 = kF * targetVel + 0.5 * Math.max((targetVel - currVel1), 0);
+        } else {
+            pow1 = kF * targetVel + kP * (targetVel - currVel1);
+        }
+        if (Double.isFinite(currVoltage) && currVoltage > 8.0) {
+            pow1 *= nominalVoltage / currVoltage;
+        }
+        robot.launchMotor1.setPower(Range.clip(pow1, 0, 1));
     }
     public void setkP(double kP) {
         Launcher.kP = kP;
@@ -90,26 +192,31 @@ public class Launcher {
         return currVel1;
     }
     //testing method
-    /*
+
     public void setHoodAngle() {
-        robot.hoodAngleServo1.setPosition(hoodAnglePos1);
-        robot.hoodAngleServo2.setPosition(hoodAnglePos2);
+        robot.hoodAngleServo.setPosition(hoodAnglePos);
     }
     public void setHoodRetraction() {
         robot.hoodGapServo1.setPosition(hoodRetractionPos1);
         robot.hoodGapServo2.setPosition(hoodRetractionPos2);
     }
-
+    public double getHoodAnglePos() {
+        return hoodAnglePos;
+    }
+    public double getHoodRetractionPos1() {
+        return hoodRetractionPos1;
+    }
+    public double getHoodRetractionPos2() {
+        return hoodRetractionPos2;
+    }
+    /*
     public void setHoodAngle(String next) {
         if (next.equals("POLLEN")) {
-            hoodAnglePos1 = ShooterConfig.elementVelocity[2] + RobotConfig.hoodAngleServo1Transform;
-            hoodAnglePos2 = ShooterConfig.elementVelocity[2] + RobotConfig.hoodAngleServo2Transform;
+            hoodAnglePos = ShooterConfig.elementConfig[2] + RobotConfig.hoodAngleServo1Transform;
         } else if (next.equals("NECTAR")) {
-            hoodAnglePos1 = ShooterConfig.elementVelocity[3] + RobotConfig.hoodAngleServo1Transform;
-            hoodAnglePos2 = ShooterConfig.elementVelocity[3] + RobotConfig.hoodAngleServo2Transform;
+            hoodAnglePos = ShooterConfig.elementConfig[3] + RobotConfig.hoodAngleServo1Transform;
         }
-        robot.hoodAngleServo1.setPosition(hoodAnglePos1);
-        robot.hoodAngleServo2.setPosition(hoodAnglePos2);
+        robot.hoodAngleServo.setPosition(hoodAnglePos);
     }
 
     public boolean goodShooterConfig() {

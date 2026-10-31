@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot.helperClasses;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 /**
@@ -202,6 +205,60 @@ public final class InterpLUT {
         // = ((a*t + b)*t + c)*t + d
         return ((mCoefficients[k] * t + mCoefficients[k + 1]) * t
                 + mCoefficients[k + 2]) * t + mCoefficients[k + 3];
+    }
+
+    /**
+     * Returns one single-line Desmos/LaTeX equation for each cubic interval.
+     *
+     * <p>The returned strings can be pasted directly into a Desmos expression
+     * line. Each equation includes its own domain restriction.</p>
+     */
+    public String[] getEquations() {
+        String[] equations = new String[mX.length - 1];
+
+        for (int i = 0; i < equations.length; i++) {
+            int k = 4 * i;
+
+            String a = desmosNumber(mCoefficients[k]);
+            String b = desmosNumber(mCoefficients[k + 1]);
+            String c = desmosNumber(mCoefficients[k + 2]);
+            String d = desmosNumber(mCoefficients[k + 3]);
+
+            String x0 = desmosNumber(mX[i]);
+            String x1 = desmosNumber(mX[i + 1]);
+            String h = desmosNumber(mX[i + 1] - mX[i]);
+
+            // Desmos accepts LaTeX-style exponents and restrictions when pasted.
+            // Keep the entire segment on one physical line so one paste creates
+            // exactly one Desmos expression.
+            String t = "((x-(" + x0 + "))/(" + h + "))";
+
+            equations[i] =
+                    "y=(" + a + ")" + t + "^{3}"
+                    + "+(" + b + ")" + t + "^{2}"
+                    + "+(" + c + ")" + t
+                    + "+(" + d + ")"
+                    + "\\left\\{" + x0 + "\\le x\\le " + x1 + "\\right\\}";
+        }
+
+        return equations;
+    }
+
+    /**
+     * Produces compact decimal text that is safe to paste into Desmos.
+     */
+    private static String desmosNumber(double value) {
+        // This formatting is only for visualization; interpolation still uses
+        // the full-precision doubles internally. Twelve significant digits
+        // removes typical floating-point noise while keeping the graph accurate.
+        if (value == 0.0) {
+            return "0.0";
+        }
+
+        BigDecimal rounded = BigDecimal.valueOf(value)
+                .round(new MathContext(12, RoundingMode.HALF_EVEN))
+                .stripTrailingZeros();
+        return rounded.toPlainString();
     }
 
     /** Number of supplied control points. */
