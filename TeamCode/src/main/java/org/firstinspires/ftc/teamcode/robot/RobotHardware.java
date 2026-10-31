@@ -84,7 +84,7 @@ public class RobotHardware {
         frontRightMotor = hardwareMap.get(DcMotor.class, RobotConfig.FRONT_RIGHT_MOTOR_NAME);
         backRightMotor  = hardwareMap.get(DcMotor.class, RobotConfig.BACK_RIGHT_MOTOR_NAME);
         intakeMotor     = hardwareMap.get(DcMotor.class, "intake_motor");
-        pinpoint        = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        //pinpoint        = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         // --- Directions ---
         frontLeftMotor.setDirection(DcMotor.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
@@ -99,6 +99,7 @@ public class RobotHardware {
         launchMotor1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
     }
     public void initIntakeTransferTrigger(HardwareMap hardwareMap) {
+        //flowerRampServo = hardwareMap.get(Servo.class, "flower_ramp_servo");
         intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
         triggerMotor = hardwareMap.get(DcMotor.class, "trigger_motor");
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -113,9 +114,9 @@ public class RobotHardware {
     }
 
     public void initTurret(HardwareMap hardwareMap) {
-        turretServo1 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_1);
-        turretServo2 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_2);
-        turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
+        turretServo1 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_1);
+        turretServo2 = hardwareMap.get(CRServo.class, RobotConfig.TURRET_SERVO_NAME_2);
+        //turretEncoder = hardwareMap.get(DcMotorEx.class, RobotConfig.TURRET_ENCODER);
         //turretHallEffect = hardwareMap.get(TouchSensor.class, RobotConfig.TURRET_HALL);
         //preShooterBeamBreak = hardwareMap.get(DigitalChannel.class, RobotConfig.PRE_SHOOTER_BEAM_BREAK);
         //preShooterBeamBreak.setMode(DigitalChannel.Mode.INPUT);

@@ -27,6 +27,7 @@ public class Turret {
     private double startTicks = 0;
 
     private double currPos = 0;
+    private double rawPos;
     private double activeTargetTicks = Double.NaN;
     private double continuousTargetHeading = Double.NaN;
 
@@ -36,11 +37,12 @@ public class Turret {
     }
     private LocalizeState localizeState = LocalizeState.NEGATIVE;
     private final ElapsedTime timer = new ElapsedTime();
-    private double goalHeading = Math.toDegrees(Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]));
+    private double goalHeading;
     private enum TurretState {
         LOCALIZING,
         AIMING,
-        UNWINDING
+        UNWINDING,
+        MANUAL
     }
     private TurretState turretState = TurretState.LOCALIZING;
     private boolean limitWasHit = false;
@@ -100,6 +102,26 @@ public class Turret {
         lastError = tickError;
     }
 
+    private void rotateTo(double currPower, double deltaTime) {
+        if (turretState != TurretState.UNWINDING) {
+
+            if (currPower > 0 && currPos >= RobotConfig.MAX_TURRET_TICKS - RobotConfig.TURRET_LIMIT_TICK_TOLERANCE) {
+                emergencyUnWind(deltaTime);
+                return;
+            } else if (currPower < 0 && currPos <= RobotConfig.MIN_TURRET_TICKS + RobotConfig.TURRET_LIMIT_TICK_TOLERANCE) {
+                emergencyUnWind(deltaTime);
+                return;
+            }
+        }
+        if ((currPower > 0 && currPos >= RobotConfig.MAX_TURRET_TICKS - RobotConfig.TURRET_LIMIT_TICK_TOLERANCE)
+                || (currPower < 0 && currPos <= RobotConfig.MIN_TURRET_TICKS + RobotConfig.TURRET_LIMIT_TICK_TOLERANCE)) {
+            currPower = 0;
+        }
+        robot.turretServo1.setPower(Range.clip(currPower, -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER));
+        robot.turretServo2.setPower(Range.clip(currPower, -RobotConfig.MAX_TURRET_POWER, RobotConfig.MAX_TURRET_POWER));
+        lastError = 0;
+    }
+
 
     public void localizeTurret() {
         //use the Cow Path Problem algorithm to find the hall effect zero point
@@ -110,7 +132,7 @@ public class Turret {
             }
             switch(localizeState) {
                 case NEGATIVE:
-                    if (currPos <= (startTicks - localizeDx)) {
+                    if (rawPos <= (startTicks - localizeDx)) {
                         localizeState = LocalizeState.POSITIVE;
                         localizeDx *= 2;
                         break;
@@ -119,7 +141,7 @@ public class Turret {
                     turretServo2.setPower(-0.5);
                     break;
                 case POSITIVE:
-                    if (currPos >= (startTicks + localizeDx)) {
+                    if (rawPos >= (startTicks + localizeDx)) {
                         localizeState = LocalizeState.NEGATIVE;
                         localizeDx *= 2;
                         break;
@@ -137,25 +159,76 @@ public class Turret {
         } else {
             turretServo1.setPower(0.0);
             turretServo2.setPower(0.0);
-            zeroOffset = currPos;
+            zeroOffset = rawPos;
             turretState = TurretState.AIMING;
         }
+    }
+    public void lolcalizeTurret() {
+        turretServo1.setPower(0.0);
+        turretServo2.setPower(0.0);
+        zeroOffset = turretEncoder.getCurrentPosition();
+        turretState = TurretState.AIMING;
     }
 
     public void updateTurret() {
         double deltaTime = timer.seconds();
         goalHeading = Math.toDegrees(Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]));
-        currPos = robot.turretEncoder.getCurrentPosition() - zeroOffset;
+        rawPos = robot.turretEncoder.getCurrentPosition();
+        currPos = rawPos - zeroOffset;
         timer.reset();
+
         if (turretState == TurretState.LOCALIZING) {
-            localizeTurret();
+            lolcalizeTurret();
             return;
         }
-        if (turretState != TurretState.UNWINDING) {
+        if (turretState != TurretState.UNWINDING && turretState != TurretState.MANUAL) {
             aim(deltaTime);
-        } else {
+        } else if (turretState == TurretState.UNWINDING) {
             continueUnWind(deltaTime);
         }
+    }
+
+    public void updateTurret(double targetPower) {
+        double deltaTime = timer.seconds();
+        goalHeading = Math.toDegrees(Math.atan2(ShooterConfig.elementVelocity[1], ShooterConfig.elementVelocity[0]));
+        rawPos = robot.turretEncoder.getCurrentPosition();
+        currPos = rawPos - zeroOffset;
+        lastError = 0;
+        timer.reset();
+        if (turretState == TurretState.LOCALIZING) {
+            lolcalizeTurret();
+            return;
+        }
+        if (turretState != TurretState.UNWINDING && turretState != TurretState.MANUAL) {
+            aim(deltaTime);
+        } else if (turretState == TurretState.UNWINDING) {
+            continueUnWind(deltaTime);
+        } else {
+            rotateTo(targetPower, deltaTime);
+        }
+    }
+
+    public void setModeManual() {
+        if (turretState != TurretState.LOCALIZING && turretState != TurretState.UNWINDING) {
+            turretState = TurretState.MANUAL;
+        }
+    }
+
+    public void setModeAutomatic() {
+        if (turretState != TurretState.LOCALIZING && turretState != TurretState.UNWINDING) {
+            turretState = TurretState.AIMING;
+        }
+    }
+
+    public void manualRezero() {
+        if (turretState == TurretState.MANUAL) {
+            zeroOffset = robot.turretEncoder.getCurrentPosition();
+        }
+    }
+
+    public void stopTurret() {
+        turretServo1.setPower(0.0);
+        turretServo2.setPower(0.0);
     }
 
 
@@ -239,11 +312,6 @@ public class Turret {
         return turretState == TurretState.AIMING
                 && Math.abs(currPos - activeTargetTicks)
                 < RobotConfig.TURRET_TICK_TOLERANCE;
-    }
-
-    public void testing() {
-        robot.turretServo1.setPower(1.0);
-        robot.turretServo2.setPower(1.0);
     }
 
 }

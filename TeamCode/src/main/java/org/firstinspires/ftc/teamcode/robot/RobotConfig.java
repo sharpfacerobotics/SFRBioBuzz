@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
-
+@Configurable
 public class RobotConfig {
 
     // Hardware config names
@@ -19,9 +20,11 @@ public class RobotConfig {
     public static final String INTAKE_MOTOR_NAME      = "intake_motor";
     public static final String TRIGGER_MOTOR_NAME     = "trigger_motor";      // moves balls from intake to turret
     public static final String LAUNCH_MOTOR_NAME     = "launch_motor";       // motor with encoder plugged in
-    public static final String TURRET_SERVO_NAME      = "turret_servo_1";     // continuous rotation (Axon) - change if your config name differs
-    public static final String HOOD_GAP_SERVO1 = "compression_servo_1";
-    public static final String HOOD_GAP_SERVO2 = "compression_servo_2";
+    public static final String TURRET_SERVO_NAME_1      = "turret_servo_1";     // continuous rotation (Axon) - change if your config name differs
+    public static final String TURRET_SERVO_NAME_2      = "turret_servo_2";     // continuous rotation (Axon) - change if your config name differs
+
+    public static final String HOOD_GAP_SERVO1 = "gap_servo_1";
+    public static final String HOOD_GAP_SERVO2 = "gap_servo_2";
     public static final String HOOD_ANGLE_SERVO        = "hood_servo";
 
 
@@ -63,7 +66,7 @@ public class RobotConfig {
     // ====================================================================================
     // 8. HOOD SERVO SETTINGS
     // ====================================================================================
-    public static final double HOOD_START_POSITION    = 0.0;   // where the servo goes on init
+    public static final double HOOD_START_POSITION    = 1.0;   // where the servo goes on init
     public static final double HOOD_SPEED_PER_SECOND  = 0.30;  // how fast D-pad up/down moves it (position units per second)
 
     // ====================================================================================
@@ -105,8 +108,8 @@ public class RobotConfig {
     public static final double TURRET_HEADING_TOLERANCE = 0.05;
     public static final double TURRET_LIMIT_TICK_TOLERANCE = 10;
     public static final double MAX_TURRET_POWER = 0.9;
-    public static final double MAX_TURRET_TICKS = 100;
-    public static final double MIN_TURRET_TICKS = -100;
+    public static final double MAX_TURRET_TICKS = 5000;
+    public static final double MIN_TURRET_TICKS = -5000;
 
 
     public static final double TURRET_GEAR_TICKS = 1000; //PLACEHOLDER

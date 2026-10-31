@@ -141,9 +141,9 @@ public class Launcher {
 
         currVel1 = robot.launchMotor1.getVelocity();
         this.targetVel = targetVel;
-        //String next = q.peek();
-        //setHoodRetraction(next);
-        //setHoodAngle(next);
+        String next = q.peek();
+        setHoodRetraction(next);
+        setHoodAngle(next);
         setVelocityPF();
     }
     //testing method, no storage

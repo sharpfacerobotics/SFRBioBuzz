@@ -28,10 +28,10 @@ public class Constants {
         c.frontRightName.set(RobotConfig.FRONT_RIGHT_MOTOR_NAME);
         c.backLeftName.set(RobotConfig.BACK_LEFT_MOTOR_NAME);
         c.backRightName.set(RobotConfig.BACK_RIGHT_MOTOR_NAME);
-        c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
-        c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
-        c.frontRightDirection.set(DcMotorSimple.Direction.FORWARD);
-        c.backRightDirection.set(DcMotorSimple.Direction.FORWARD);
+        c.frontLeftDirection.set(DcMotorSimple.Direction.FORWARD);
+        c.backLeftDirection.set(DcMotorSimple.Direction.FORWARD);
+        c.frontRightDirection.set(DcMotorSimple.Direction.REVERSE);
+        c.backRightDirection.set(DcMotorSimple.Direction.REVERSE);
     });
 
     // TODO(tune): run PinpointTuner for directions + offsets.
