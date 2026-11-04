@@ -1,96 +1,280 @@
 package org.firstinspires.ftc.teamcode.pedro.procedures;
 
-import com.pedropathing.tuning.autotune.*;
-import com.pedropathing.tuning.autotune.Display.FourWheelBot.Wheel;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.pedropathing.math.Pose;
+import com.pedropathing.revhub.localizers.PinpointConfig;
+import com.pedropathing.revhub.localizers.PinpointLocalizer;
+import com.pedropathing.tuning.autotune.Inputs;
+import com.pedropathing.tuning.autotune.Procedure;
+import com.pedropathing.tuning.autotune.TuningOpMode;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-enum Direction {
-    @DisplayName("Forward") FORWARD,
-    @DisplayName("Reversed") REVERSE
-}
+import java.util.*;
 
-public class MecanumTuner extends Procedure {
-    public MecanumTuner() {
-        super("Mecanum Tuner", "A procedure to find the directions of mecanum wheels.");
+public class PinpointTuner extends Procedure {
+    enum PodType {
+        SWING_ARM,
+        FOUR_BAR,
+        CUSTOM
+    }
+    public PinpointTuner() {
+        super("Pinpoint Tuner", "A procedure for tuning the Pinpoint localizer.");
     }
 
     @Override
     public void run() throws InterruptedException {
-        Inputs motorNames = inputs("Mecanum Motor Names", "Enter the names in HardwareMap of your drivetrain motors.");
-        Inputs.Field<String> frontLeftName = motorNames.s("Front Left Name");
-        Inputs.Field<String> frontRightName = motorNames.s("Front Right Name");
-        Inputs.Field<String> backLeftName = motorNames.s("Back Left Name");
-        Inputs.Field<String> backRightName = motorNames.s("Back Right Name");
-        awaitInputs(motorNames);
+        Inputs inputs = inputs("Setup", "Set Pinpoint HardwareMap Name and Odometry Pod Type");
+        Inputs.Field<String> pinpointName = inputs.s("HardwareMap Name").withDefault("pinpoint");
+        Inputs.Field<PodType> podType = inputs.e("Odometry Pod Type", PodType.class).withDefault(PodType.FOUR_BAR);
+        awaitInputs(inputs);
 
-        confirmation("Motor Directions", "Each drivetrain motor will spin, one at a time. After each one, you will enter whether it spun forward or reversed. You may use the interactive diagram to see which wheel should be spinning and which direction is forward.");
+        OptionalDouble customPodScalar = OptionalDouble.empty();
 
-        Direction frontLeftDirection = testMotor(Wheel.FRONT_LEFT, "Front Left", frontLeftName.get());
-        Direction frontRightDirection = testMotor(Wheel.FRONT_RIGHT, "Front Right", frontRightName.get());
-        Direction backLeftDirection = testMotor(Wheel.BACK_LEFT, "Back Left", backLeftName.get());
-        Direction backRightDirection = testMotor(Wheel.BACK_RIGHT, "Back Right", backRightName.get());
+        if (podType.get() == PodType.CUSTOM) {
+            Inputs inputsCustom = inputs("Custom Scalar Identification Push Distance", "Set the distance you will push your robot forward in inches");
+            Inputs.Field<Double> distance = inputsCustom.d("Distance").withDefault(48.0);
+            awaitInputs(inputsCustom);
+            customPodScalar = OptionalDouble.of(runOpMode(new PinpointCustomPodScalar(distance.get(), pinpointName.get())));
+        }
 
-        result("frontLeftName", frontLeftName.get());
-        result("frontRightName", frontRightName.get());
-        result("backLeftName", backLeftName.get());
-        result("backRightName", backRightName.get());
-        result("frontLeftDirection", frontLeftDirection);
-        result("frontRightDirection", frontRightDirection);
-        result("backLeftDirection", backLeftDirection);
-        result("backRightDirection", backRightDirection);
+        boolean forwardPodReversed = runOpMode(new PinpointForwardDirection(pinpointName.get(), podType.get(), customPodScalar));
+        boolean strafePodReversed = runOpMode(new PinpointStrafeDirection(pinpointName.get(), podType.get(), customPodScalar));
 
-        code(Language.JAVA, "public static MecanumConfig drivetrainConfig = new MecanumConfig(c -> {\n" +
-                "    c.frontLeftName.set(\"" + frontLeftName.get() + "\");\n" +
-                "    c.frontRightName.set(\"" + frontRightName.get() + "\");\n" +
-                "    c.backLeftName.set(\"" + backLeftName.get() + "\");\n" +
-                "    c.backRightName.set(\"" + backRightName.get() + "\");\n" +
-                "    c.frontLeftDirection.set(DcMotorSimple.Direction." + frontLeftDirection + ");\n" +
-                "    c.frontRightDirection.set(DcMotorSimple.Direction." + frontRightDirection + ");\n" +
-                "    c.backLeftDirection.set(DcMotorSimple.Direction." + backLeftDirection + ");\n" +
-                "    c.backRightDirection.set(DcMotorSimple.Direction." + backRightDirection + ");\n" +
+        List<Double> offsets = runOpMode(new PinpointOffsets(pinpointName.get(), podType.get(), customPodScalar, forwardPodReversed, strafePodReversed));
+
+        result("name", pinpointName.get());
+
+        if (customPodScalar.isPresent()) {
+            result("podType", "Custom");
+            result("ticksPerUnit", customPodScalar.getAsDouble());
+        } else {
+            result("podType", podType.get() == PodType.SWING_ARM ? GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD : GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        }
+
+        result("xPodDirection", forwardPodReversed ? GoBildaPinpointDriver.EncoderDirection.REVERSED : GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        result("yPodDirection", strafePodReversed ? GoBildaPinpointDriver.EncoderDirection.REVERSED : GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        result("xPodOffset", offsets.get(0));
+        result("yPodOffset", offsets.get(1));
+
+        code(Language.JAVA,"public static PinpointConfig localizerConfig = new PinpointConfig(c -> {\n" +
+                "    c.name.set(\"" + pinpointName.get() + "\");\n" +
+                (customPodScalar.isPresent() ? "    c.ticksPerUnit.set(OptionalDouble.of(" + customPodScalar.getAsDouble() + "));\n" : "    c.podType.set(" + (podType.get() == PodType.SWING_ARM ? "GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD" : "GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD") + ");\n") +
+                "    c.xPodOffset.set(" + offsets.get(0) + ");\n" +
+                "    c.yPodOffset.set(" + offsets.get(1) + ");\n" +
+                "    c.xPodDirection.set(" + (forwardPodReversed ? "GoBildaPinpointDriver.EncoderDirection.REVERSED" : "GoBildaPinpointDriver.EncoderDirection.FORWARD") + ");\n" +
+                "    c.yPodDirection.set(" + (strafePodReversed ? "GoBildaPinpointDriver.EncoderDirection.REVERSED" : "GoBildaPinpointDriver.EncoderDirection.FORWARD") + ");\n" +
+                "    c.globalDistanceUnit.set(DistanceUnit.INCH);\n" +
+                "    c.offsetUnits.set(DistanceUnit.INCH);\n" +
                 "});");
-    }
-
-    private Direction testMotor(Wheel wheel, String displayName, String hardwareName) throws InterruptedException {
-        final boolean[] correctMotor = new boolean[1];
-        final Direction[] direction = new Direction[1];
-
-        withDisplay(Display.fourWheelBot(wheel, false), () -> {
-            runOpMode(new SpinMotor(displayName, hardwareName));
-
-            Inputs inputs = inputs(displayName, "Determine the " + displayName.toLowerCase() + " motor direction.");
-            Inputs.Field<Boolean> correctMotorField = inputs.b("Did the " + displayName.toLowerCase() + " motor spin?").withDefault(true);
-            Inputs.Field<Direction> directionField = inputs.e("Which way did the motor spin?", Direction.class);
-            awaitInputs(inputs);
-
-            correctMotor[0] = correctMotorField.get();
-            direction[0] = directionField.get();
-        });
-
-        if (!correctMotor[0])
-            abort("The wrong motor spun. Check that your motors are plugged into the correct ports, and that they are configured correctly. Then, try again.");
-
-        return direction[0];
     }
 }
 
-class SpinMotor extends TuningOpMode<Void> {
-    private final String name;
+class PinpointCustomPodScalar extends TuningOpMode<Double> {
 
-    public SpinMotor(String displayName, String hardwareName) {
-        super(displayName, "The " + displayName.toLowerCase() + " motor will spin. The interactive diagram shows which way is forward. Click stop when you know if it is spinning forward or reversed.", true);
-        this.name = hardwareName;
+    String name;
+    double distance;
+
+    public PinpointCustomPodScalar(Double distance, String name) {
+        super("Custom Scalar Identification",
+                "Determines the scalar for the custom pods of the Pinpoint localizer. \n"
+                        + "Push your robot forward " + distance + " inches exactly and then stop the Opmode",
+                true);
+        this.name = name;
+        this.distance = distance;
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    protected Void runTuningOpMode() {
-        DcMotor motor = hardwareMap.dcMotor.get(name);
+    protected Double runTuningOpMode() throws InterruptedException {
+        PinpointConfig config = new PinpointConfig(c -> {
+            c.name.set(name);
+            c.ticksPerUnit.set(OptionalDouble.of(1.0));
+            c.xPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.yPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.xPodOffset.set(0.0);
+            c.yPodOffset.set(0.0);
+        });
+        PinpointLocalizer localizer = new PinpointLocalizer(hardwareMap, config);
+        localizer.setPose(new Pose(0, 0));
+        Thread.sleep(1000);
         waitForStart();
-        motor.setPower(0.5);
-        while (opModeIsActive()) {
+        localizer.setPose(Pose.zero());
+        localizer.update();
+        while (!isStopRequested()) {
+            localizer.update();
         }
-        motor.setPower(0);
-        return null;
+        return Math.abs((localizer.pose().x() / distance));
+    }
+}
+
+class PinpointForwardDirection extends TuningOpMode<Boolean> {
+    String name;
+    PinpointTuner.PodType podType;
+    OptionalDouble customPodScalar;
+
+    public PinpointForwardDirection(String name, PinpointTuner.PodType podType, OptionalDouble customPodScalar) {
+        super("Forward Direction Identification",
+                "Determines if your forward pod needs to be reversed. \n"
+                        + "Push your robot forward and then stop the Opmode",
+                true);
+        this.name = name;
+        this.podType = podType;
+        this.customPodScalar = customPodScalar;
+    }
+
+    @Override
+    protected Boolean runTuningOpMode() throws InterruptedException {
+        PinpointConfig config = new PinpointConfig(c -> {
+            c.name.set(name);
+            c.xPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.yPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.xPodOffset.set(0.0);
+            c.yPodOffset.set(0.0);
+            if (customPodScalar.isPresent()) {
+                c.encoderResolutionUnit.set(DistanceUnit.INCH);
+                c.ticksPerUnit.set(OptionalDouble.of(customPodScalar.getAsDouble()));
+            } else {
+                c.podType.set(podType == PinpointTuner.PodType.SWING_ARM ? GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD : GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            }
+        });
+        PinpointLocalizer localizer = new PinpointLocalizer(hardwareMap, config);
+        localizer.setPose(new Pose(0, 0));
+        Thread.sleep(1000);
+        waitForStart();
+        localizer.setPose(Pose.zero());
+        localizer.update();
+
+        // Keep the last reading taken before Stop. After Stop the Pinpoint reports a reset
+        // pose (x = 0), so reading it afterwards always returns false (not reversed).
+        double x = 0;
+        while (!isStopRequested()) {
+            localizer.update();
+            if (!isStopRequested()) {
+                x = localizer.pose().x();
+            }
+        }
+
+        return x < 0;
+    }
+}
+
+class PinpointStrafeDirection extends TuningOpMode<Boolean> {
+    String name;
+    PinpointTuner.PodType podType;
+    OptionalDouble customPodScalar;
+
+    public PinpointStrafeDirection(String name, PinpointTuner.PodType podType, OptionalDouble customPodScalar) {
+        super("Strafe Direction Identification",
+                "Determines if your strafe pod needs to be reversed. \n"
+                        + "Push your robot to the left and then stop the Opmode",
+                true);
+        this.name = name;
+        this.podType = podType;
+        this.customPodScalar = customPodScalar;
+    }
+
+    @Override
+    protected Boolean runTuningOpMode() throws InterruptedException {
+        PinpointConfig config = new PinpointConfig(c -> {
+            c.name.set(name);
+            c.xPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.yPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.xPodOffset.set(0.0);
+            c.yPodOffset.set(0.0);
+            if (customPodScalar.isPresent()) {
+                c.encoderResolutionUnit.set(DistanceUnit.INCH);
+                c.ticksPerUnit.set(OptionalDouble.of(customPodScalar.getAsDouble()));
+            } else {
+                c.podType.set(podType == PinpointTuner.PodType.SWING_ARM ? GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD : GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            }
+        });
+        PinpointLocalizer localizer = new PinpointLocalizer(hardwareMap, config);
+        localizer.setPose(new Pose(0, 0));
+        Thread.sleep(1000);
+        waitForStart();
+        localizer.setPose(Pose.zero());
+        localizer.update();
+        // Keep the last reading taken before Stop. After Stop the Pinpoint reports a reset
+        // pose (y = 0), so reading it afterwards always returns false (not reversed).
+        double y = 0;
+        while (!isStopRequested()) {
+            localizer.update();
+            if (!isStopRequested()) {
+                y = localizer.pose().y();
+            }
+        }
+
+        return y < 0;
+    }
+}
+
+class PinpointOffsets extends TuningOpMode<List<Double>> {
+    String name;
+    PinpointTuner.PodType podType;
+    OptionalDouble customPodScalar =  OptionalDouble.empty();
+    boolean forwardPodReversed, strafePodReversed;
+    private Pose previous = Pose.zero();
+
+    public PinpointOffsets(String name, PinpointTuner.PodType podType, OptionalDouble customPodScalar, Boolean forwardPodReversed, Boolean strafePodReversed) {
+        super("Offsets Identification",
+                "Automatically identifies the offsets for your Pinpoint localizer. \n"
+                        + "Spin your robot in place 180 degrees counterclockwise and then stop the Opmode",
+                true);
+        this.name = name;
+        this.podType = podType;
+        if (customPodScalar.isPresent()) {
+            this.customPodScalar = customPodScalar;
+        }
+        this.forwardPodReversed = forwardPodReversed;
+        this.strafePodReversed = strafePodReversed;
+    }
+
+    @Override
+    protected List<Double> runTuningOpMode() throws InterruptedException {
+        PinpointConfig config = new PinpointConfig(c -> {
+            c.name.set(name);
+            c.xPodDirection.set(forwardPodReversed ? GoBildaPinpointDriver.EncoderDirection.REVERSED : GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            c.yPodDirection.set(strafePodReversed ? GoBildaPinpointDriver.EncoderDirection.REVERSED : GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            if (customPodScalar.isPresent()) {
+                c.encoderResolutionUnit.set(DistanceUnit.INCH);
+                c.ticksPerUnit.set(OptionalDouble.of(customPodScalar.getAsDouble()));
+                c.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
+            } else {
+                c.podType.set(podType == PinpointTuner.PodType.SWING_ARM ? GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD : GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            }
+            c.xPodOffset.set(0.0);
+            c.yPodOffset.set(0.0);
+            c.globalDistanceUnit.set(DistanceUnit.INCH);
+            c.offsetUnits.set(DistanceUnit.INCH);
+        });
+        PinpointLocalizer localizer = new PinpointLocalizer(hardwareMap, config);
+        if (customPodScalar.isPresent()) {
+            localizer.reset();
+        }
+        localizer.setPose(Pose.zero());
+        localizer.update();
+
+
+        Thread.sleep(1000);
+        waitForStart();
+        localizer.setPose(Pose.zero());
+        localizer.update();
+
+        localizer.setPose(Pose.zero());
+
+        while (!isStopRequested()) {
+            previous = localizer.pose();
+            localizer.update();
+
+            telemetry.addData("heading", localizer.pose().heading());
+            telemetry.addData("pose", localizer.pose());
+            telemetry.addData("previous", previous);
+            telemetry.update();
+        }
+
+        if (localizer.pose().x() != Pose.zero().x() || localizer.pose().y() != Pose.zero().y()) {
+            previous =  localizer.pose();
+        }
+
+        return List.of(((-previous.y()) / 2.0), ((-previous.x()) / 2.0));
     }
 }
